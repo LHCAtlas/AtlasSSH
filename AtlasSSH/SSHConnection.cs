@@ -104,7 +104,7 @@ namespace AtlasSSH
         /// <param name="command"></param>
         /// <param name="output"></param>
         /// <returns></returns>
-        public async Task<SSHConnection> ExecuteCommand(string command, Action<string> output)
+        public SSHConnection ExecuteCommand(string command, Action<string> output = null)
         {
             _shell.Value.WriteLine(command);
             DumpTillFind(_shell.Value, command); // The command is (normally) repeated back to us...

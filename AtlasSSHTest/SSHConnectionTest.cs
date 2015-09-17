@@ -28,14 +28,23 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
-        public async Task ListDirectory()
+        public void ListDirectory()
         {
             var info = util.GetUsernameAndPassword();
             var s = new SSHConnection(info.Item1, info.Item2);
 
             bool foundFile = false;
-            await s.ExecuteCommand("ls -a | cat", l => { if (l.Contains(".bash_profile")) { foundFile = true; } Console.WriteLine(l); });
+            s.ExecuteCommand("ls -a | cat", l => { if (l.Contains(".bash_profile")) { foundFile = true; } Console.WriteLine(l); });
             Assert.IsTrue(foundFile);
+        }
+
+        [TestMethod]
+        public void ListDirectoryWithNoOutput()
+        {
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+
+            s.ExecuteCommand("ls -a | cat");
         }
     }
 }
