@@ -70,10 +70,16 @@ namespace AtlasSSHTest
             var info = util.GetUsernameAndPassword();
             var s = new SSHConnection(info.Item1, info.Item2);
 
+            Console.WriteLine("Before we do anything here is the environment:");
+            s.ExecuteCommand("set", l => Console.WriteLine(" set: " + l));
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+
             bool valueSet = false;
             bool sawPrompt = false;
             s.ExecuteCommand("prompt=\"what is up: \"");
-            s.ExecuteCommandWithInput("read -p \"$prompt\" bogusvalue", new Dictionary<string, string>() { { "up:", "this is a test" } }, l =>
+            s.ExecuteCommandWithInput("read -p \"$prompt\" bogusvalue", new Dictionary<string, string>() { { "up:", "\nthis freak me out is a test" } }, l =>
                 {
                     sawPrompt = sawPrompt || l.Contains("what is up");
                     Console.WriteLine("==> " + l);

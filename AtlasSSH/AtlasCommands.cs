@@ -74,9 +74,9 @@ namespace AtlasSSH
             // Run the command
             bool goodProxy = false;
             var whatHappened = new List<string>();
+
             connection
-                .ExecuteCommandWithInput(string.Format("voms-proxy-init -voms {0}", voms),
-                    new Dictionary<string, string>() { { "identity:", passwordInfo.Password } },
+                .ExecuteCommand(string.Format("echo {0} | voms-proxy-init -voms {1}", passwordInfo.Password, voms),
                     l => { 
                         goodProxy = goodProxy || l.Contains("Your proxy is valid");
                         whatHappened.Add(l);

@@ -4,6 +4,7 @@ using CredentialManagement;
 using System.Linq;
 using Renci.SshNet;
 using System.Threading;
+using System.IO;
 
 namespace AtlasSSHTest
 {
@@ -23,24 +24,31 @@ namespace AtlasSSHTest
             }
 
             // Create the connection, but do it lazy so we don't do anything if we aren't used.
-            var con = new SshClient(info.Item1, info.Item2, passwordInfo.Password);
+            var host = info.Item1;
+            var username = info.Item2;
+            var password = passwordInfo.Password;
+
+            // Do the work.
+            var con = new SshClient(host, username, password);
             con.Connect();
 
-            // And create a shell stream. Initialize to find the prompt so we can figure out, later, when
-            // a task has finished.
             var s = con.CreateShellStream("Commands", 240, 200, 132, 80, 1024);
 
-            s.WriteLine("read -p \"hi there\" bogus1 bogus2 bogus3 bogus4 bogus5");
+            var reader = new StreamReader(s);
+            var writer = new StreamWriter(s);
+            writer.AutoFlush = true;
+
+            // Do the read command
+            writer.WriteLine("read -p \"hi there: \" bogus");
             Thread.Sleep(200);
-            s.WriteLine("dork is a winner");
-            s.WriteLine("dork is a winner");
+            writer.Write("Life Is Great\n");
             Thread.Sleep(200);
-            s.WriteLine("set");
+            writer.WriteLine("set | grep bogus");
 
             Thread.Sleep(200);
 
             string l = "";
-            while ((l = s.ReadLine()) != null)
+            while ((l = reader.ReadLine()) != null)
             {
                 Console.WriteLine(l);
             }
