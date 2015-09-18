@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AtlasSSH;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace AtlasSSHTest
 {
@@ -39,12 +40,52 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        public void PWDOutputAsExpected()
+        {
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+
+            int count = 0;
+            s.ExecuteCommand("pwd", l => {
+                Assert.IsFalse(l.Contains("\r"));
+                Assert.IsFalse(l.Contains("\n"));
+                Console.WriteLine("--> " + l);
+                count++;
+            });
+            Assert.AreEqual(1, count);            
+        }
+
+        [TestMethod]
         public void ListDirectoryWithNoOutput()
         {
             var info = util.GetUsernameAndPassword();
             var s = new SSHConnection(info.Item1, info.Item2);
 
             s.ExecuteCommand("ls -a | cat");
+        }
+
+        [TestMethod]
+        public void ReadBackWithPrompt()
+        {
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+
+            bool valueSet = false;
+            bool sawPrompt = false;
+            s.ExecuteCommand("prompt=\"what is up: \"");
+            s.ExecuteCommandWithInput("read -p \"$prompt\" bogusvalue", new Dictionary<string, string>() { { "up:", "this is a test" } }, l =>
+                {
+                    sawPrompt = sawPrompt || l.Contains("what is up");
+                    Console.WriteLine("==> " + l);
+                })
+                .ExecuteCommand("set", l => Console.WriteLine(" set: " + l))
+                .ExecuteCommand("echo bogusvalue $bogusvalue", l =>
+                {
+                    valueSet = valueSet || l.Contains("this");
+                    Console.WriteLine("--> " + l);
+                });
+            Assert.IsTrue(sawPrompt);
+            Assert.IsTrue(valueSet);
         }
     }
 }
