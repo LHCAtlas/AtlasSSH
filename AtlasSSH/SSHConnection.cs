@@ -2,6 +2,7 @@
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -39,6 +40,15 @@ namespace AtlasSSH
                 return c;
             });
 
+            // Create the scp client for copying things
+            _scp = new Lazy<ScpClient>(() =>
+            {
+                var c = new ScpClient(host, username, passwordInfo.Password);
+                c.Connect();
+                c.ErrorOccurred += (sender, error) => _scpError = error.Exception;
+                return c;
+            });
+
             // And create a shell stream. Initialize to find the prompt so we can figure out, later, when
             // a task has finished.
             _shell = new Lazy<ShellStream>(() => {
@@ -52,6 +62,11 @@ namespace AtlasSSH
         }
 
         /// <summary>
+        /// Record any errors during the download
+        /// </summary>
+        private Exception _scpError = null;
+
+        /// <summary>
         /// Hold onto the client. By referencing it, a connection will be made.
         /// </summary>
         private Lazy<SshClient> _client;
@@ -60,6 +75,8 @@ namespace AtlasSSH
         /// Hold onto a shell stream. By referencing it the first time it will be created.
         /// </summary>
         private Lazy<ShellStream> _shell;
+
+        private Lazy<ScpClient> _scp;
 
         /// <summary>
         /// What we've determined is the command prompt. We have to use it b.c. we want to make sure not to get
@@ -187,6 +204,24 @@ namespace AtlasSSH
 
             _shell.Value.Expect(TimeSpan.FromSeconds(5), actions);
             DumpTillFind(_shell.Value, _prompt, output);
+            return this;
+        }
+
+        /// <summary>
+        /// Copy a remote directory locally
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="remotedir"></param>
+        /// <param name="localDir"></param>
+        /// <returns></returns>
+        public SSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir)
+        {
+            _scpError = null;
+            _scp.Value.Download(remotedir, localDir);
+            if (_scpError != null)
+            {
+                throw _scpError;
+            }
             return this;
         }
     }

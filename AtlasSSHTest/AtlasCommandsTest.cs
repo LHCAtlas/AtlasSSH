@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AtlasSSH;
 using System.Collections.Generic;
+using System.IO;
 
 namespace AtlasSSHTest
 {
@@ -128,11 +129,5 @@ namespace AtlasSSHTest
             Assert.AreEqual(10, files.Count);
         }
 
-        [TestMethod]
-        public void copyRemoteDirectoryLocal()
-        {
-            // download to a local directory the dataset.
-            Assert.Inconclusive();
-        }
     }
 }

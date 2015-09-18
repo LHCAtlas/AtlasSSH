@@ -3,6 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AtlasSSH;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.IO;
+using Renci.SshNet.Common;
 
 namespace AtlasSSHTest
 {
@@ -95,6 +97,88 @@ namespace AtlasSSHTest
             Assert.Inconclusive();
             Assert.IsTrue(sawPrompt);
             Assert.IsTrue(valueSet);
+        }
+
+        [TestMethod]
+        public void copyRemoteDirectoryLocal()
+        {
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+
+            // Create a "complex" directory structure on the remote machine
+            s
+                .ExecuteCommand("mkdir -p /tmp/usergwatts/data")
+                .ExecuteCommand("mkdir -p /tmp/usergwatts/data/d1")
+                .ExecuteCommand("mkdir -p /tmp/usergwatts/data/d2")
+                .ExecuteCommand("echo hi1 > /tmp/usergwatts/data/f1")
+                .ExecuteCommand("echo hi2 > /tmp/usergwatts/data/d1/f2")
+                .ExecuteCommand("echo hi3 > /tmp/usergwatts/data/d2/f3")
+                .ExecuteCommand("echo hi4 > /tmp/usergwatts/data/d2/f4");
+
+            // Remove everything local
+            var d = new DirectoryInfo("./data");
+            if (d.Exists)
+            {
+                d.Delete(true);
+                d.Refresh();
+            }
+            d.Create();
+
+            // Do the copy
+            s.CopyRemoteDirectoryLocally("/tmp/usergwatts/data", d);
+
+            Assert.IsTrue(File.Exists(Path.Combine(d.FullName, "f1")));
+            Assert.IsTrue(File.Exists(Path.Combine(d.FullName, "d1", "f2")));
+            Assert.IsTrue(File.Exists(Path.Combine(d.FullName, "d2", "f3")));
+            Assert.IsTrue(File.Exists(Path.Combine(d.FullName, "d2", "f4")));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ScpException))]
+        public void copyBadRemoteDirectoryLocal()
+        {
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+
+            // Do the copy
+            var d = new DirectoryInfo("./databogus");
+            if (d.Exists)
+            {
+                d.Delete(true);
+                d.Refresh();
+            }
+            d.Create();
+            s.CopyRemoteDirectoryLocally("/tmp/usergwatts/databogusbogusbogusbogus", d);
+        }
+
+        [TestMethod]
+        public void CopyTwice()
+        {
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+
+            // Create a "complex" directory structure on the remote machine
+            s
+                .ExecuteCommand("mkdir -p /tmp/usergwatts/data")
+                .ExecuteCommand("mkdir -p /tmp/usergwatts/data/d1")
+                .ExecuteCommand("mkdir -p /tmp/usergwatts/data/d2")
+                .ExecuteCommand("echo hi1 > /tmp/usergwatts/data/f1")
+                .ExecuteCommand("echo hi2 > /tmp/usergwatts/data/d1/f2")
+                .ExecuteCommand("echo hi3 > /tmp/usergwatts/data/d2/f3")
+                .ExecuteCommand("echo hi4 > /tmp/usergwatts/data/d2/f4");
+
+            // Remove everything local
+            var d = new DirectoryInfo("./data");
+            if (d.Exists)
+            {
+                d.Delete(true);
+                d.Refresh();
+            }
+            d.Create();
+
+            // Do the copy
+            s.CopyRemoteDirectoryLocally("/tmp/usergwatts/data", d);
+            s.CopyRemoteDirectoryLocally("/tmp/usergwatts/data", d);
         }
     }
 }
