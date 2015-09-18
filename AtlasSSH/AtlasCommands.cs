@@ -100,5 +100,40 @@ namespace AtlasSSH
 
             return connection;
         }
+
+        /// <summary>
+        /// Fetch a dataset from the grid using Rucio to a local directory.
+        /// </summary>
+        /// <param name="connection">A previously configured connection with everything ready to go for GRID access.</param>
+        /// <param name="datasetName">The rucio dataset name</param>
+        /// <param name="localDirectory"></param>
+        /// <returns></returns>
+        public static SSHConnection DownloadFromGRID(this SSHConnection connection, string datasetName, string localDirectory)
+        {
+            // Does the dataset exist?
+            var response = new List<string>();
+            connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l));
+
+            var dsnames = response
+                .Where(l => l.Contains("DATASET"))
+                .Select(l => l.Split(' '))
+                .Where(sl => sl.Length > 1)
+                .Select(sl => sl[1])
+                .ToArray();
+
+            if (!dsnames.Where(n => n == datasetName).Any())
+            {
+                throw new ArgumentException(string.Format("Unable to find any datasets with the name '{0}'.", datasetName));
+            }
+
+            // We good on creating the directory?
+            connection.ExecuteCommand(string.Format("mkdir -p {0}", localDirectory), l => { throw new ArgumentException("Error trying to create directory {0} for dataset on remote machine.", localDirectory); });
+
+            // Next, do the download
+            response.Clear();
+            connection.ExecuteCommand(string.Format("rucio download {0} --dir {1}", datasetName, localDirectory));
+
+            return connection;
+        }
     }
 }

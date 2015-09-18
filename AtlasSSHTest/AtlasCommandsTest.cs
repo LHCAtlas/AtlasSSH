@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AtlasSSH;
+using System.Collections.Generic;
 
 namespace AtlasSSHTest
 {
@@ -79,21 +80,56 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
         public void downloadBadDS()
         {
-            // Download an invalid dataset name to a remote directory (on Linux).
-            Assert.Inconclusive();
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+            s
+                .setupATLAS()
+                .setupRucio(info.Item2)
+                .VomsProxyInit("atlas", info.Item2)
+                .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.11111", "/tmp/usergwattstempdata");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void downloadToBadDir()
+        {
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+            s
+                .setupATLAS()
+                .setupRucio(info.Item2)
+                .VomsProxyInit("atlas", info.Item2)
+                .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/furitcake/usergwattstempdata");
         }
 
         [TestMethod]
         public void downloadDS()
         {
-            // Download a good dataset to a remote directory.
-            Assert.Inconclusive();
+            var info = util.GetUsernameAndPassword();
+            var s = new SSHConnection(info.Item1, info.Item2);
+            s
+                .setupATLAS()
+                .setupRucio(info.Item2)
+                .VomsProxyInit("atlas", info.Item2)
+                .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/tmp/usergwattstempdata");
+
+            // Now, check!
+            var files = new List<string>();
+            s.ExecuteCommand("ls /tmp/usergwattstempdata/user.gwatts.301295.EVNT.1 | cat", l => files.Add(l));
+
+            foreach (var fname in files)
+            {
+                Console.WriteLine("-> " + fname);
+            }
+
+            Assert.AreEqual(10, files.Count);
         }
 
         [TestMethod]
-        public void downloadLocally()
+        public void copyRemoteDirectoryLocal()
         {
             // download to a local directory the dataset.
             Assert.Inconclusive();
