@@ -56,6 +56,7 @@
     <Compile Include="Location\LocatorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="utils.cs" />
+    <Compile Include="Utils\DataSetUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AtlasWorkFlows\AtlasWorkFlows.csproj">

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -65,7 +66,7 @@ namespace AtlasWorkFlows.Locations
         {
             // The layout is fixed. If the top level directory doesn't exist, then we assume
             // that nothing good is going on.
-            var dinfo = new DirectoryInfo(Path.Combine(LocationOfLocalCache.FullName, dsname));
+            var dinfo = new DirectoryInfo(Path.Combine(LocationOfLocalCache.FullName, dsname.SantizeDSName()));
             if (!dinfo.Exists)
                 return null;
 

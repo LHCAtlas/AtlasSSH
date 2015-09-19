@@ -31,7 +31,7 @@ namespace AtlasWorkFlows.Locations
                 CanBeGenerated = true
             };
 
-            var fetcher = new LinuxFetcher(props["LinuxHost"], props["LinuxPath"]);
+            var fetcher = new LinuxFetcher(props["LinuxHost"], props["LinuxUserName"]);
 
             var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(props["WindowsPath"]), fetcher, props["LinuxPath"]);
             l.GetDS = dsfinder.GetDS;
