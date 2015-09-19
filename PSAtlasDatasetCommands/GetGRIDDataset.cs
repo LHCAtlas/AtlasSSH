@@ -66,7 +66,7 @@ namespace PSAtlasDatasetCommands
                 var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName);
                 foreach (var ds in r)
                 {
-                    WriteObject(r);
+                    WriteObject(ds);
                 }
             }
             finally
