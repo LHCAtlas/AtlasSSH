@@ -208,8 +208,8 @@ namespace AtlasWorkFlowsTest.Location
             Assert.AreEqual(1, r.Length);
 
             r = gf.GetDS(dsinfo, fileFilter: flist => flist.Where(f => f.Contains("5")).ToArray());
-            Assert.AreEqual(2, r.Length);
-            Assert.IsTrue(r[1].LocalPath.Contains("file.root.5"), r[1].LocalPath);
+            Assert.AreEqual(1, r.Length);
+            Assert.IsTrue(r[0].LocalPath.Contains("file.root.5"), r[0].LocalPath);
 
             Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
         }
@@ -233,6 +233,7 @@ namespace AtlasWorkFlowsTest.Location
             Assert.AreEqual(5, r.Length);
 
             Assert.AreEqual(5, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
+            Assert.IsFalse(gf.CheckIfPartial(dsinfo.Name));
         }
         
         [TestMethod]

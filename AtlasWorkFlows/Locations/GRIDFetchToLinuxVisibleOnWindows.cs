@@ -74,7 +74,7 @@ namespace AtlasWorkFlows.Locations
             LinuxFetcher.Fetch(info.Name, string.Format("{0}/{1}", LinuxRootDSDirectory, info.Name.SantizeDSName()), statusUpdate, fileFilter);
 
             // And then the files should all be down! If we got them all, then don't mark it as partial.
-            var result = FindDSFiles(info.Name, fileFilter);
+            var result = FindDSFiles(info.Name, fileFilter, returnWhatWeHave: true);
             if (result.Length == TotalFilesInDataset(info.Name))
                 RemovePartialDownloadMark(info.Name);
 
@@ -86,7 +86,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsname">Dataset name</param>
         /// <returns></returns>
-        private Uri[] FindDSFiles(string dsname, Func<string[], string[]> fileFilter = null)
+        private Uri[] FindDSFiles(string dsname, Func<string[], string[]> fileFilter = null, bool returnWhatWeHave = false)
         {
             // The layout is fixed. If the top level directory doesn't exist, then we assume
             // that nothing good is going on.
@@ -100,11 +100,34 @@ namespace AtlasWorkFlows.Locations
                 .ToArray();
 
             if (fileFilter != null) {
-                var nameOnlyList = fullList.Select(f => Path.GetFileName(f)).ToArray();
-                nameOnlyList = fileFilter(nameOnlyList);
-                var fullList1 = (from nOnly in nameOnlyList
+
+                // This is tricky. We must see if we get back the same files from the full dataset list and from the search of the files
+                // that are already downloaded. If they aren't, then we don't have the files the user wants, so we return null.
+                var namesOfLocalFiles = fullList.Select(f => Path.GetFileName(f)).ToArray();
+                namesOfLocalFiles = fileFilter(namesOfLocalFiles);
+
+                var namesOfRemoteFiles = fileFilter(ListOfDSFiles(dsname));
+
+                var namedHashSet = new HashSet<string>();
+                namedHashSet.AddRange(namesOfLocalFiles);
+                namedHashSet.AddRange(namesOfRemoteFiles);
+                if (!returnWhatWeHave && (namedHashSet.Count != namesOfLocalFiles.Length
+                    || namedHashSet.Count != namesOfRemoteFiles.Length))
+                {
+                    return null;
+                }
+
+                var fullList1 = (from nOnly in namesOfLocalFiles
                             select (from f in fullList where Path.GetFileName(f) == nOnly select f).First()).ToArray();
                 fullList = fullList1;
+            }
+            else
+            {
+                // If we are doing the full download, and this is a partial dataset, then we need to go back and re-do it.
+                if (!returnWhatWeHave && CheckIfPartial(dsname))
+                {
+                    return null;
+                }
             }
 
             return fullList
@@ -214,6 +237,34 @@ namespace AtlasWorkFlows.Locations
             return index;
         }
 
+        /// <summary>
+        /// Return the list of dataset files.
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        private string[] ListOfDSFiles(string dsname)
+        {
+            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetFileList));
+            if (!f.Exists)
+                return null;
+
+            int index = 0;
+
+            var files = new List<string>();
+            using (var rd = f.OpenText())
+            {
+                while (!rd.EndOfStream)
+                {
+                    var line = rd.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        files.Add(line);
+                    }
+                }
+            }
+
+            return files.ToArray();
+        }
 
     }
 }

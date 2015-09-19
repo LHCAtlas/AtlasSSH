@@ -21,7 +21,8 @@ namespace AtlasWorkFlowsTest
             var root = new DirectoryInfo(rootDirName);
 
             // Do any filtering that needs to be done.
-            var goodFileNames = Enumerable.Range(1, 5)
+            const int nfiles = 5;
+            var goodFileNames = Enumerable.Range(1, nfiles)
                 .Select(index => string.Format("file.root.{0}", index))
                 .ToArray();
 
@@ -42,7 +43,7 @@ namespace AtlasWorkFlowsTest
                 int index = 0;
                 foreach (var gfname in goodFileNames)
                 {
-                    var dsDirForFile = index < goodFileNames.Length / 2 ? dsDirSub1 : dsDirSub2;
+                    var dsDirForFile = index < nfiles / 2 ? dsDirSub1 : dsDirSub2;
                     WriteShortRootFile(new FileInfo(Path.Combine(dsDirForFile.FullName, gfname)));
                 }
 
