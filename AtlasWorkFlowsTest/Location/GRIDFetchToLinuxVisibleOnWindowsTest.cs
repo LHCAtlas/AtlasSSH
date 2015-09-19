@@ -51,6 +51,24 @@ namespace AtlasWorkFlowsTest.Location
             Assert.AreEqual("/bogus/files/store/ds1.1.1", ld.LinuxDest);
         }
 
+        [TestMethod]
+        public void DownloadToLinuxDirectoryThatIsAWindowsDirectoryWithScoppedDS()
+        {
+            var dsinfo = MakeDSInfo("user.norm:ds1.1.1");
+            var d = new DirectoryInfo("DownloadToLinuxDirectoryThatIsAWindowsDirectory");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo);
+            Assert.IsNotNull(r);
+            Assert.AreEqual(5, r.Length);
+            Assert.AreEqual("/bogus/files/store/ds1.1.1", ld.LinuxDest);
+        }
+
         /// <summary>
         /// Build a sample directory 
         /// </summary>
@@ -71,6 +89,9 @@ namespace AtlasWorkFlowsTest.Location
             /// <param name="linuxDirDestination"></param>
             public void Fetch(string dsName, string linuxDirDestination)
             {
+                // Do some basic checks on the Dir destination.
+                Assert.IsFalse(linuxDirDestination.Contains(":"));
+
                 utils.BuildSampleDirectory(_dirHere.FullName, _dsNames);
                 LinuxDest = linuxDirDestination;
             }
