@@ -28,7 +28,7 @@ namespace AtlasWorkFlows.Locations
                 IsLocal = false,
                 CanBeGenerated = true
             };
-            var dsfinder = new GRIDFetchToLinuxVisibleOnWindows();
+            var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(null, null, null);
             l.GetDS = dsfinder.GetDS;
 
             return l;
