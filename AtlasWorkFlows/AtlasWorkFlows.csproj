@@ -42,6 +42,7 @@
     <Compile Include="DSInfo.cs" />
     <Compile Include="GRIDDatasetLocator.cs" />
     <Compile Include="Location.cs" />
+    <Compile Include="Locations\LinuxFetcher.cs" />
     <Compile Include="Locations\LinuxWithWindowsReflector.cs" />
     <Compile Include="Locations\GRIDFetchToLinuxVisibleOnWindows.cs" />
     <Compile Include="Locations\IFetchToRemoteLinuxDir.cs" />
@@ -49,6 +50,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\Config.cs" />
     <Compile Include="Utils\IPLocationTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AtlasSSH\AtlasSSH.csproj">
+      <Project>{6bf4235b-b92f-40ea-b353-abb2f084f5cd}</Project>
+      <Name>AtlasSSH</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -37,7 +37,11 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void ProcessRecord()
         {
-            WriteObject("Hi there");
+            var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName);
+            foreach (var ds in r)
+            {
+                WriteObject(r);
+            }
         }
 
         /// <summary>

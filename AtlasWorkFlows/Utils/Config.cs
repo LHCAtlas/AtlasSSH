@@ -23,6 +23,7 @@ namespace AtlasWorkFlows.Utils
             c["WindowsPath"] = @"\\uw01.myds.me\LLPData\GRIDDS";
             c["LinuxPath"] = "/LLPData/GRIDDS";
             c["LocationType"] = "LinuxWithWindowsReflector";
+            c["LinuxHost"] = "pcatuw4.cern.ch";
 
             r["CERN"] = c;
 
