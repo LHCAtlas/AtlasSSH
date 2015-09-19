@@ -69,7 +69,8 @@ namespace PSAtlasDatasetCommands
             Trace.Listeners.Add(listener);
             try
             {
-                var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname));
+                Func<string[], string[]> filter = nFiles == 0 ? (Func<string[],string[]>) null : flist => flist.OrderBy(f => f).Take(nFiles).ToArray();
+                var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname), fileFilter: filter);
                 foreach (var ds in r)
                 {
                     WriteObject(ds);
