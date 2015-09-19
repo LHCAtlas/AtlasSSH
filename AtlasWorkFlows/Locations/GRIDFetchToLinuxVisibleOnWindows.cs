@@ -41,10 +41,10 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="info"></param>
         /// <returns></returns>
-        public Uri[] GetDS (DSInfo info, Action<string> statusUpdate = null)
+        public Uri[] GetDS (DSInfo info, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null)
         {
             // First, we attempt to get the files from the downloaded directory.
-            var flist = FindDSFiles(info.Name);
+            var flist = FindDSFiles(info.Name, fileFilter);
             if (flist != null)
             {
                 return flist;
@@ -54,7 +54,7 @@ namespace AtlasWorkFlows.Locations
             LinuxFetcher.Fetch(info.Name, string.Format("{0}/{1}", LinuxRootDSDirectory, info.Name.SantizeDSName()), statusUpdate);
 
             // And then the files should all be down!
-            return FindDSFiles(info.Name);
+            return FindDSFiles(info.Name, fileFilter);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsname">Dataset name</param>
         /// <returns></returns>
-        private Uri[] FindDSFiles(string dsname)
+        private Uri[] FindDSFiles(string dsname, Func<string[], string[]> fileFilter = null)
         {
             // The layout is fixed. If the top level directory doesn't exist, then we assume
             // that nothing good is going on.
@@ -70,8 +70,20 @@ namespace AtlasWorkFlows.Locations
             if (!dinfo.Exists)
                 return null;
 
-            return dinfo.EnumerateFiles("*.root.*", SearchOption.AllDirectories)
-                .Select(f => new Uri(string.Format("file://" + f.FullName)))
+            var fullList = dinfo.EnumerateFiles("*.root.*", SearchOption.AllDirectories)
+                .Select(f => f.FullName)
+                .ToArray();
+
+            if (fileFilter != null) {
+                var nameOnlyList = fullList.Select(f => Path.GetFileName(f)).ToArray();
+                nameOnlyList = fileFilter(nameOnlyList);
+                var fullList1 = (from nOnly in nameOnlyList
+                            select (from f in fullList where Path.GetFileName(f) == nOnly select f).First()).ToArray();
+                fullList = fullList1;
+            }
+
+            return fullList
+                .Select(f => new Uri(string.Format("file://" + f)))
                 .ToArray();
         }
     }

@@ -22,6 +22,12 @@ namespace PSAtlasDatasetCommands
         public string DatasetName { get; set; }
 
         /// <summary>
+        /// How many files should be downloaded. They are sorted before making a determination (so it isn't random).
+        /// </summary>
+        [Parameter(HelpMessage="Maximum number of files to fetch")]
+        public int nFiles { get; set; }
+
+        /// <summary>
         /// The location against which we will be doing all the download and fetching work
         /// </summary>
         private Location _location = null;
