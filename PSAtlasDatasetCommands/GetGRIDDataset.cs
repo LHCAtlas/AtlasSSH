@@ -47,13 +47,18 @@ namespace PSAtlasDatasetCommands
             }
         }
 
+        private PSListener _listener = null;
+
         /// <summary>
         /// Initialize the context for making whatever connections we are going to need.
         /// </summary>
         protected override void BeginProcessing()
         {
-            // If verbose, setup a callback.
-            Trace.Listeners.Add(new PSListener(this));
+            if (_listener == null)
+            {
+                _listener = new PSListener(this);
+            }
+            Trace.Listeners.Add(_listener);
         }
 
         /// <summary>
@@ -73,6 +78,9 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void EndProcessing()
         {
+            // Clean up all our setup.
+            Trace.Listeners.Remove(_listener);
+
             base.EndProcessing();
         }
     }
