@@ -24,6 +24,8 @@ namespace AtlasSSH
     /// </remarks>
     public class SSHConnection : IDisposable
     {
+        const string CrLf = "\r\n";
+
         public SSHConnection(string host, string username)
         {
             // Fetch the username and password.
@@ -107,7 +109,7 @@ namespace AtlasSSH
             {
                 while (true)
                 {
-                    var lend = _text.IndexOf("\r\n");
+                    var lend = _text.IndexOf(CrLf);
                     if (lend < 0)
                         break;
 
@@ -162,7 +164,16 @@ namespace AtlasSSH
             {
                 lb.Suppress(matchText);
             }
-            s.Expect(TimeSpan.FromMinutes(60), new ExpectAction(matchText, l => lb.Add(l)));
+
+            var timeout = DateTime.Now + TimeSpan.FromMinutes(60);
+            while (timeout > DateTime.Now)
+            {
+                bool gotmatch = false;
+                s.Expect(TimeSpan.FromMilliseconds(100), new ExpectAction(matchText, l => { lb.Add(l); gotmatch = true; }));
+                if (gotmatch)
+                    break;
+                lb.Add(s.Read());
+            }
             lb.DumpRest();
         }
 

@@ -107,9 +107,10 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="connection">A previously configured connection with everything ready to go for GRID access.</param>
         /// <param name="datasetName">The rucio dataset name</param>
-        /// <param name="localDirectory"></param>
+        /// <param name="localDirectory">The local directory (on Linux) where the file should be downloaded</param>
+        /// <param name="fileStatus">Gets updates as new files are downloaded. This will contain just the filename.</param>
         /// <returns></returns>
-        public static SSHConnection DownloadFromGRID(this SSHConnection connection, string datasetName, string localDirectory)
+        public static SSHConnection DownloadFromGRID(this SSHConnection connection, string datasetName, string localDirectory, Action<string> fileStatus = null)
         {
             // Does the dataset exist?
             var response = new List<string>();
@@ -132,7 +133,20 @@ namespace AtlasSSH
 
             // Next, do the download
             response.Clear();
-            connection.ExecuteCommand(string.Format("rucio download {0} --dir {1}", datasetName, localDirectory));
+            connection.ExecuteCommand(string.Format("rucio download {0} --dir {1}", datasetName, localDirectory), l =>
+            {
+                if (fileStatus != null)
+                {
+                    const string fileNameMarker = "Starting the download of ";
+                    var idx = l.IndexOf(fileNameMarker);
+                    if (idx >= 0)
+                    {
+                        var closeBracket = l.IndexOf(']', idx);
+                        var startOfFileName = idx + fileNameMarker.Length;
+                        fileStatus(l.Substring(startOfFileName, closeBracket - startOfFileName));
+                    }
+                }
+            });
 
             return connection;
         }

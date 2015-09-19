@@ -17,6 +17,6 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="linuxDirDestination"></param>
-        void Fetch(string dsName, string linuxDirDestination);
+        void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdate = null);
     }
 }

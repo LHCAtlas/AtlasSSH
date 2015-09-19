@@ -17,7 +17,7 @@ namespace AtlasWorkFlows
         /// </summary>
         /// <param name="datasetname">The GRID dataset name</param>
         /// <returns></returns>
-        public static Uri[] FetchDatasetUris(string datasetname)
+        public static Uri[] FetchDatasetUris(string datasetname, Action<string> statusUpdate = null)
         {
             // Basic parameter checks
             if (string.IsNullOrWhiteSpace(datasetname))
@@ -38,7 +38,7 @@ namespace AtlasWorkFlows
 
             // And delegate all the rest of our work to fetching.
             var dsinfo = location.GetDSInfo(datasetname);
-            return location.GetDS(dsinfo);
+            return location.GetDS(dsinfo, statusUpdate);
         }
     }
 }

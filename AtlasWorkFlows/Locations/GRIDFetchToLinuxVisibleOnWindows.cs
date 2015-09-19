@@ -41,7 +41,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="info"></param>
         /// <returns></returns>
-        public Uri[] GetDS (DSInfo info)
+        public Uri[] GetDS (DSInfo info, Action<string> statusUpdate = null)
         {
             // First, we attempt to get the files from the downloaded directory.
             var flist = FindDSFiles(info.Name);
@@ -51,7 +51,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Ok, we are going to have to go the full route, unfortunately.
-            LinuxFetcher.Fetch(info.Name, string.Format("{0}/{1}", LinuxRootDSDirectory, info.Name.SantizeDSName()));
+            LinuxFetcher.Fetch(info.Name, string.Format("{0}/{1}", LinuxRootDSDirectory, info.Name.SantizeDSName()), statusUpdate);
 
             // And then the files should all be down!
             return FindDSFiles(info.Name);

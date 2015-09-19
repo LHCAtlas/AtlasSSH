@@ -87,7 +87,7 @@ namespace AtlasWorkFlowsTest.Location
             /// </summary>
             /// <param name="dsName"></param>
             /// <param name="linuxDirDestination"></param>
-            public void Fetch(string dsName, string linuxDirDestination)
+            public void Fetch(string dsName, string linuxDirDestination, Action<string> statsUpdate)
             {
                 // Do some basic checks on the Dir destination.
                 Assert.IsFalse(linuxDirDestination.Contains(":"));

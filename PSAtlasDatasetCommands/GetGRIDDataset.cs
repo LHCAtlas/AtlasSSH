@@ -63,7 +63,7 @@ namespace PSAtlasDatasetCommands
             Trace.Listeners.Add(listener);
             try
             {
-                var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName);
+                var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname));
                 foreach (var ds in r)
                 {
                     WriteObject(ds);
@@ -73,6 +73,16 @@ namespace PSAtlasDatasetCommands
             {
                 Trace.Listeners.Remove(listener);
             }
+        }
+
+        /// <summary>
+        /// Called to build a status object
+        /// </summary>
+        /// <param name="fname"></param>
+        private void DisplayStatus(string fname)
+        {
+            var pr = new ProgressRecord(1, "Downloading", fname);
+            WriteProgress(pr);
         }
 
         /// <summary>

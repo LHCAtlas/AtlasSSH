@@ -38,7 +38,7 @@ namespace AtlasWorkFlows
         /// Given a DS Info, this function will return a list of URI's that are accessible by
         /// ROOT on the machine we are currently running on.
         /// </summary>
-        public Func<DSInfo, Uri[]> GetDS { get; set; }
+        public Func<DSInfo, Action<string>, Uri[]> GetDS { get; set; }
 
         /// <summary>
         /// Setup default object configuration
