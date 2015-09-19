@@ -1,6 +1,7 @@
 ﻿using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,7 +29,8 @@ namespace AtlasWorkFlows.Locations
                 IsLocal = false,
                 CanBeGenerated = true
             };
-            var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(null, null, null);
+
+            var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(@"\\uw01.myds.me\LLPData\GRIDDS"), null, "/LLPData/GRIDDS");
             l.GetDS = dsfinder.GetDS;
 
             return l;

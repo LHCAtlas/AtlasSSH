@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AtlasWorkFlows;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace PSAtlasDatasetCommands
 {
     /// <summary>
-    /// Fetch a dataset from the grid using a location profile
+    /// Fetch a dataset from the grid using a location profile. Passwords must be set in the credential cache for this to work!
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GRIDDataset")]
     public class GetGRIDDataset : PSCmdlet
@@ -20,11 +21,15 @@ namespace PSAtlasDatasetCommands
         public string DatasetName { get; set; }
 
         /// <summary>
-        /// Setup the context
+        /// The location against which we will be doing all the download and fetching work
+        /// </summary>
+        private Location _location = null;
+
+        /// <summary>
+        /// Initialize the context for making whatever connections we are going to need.
         /// </summary>
         protected override void BeginProcessing()
         {
-            base.BeginProcessing();
         }
 
         /// <summary>

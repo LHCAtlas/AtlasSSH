@@ -13,7 +13,7 @@ namespace AtlasWorkFlowsTest.Location
         public void FindLocalFilesWithNoWork()
         {
             var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
+            var d = utils.BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
 
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
             var r = gf.GetDS(dsinfo);
@@ -59,7 +59,7 @@ namespace AtlasWorkFlowsTest.Location
             /// <param name="linuxDirDestination"></param>
             public void Fetch(string dsName, string linuxDirDestination)
             {
-                BuildSampleDirectory(_dirHere.FullName, _dsNames);
+                utils.BuildSampleDirectory(_dirHere.FullName, _dsNames);
                 LinuxDest = linuxDirDestination;
             }
 
@@ -67,7 +67,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         /// <summary>
-        /// Create a dsinfo for debugging.
+        /// Create a Dataset Info for debugging.
         /// </summary>
         /// <param name="dsname"></param>
         /// <returns></returns>
@@ -82,47 +82,5 @@ namespace AtlasWorkFlowsTest.Location
             };
         }
 
-        /// <summary>
-        /// Build some dummy local files.
-        /// </summary>
-        /// <param name="rootDirName"></param>
-        /// <returns></returns>
-        private static DirectoryInfo BuildSampleDirectory(string rootDirName, params string[] dsnames)
-        {
-            // Start clean!
-            var root = new DirectoryInfo(rootDirName);
-            if (root.Exists)
-            {
-                root.Delete(true);
-            }
-
-            // Now, create a dataset(s).
-            foreach (var ds in dsnames)
-            {
-                var dsDir = new DirectoryInfo(Path.Combine(root.FullName, ds));
-                dsDir.Create();
-                var dsDirSub1 = new DirectoryInfo(Path.Combine(dsDir.FullName, "sub1"));
-                dsDirSub1.Create();
-                var dsDirSub2 = new DirectoryInfo(Path.Combine(dsDir.FullName, "sub2"));
-                dsDirSub2.Create();
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub1.FullName, "file.root.1")));
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub1.FullName, "file.root.2")));
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub2.FullName, "file.root.1")));
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub2.FullName, "file.root.2")));
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub2.FullName, "file.root.3")));
-            }
-
-            return root;
-        }
-
-        /// <summary>
-        /// Write out a short empty file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        private static void WriteShortRootFile(FileInfo fileInfo)
-        {
-            using (var wr = fileInfo.Create())
-            { }
-        }
     }
 }
