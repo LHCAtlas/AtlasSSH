@@ -31,7 +31,7 @@ namespace AtlasWorkFlowsTest
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
             var dsname = "ds1.1.1";
             var d = utils.BuildSampleDirectory("DatasetAlreadyAtCERN", dsname);
-            Locator._getLocations = () => GetLocal(d);
+            Locator._getLocations = () => utils.GetLocal(d);
 
             var r = GRIDDatasetLocator.FetchDatasetUris(dsname);
 
@@ -45,35 +45,12 @@ namespace AtlasWorkFlowsTest
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
             var dsname = "ds1.1.1";
             var d = utils.BuildSampleDirectory("DatasetAlreadyAtCERN", dsname);
-            Locator._getLocations = () => GetLocal(d);
+            Locator._getLocations = () => utils.GetLocal(d);
 
             var r = GRIDDatasetLocator.FetchDatasetUris(dsname, fileFilter: fs => fs.OrderBy(f => f).Take(1).ToArray());
 
             Assert.IsNotNull(r);
             Assert.AreEqual(1, r.Length);
-        }
-
-        /// <summary>
-        /// Generate a location that is local for this test environment.
-        /// </summary>
-        /// <returns></returns>
-        private Dictionary<string, Dictionary<string, string>> GetLocal(DirectoryInfo location)
-        {
-            var r = new Dictionary<string, Dictionary<string, string>>();
-
-            // CERN
-            var c = new Dictionary<string, string>();
-            c["DNSEndString"] = ".cern.ch";
-            c["Name"] = "MyTestLocation";
-            c["WindowsPath"] = location.FullName;
-            c["LinuxPath"] = "/LLPData/GRIDDS";
-            c["LocationType"] = "LinuxWithWindowsReflector";
-            c["LinuxUserName"] = "gwatts";
-            c["LinuxHost"] = "pcatuw4.cern.ch";
-
-            r["MyTestLocation"] = c;
-
-            return r;
         }
 
         [TestMethod]

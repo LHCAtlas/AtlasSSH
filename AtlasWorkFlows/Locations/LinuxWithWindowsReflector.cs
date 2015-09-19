@@ -23,17 +23,19 @@ namespace AtlasWorkFlows.Locations
             var l = new Location();
             l.Name = props["Name"];
             l.LocationTests.Add(() => IPLocationTests.FindLocalIpName().EndsWith(props["DNSEndString"]));
+
+            var fetcher = new LinuxFetcher(props["LinuxHost"], props["LinuxUserName"]);
+            var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(props["WindowsPath"]), fetcher, props["LinuxPath"]);
+
             l.GetDSInfo = name => new DSInfo()
             {
                 Name = name,
-                NumberOfFiles = 0,
+                NumberOfFiles = dsfinder.CheckNumberOfFiles(name),
                 IsLocal = false,
-                CanBeGenerated = true
+                CanBeGenerated = true,
+                IsPartial = dsfinder.CheckIfPartial(name)
             };
 
-            var fetcher = new LinuxFetcher(props["LinuxHost"], props["LinuxUserName"]);
-
-            var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(props["WindowsPath"]), fetcher, props["LinuxPath"]);
             l.GetDS = dsfinder.GetDS;
 
             return l;

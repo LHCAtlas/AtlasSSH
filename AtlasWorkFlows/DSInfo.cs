@@ -37,9 +37,14 @@ namespace AtlasWorkFlows
         /// <summary>
         /// The number of files in the data set with some special meanings:
         ///   If CanBeGenerated is false, then this field has no meaning.
-        ///   0: All files
+        ///   0: Unknown number of files are present
         ///   n: n>0 - a subset of all the files, and this contains the number.
         /// </summary>
         public int NumberOfFiles { get; set; }
+
+        /// <summary>
+        /// Some files have been downloaded already, but not everything.
+        /// </summary>
+        public bool IsPartial { get; set; }
     }
 }

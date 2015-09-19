@@ -23,6 +23,38 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void CheckNonPartialDataset()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = utils.BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
+
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
+            Assert.IsFalse(gf.CheckIfPartial("ds1.1.1"));
+        }
+
+        [TestMethod]
+        public void CheckPartialDataset()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = utils.BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
+            utils.MakePartial(d, "ds1.1.1");
+
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
+            Assert.IsTrue(gf.CheckIfPartial("ds1.1.1"));
+        }
+
+        [TestMethod]
+        public void CountFilesDownloaded()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = utils.BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
+            utils.MakePartial(d, "ds1.1.1");
+
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
+            Assert.AreEqual(5, gf.CheckNumberOfFiles("ds1.1.1"));
+        }
+
+        [TestMethod]
         public void FindLocationWithScopedDataset()
         {
             var dsinfo = MakeDSInfo("user.norm:ds1.1.1");

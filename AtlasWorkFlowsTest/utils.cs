@@ -62,6 +62,19 @@ namespace AtlasWorkFlowsTest
         }
 
         /// <summary>
+        /// Mark the ds as partially downloaded.
+        /// </summary>
+        /// <param name="rootDir"></param>
+        /// <param name="dsnames"></param>
+        public static void MakePartial(DirectoryInfo rootDir, params string[] dsnames)
+        {
+            foreach (var ds in dsnames)
+            {
+                WriteShortRootFile(new FileInfo(Path.Combine(rootDir.FullName, ds, "aa_download_not_finished.txt")));
+            }
+        }
+
+        /// <summary>
         /// Write out a short empty file.
         /// </summary>
         /// <param name="fileInfo"></param>
@@ -69,6 +82,30 @@ namespace AtlasWorkFlowsTest
         {
             using (var wr = fileInfo.Create())
             { }
+        }
+
+
+        /// <summary>
+        /// Generate a location that is local for this test environment.
+        /// </summary>
+        /// <returns></returns>
+        public static Dictionary<string, Dictionary<string, string>> GetLocal(DirectoryInfo location)
+        {
+            var r = new Dictionary<string, Dictionary<string, string>>();
+
+            // CERN
+            var c = new Dictionary<string, string>();
+            c["DNSEndString"] = ".cern.ch";
+            c["Name"] = "MyTestLocation";
+            c["WindowsPath"] = location.FullName;
+            c["LinuxPath"] = "/LLPData/GRIDDS";
+            c["LocationType"] = "LinuxWithWindowsReflector";
+            c["LinuxUserName"] = "gwatts";
+            c["LinuxHost"] = "pcatuw4.cern.ch";
+
+            r["MyTestLocation"] = c;
+
+            return r;
         }
     }
 }
