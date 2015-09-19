@@ -51,7 +51,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="GRIDDatasetLocatorTest.cs" />
-    <Compile Include="Location\CERNTest.cs" />
+    <Compile Include="Location\LinuxWithWindowsReflectorTest.cs" />
     <Compile Include="Location\GRIDFetchToLinuxVisibleOnWindowsTest.cs" />
     <Compile Include="Location\LocatorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

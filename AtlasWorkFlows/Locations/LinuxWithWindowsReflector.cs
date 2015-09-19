@@ -11,17 +11,18 @@ namespace AtlasWorkFlows.Locations
     /// <summary>
     /// Location info for CERN
     /// </summary>
-    class CERN
+    class LinuxWithWindowsReflector
     {
         /// <summary>
         /// Return the location for CERN
         /// </summary>
+        /// <param name="props">Property bag to configure the object</param>
         /// <returns></returns>
-        public static Location GetLocation()
+        public static Location GetLocation(Dictionary<string, string> props)
         {
             var l = new Location();
-            l.Name = "CERN";
-            l.LocationTests.Add(() => IPLocationTests.FindLocalIpName().EndsWith(".cern.ch"));
+            l.Name = props["Name"];
+            l.LocationTests.Add(() => IPLocationTests.FindLocalIpName().EndsWith(props["DNSEndString"]));
             l.GetDSInfo = name => new DSInfo()
             {
                 Name = name,
@@ -30,7 +31,7 @@ namespace AtlasWorkFlows.Locations
                 CanBeGenerated = true
             };
 
-            var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(@"\\uw01.myds.me\LLPData\GRIDDS"), null, "/LLPData/GRIDDS");
+            var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(props["WindowsPath"]), null, props["LinuxPath"]);
             l.GetDS = dsfinder.GetDS;
 
             return l;

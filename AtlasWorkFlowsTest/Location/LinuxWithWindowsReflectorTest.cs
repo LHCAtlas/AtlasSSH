@@ -2,16 +2,17 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AtlasWorkFlows.Locations;
 using System.Linq;
+using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlowsTest.Location
 {
     [TestClass]
-    public class CERNTest
+    public class LinuxWithWindowsReflectorTest
     {
         [TestMethod]
         public void CERNLocationName()
         {
-            var c = CERN.GetLocation();
+            var c = LinuxWithWindowsReflector.GetLocation(Config.GetLocationConfigs()["CERN"]);
             Assert.AreEqual("CERN", c.Name);
         }
 
@@ -19,7 +20,7 @@ namespace AtlasWorkFlowsTest.Location
         public void CERNLocationAtUW()
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("bogus.washington.phys.washington.edu");
-            var c = CERN.GetLocation();
+            var c = LinuxWithWindowsReflector.GetLocation(Config.GetLocationConfigs()["CERN"]);
             Assert.IsFalse(c.LocationIsGood());
         }
 
@@ -27,7 +28,7 @@ namespace AtlasWorkFlowsTest.Location
         public void CERNLocationAtCERN()
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
-            var c = CERN.GetLocation();
+            var c = LinuxWithWindowsReflector.GetLocation(Config.GetLocationConfigs()["CERN"]);
             Assert.IsTrue(c.LocationIsGood());
         }
 
@@ -35,7 +36,7 @@ namespace AtlasWorkFlowsTest.Location
         public void CERNLocationAtWhereWeAre()
         {
             AtlasWorkFlows.Utils.IPLocationTests.ResetIpName();
-            var c = CERN.GetLocation();
+            var c = LinuxWithWindowsReflector.GetLocation(Config.GetLocationConfigs()["CERN"]);
             Console.WriteLine("Are we at CERN? : {0}", c.LocationIsGood());
         }
 
@@ -43,7 +44,7 @@ namespace AtlasWorkFlowsTest.Location
         public void CERNFetchDatasetInfo()
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
-            var c = CERN.GetLocation();
+            var c = LinuxWithWindowsReflector.GetLocation(Config.GetLocationConfigs()["CERN"]);
             var dsinfo = c.GetDSInfo("bogus.dataset.version.1");
             Assert.IsNotNull(dsinfo);
             Assert.AreEqual(true, dsinfo.CanBeGenerated);
@@ -58,7 +59,7 @@ namespace AtlasWorkFlowsTest.Location
             // We can't really test the full cern fetch here, we'll do that elsewhere.
             // But do make sure we get something valid back here.
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
-            var c = CERN.GetLocation();
+            var c = LinuxWithWindowsReflector.GetLocation(Config.GetLocationConfigs()["CERN"]);
             Assert.IsNotNull(c.GetDS);
         }
     }

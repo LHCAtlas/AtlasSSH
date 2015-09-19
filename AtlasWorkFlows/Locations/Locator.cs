@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AtlasWorkFlows.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,6 +41,11 @@ namespace AtlasWorkFlows.Locations
         private List<Location> _allLocations = null;
 
         /// <summary>
+        /// This is used for tests, a way to inject a non-production configuration into the system.
+        /// </summary>
+        internal static Func<Dictionary<string, Dictionary<string, string>>> _getLocations = null;
+
+        /// <summary>
         /// Return a list of all locations
         /// </summary>
         /// <returns></returns>
@@ -48,7 +54,22 @@ namespace AtlasWorkFlows.Locations
             if (_allLocations == null)
             {
                 _allLocations = new List<Location>();
-                _allLocations.Add(CERN.GetLocation());
+
+                var infoOnLocations = _getLocations == null ? Config.GetLocationConfigs() : _getLocations();
+                Location newLocation = null;
+                foreach (var loc in infoOnLocations)
+                {
+                    if (loc.Value["LocationType"] == "LinuxWithWindowsReflector")
+                    {
+                        newLocation = LinuxWithWindowsReflector.GetLocation(loc.Value);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(string.Format("Location '{0}' requires a setup of type '{1}' which we don't understand how to do.", loc.Key, loc.Value["LocationType"]));
+                    }
+                }
+
+                _allLocations.Add(newLocation);
             }
             return _allLocations;
         }
