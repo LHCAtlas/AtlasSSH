@@ -22,7 +22,7 @@ namespace AtlasSSH
     /// 
     /// If anything is done to change the command prompt, this class will fail to work properly.
     /// </remarks>
-    public class SSHConnection
+    public class SSHConnection : IDisposable
     {
         public SSHConnection(string host, string username)
         {
@@ -229,6 +229,27 @@ namespace AtlasSSH
                 throw _scpError;
             }
             return this;
+        }
+
+        /// <summary>
+        /// We make sure to shut down everything attached to us
+        /// </summary>
+        public void Dispose()
+        {
+            if (_shell.IsValueCreated)
+            {
+                _shell.Value.Dispose();
+            }
+
+            if (_scp.IsValueCreated)
+            {
+                _scp.Value.Dispose();
+            }
+
+            if (_client.IsValueCreated)
+            {
+                _client.Value.Dispose();
+            }
         }
     }
 }

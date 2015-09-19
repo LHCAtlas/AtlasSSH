@@ -32,12 +32,14 @@ namespace AtlasWorkFlows.Locations
         /// <param name="linuxDirDestination"></param>
         public void Fetch(string dsName, string linuxDirDestination)
         {
-            var s = new SSHConnection(_linuxHost, _username);
-            s
-                .setupATLAS()
-                .setupRucio(_username)
-                .VomsProxyInit("atlas", _username)
-                .DownloadFromGRID(dsName, linuxDirDestination);
+            using (var s = new SSHConnection(_linuxHost, _username))
+            {
+                s
+                    .setupATLAS()
+                    .setupRucio(_username)
+                    .VomsProxyInit("atlas", _username)
+                    .DownloadFromGRID(dsName, linuxDirDestination);
+            }
         }
     }
 }
