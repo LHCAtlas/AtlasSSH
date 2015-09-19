@@ -62,6 +62,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = LinuxWithWindowsReflector.GetLocation(configInfo["MyTestLocation"]);
             var dsinfo = c.GetDSInfo("bogus.dataset.version.1");
             Assert.IsNotNull(dsinfo);
+            Assert.IsTrue(dsinfo.IsLocal);
             Assert.IsFalse(dsinfo.IsPartial);
             Assert.AreEqual(5, dsinfo.NumberOfFiles);
         }
@@ -76,6 +77,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = LinuxWithWindowsReflector.GetLocation(configInfo["MyTestLocation"]);
             var dsinfo = c.GetDSInfo("bogus.dataset.version.1");
             Assert.IsNotNull(dsinfo);
+            Assert.IsTrue(dsinfo.IsLocal);
             Assert.IsTrue(dsinfo.IsPartial);
             Assert.AreEqual(5, dsinfo.NumberOfFiles);
         }

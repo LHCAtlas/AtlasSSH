@@ -27,13 +27,17 @@ namespace AtlasWorkFlows.Locations
             var fetcher = new LinuxFetcher(props["LinuxHost"], props["LinuxUserName"]);
             var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(props["WindowsPath"]), fetcher, props["LinuxPath"]);
 
-            l.GetDSInfo = name => new DSInfo()
+            l.GetDSInfo = name =>
             {
-                Name = name,
-                NumberOfFiles = dsfinder.CheckNumberOfFiles(name),
-                IsLocal = false,
-                CanBeGenerated = true,
-                IsPartial = dsfinder.CheckIfPartial(name)
+                var nfiles = dsfinder.CheckNumberOfFiles(name);
+                return new DSInfo()
+                {
+                    Name = name,
+                    NumberOfFiles = nfiles,
+                    IsLocal = nfiles > 0,
+                    CanBeGenerated = true,
+                    IsPartial = dsfinder.CheckIfPartial(name)
+                };
             };
 
             l.GetDS = dsfinder.GetDS;

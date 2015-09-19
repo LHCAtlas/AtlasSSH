@@ -17,12 +17,10 @@ namespace AtlasWorkFlows
         public string Name { get; set; }
 
         /// <summary>
-        /// True if the dataset can be fetched trivially (via a FileInfo, for example) with no work.
+        /// True if some files are available locally (eg, on local disk, or close by network disk).
         /// </summary>
         /// <remarks>
-        /// This should be false even if the dataset is already been downloaded... This is because it should take
-        /// no time to get the DSInfo information - shouldn't be any slower than a possible local disk lookup. Network disk lookups
-        /// can be expensive.
+        /// This is true even if the dataset is a partial dataset, which means some are local and some aren't!
         /// </remarks>
         public bool IsLocal { get; set; }
 
