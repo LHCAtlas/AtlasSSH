@@ -2,6 +2,7 @@
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -53,10 +54,12 @@ namespace AtlasSSH
             // a task has finished.
             _shell = new Lazy<ShellStream>(() => {
                 var s = _client.Value.CreateShellStream("Commands", 240, 200, 132, 80, 240*200);
+                s.WaitTillPromptText();
                 s.WriteLine("# this initialization");
                 DumpTillFind(s, "# this initialization");
                 s.ReadLine(); // Get past the "new-line" that is at the end of the printed comment above
-                _prompt = s.ReadLine();
+                _prompt = s.ReadRemainingText(100);
+                Trace.WriteLine("Initialization: prompt=" + _prompt, "SSHConnection");
                 return s;
             });
         }
@@ -137,6 +140,7 @@ namespace AtlasSSH
             /// <param name="line"></param>
             private void ActOnLine(string line)
             {
+                Trace.WriteLine("ReturnedLine: " + line, "SSHConnection");
                 if (_actinoOnLine == null)
                     return;
                 if (!stringsToSuppress.Any(s => line.Contains(s)))
@@ -171,6 +175,7 @@ namespace AtlasSSH
         /// <returns></returns>
         public SSHConnection ExecuteCommand(string command, Action<string> output = null)
         {
+            Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             _shell.Value.WriteLine(command);
             DumpTillFind(_shell.Value, command); // The command is (normally) repeated back to us...
             _shell.Value.ReadLine(); // Read back the end of line after the command is sent out.
@@ -188,6 +193,7 @@ namespace AtlasSSH
         public SSHConnection ExecuteCommandWithInput(string command, Dictionary<string, string> seeAndRespond, Action<string> output = null)
         {
             // Run the command
+            Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             _shell.Value.WriteLine(command);
             DumpTillFind(_shell.Value, command); // The command is (normally) repeated back to us...
             _shell.Value.ReadLine(); // And the new line at the end of the command.

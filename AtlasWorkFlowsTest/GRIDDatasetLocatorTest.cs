@@ -53,6 +53,8 @@ namespace AtlasWorkFlowsTest
             c["WindowsPath"] = location.FullName;
             c["LinuxPath"] = "/LLPData/GRIDDS";
             c["LocationType"] = "LinuxWithWindowsReflector";
+            c["LinuxUserName"] = "gwatts";
+            c["LinuxHost"] = "pcatuw4.cern.ch";
 
             r["MyTestLocation"] = c;
 
