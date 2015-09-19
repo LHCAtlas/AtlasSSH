@@ -47,18 +47,11 @@ namespace PSAtlasDatasetCommands
             }
         }
 
-        private PSListener _listener = null;
-
         /// <summary>
         /// Initialize the context for making whatever connections we are going to need.
         /// </summary>
         protected override void BeginProcessing()
         {
-            if (_listener == null)
-            {
-                _listener = new PSListener(this);
-            }
-            Trace.Listeners.Add(_listener);
         }
 
         /// <summary>
@@ -66,10 +59,19 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void ProcessRecord()
         {
-            var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName);
-            foreach (var ds in r)
+            var listener = new PSListener(this);
+            Trace.Listeners.Add(listener);
+            try
             {
-                WriteObject(r);
+                var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName);
+                foreach (var ds in r)
+                {
+                    WriteObject(r);
+                }
+            }
+            finally
+            {
+                Trace.Listeners.Remove(listener);
             }
         }
 
@@ -78,9 +80,6 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void EndProcessing()
         {
-            // Clean up all our setup.
-            Trace.Listeners.Remove(_listener);
-
             base.EndProcessing();
         }
     }
