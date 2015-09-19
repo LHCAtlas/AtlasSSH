@@ -18,5 +18,13 @@ namespace AtlasWorkFlows.Locations
         /// <param name="dsName"></param>
         /// <param name="linuxDirDestination"></param>
         void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null);
+
+        /// <summary>
+        /// Return a list of all files in the dataset - this is everything, not just what is on disk.
+        /// Expect that this will require going to the network.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        string[] GetListOfFiles(string p);
     }
 }

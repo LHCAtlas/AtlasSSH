@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using AtlasWorkFlows.Locations;
 using AtlasWorkFlows;
+using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlowsTest.Location
 {
@@ -102,6 +103,139 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void CheckPartialDownloadIsCorrectlyMarked()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("CheckPartialDownloadIsCorrectlyMarked");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
+            Assert.IsTrue(gf.CheckIfPartial("ds1.1.1"));
+        }
+
+        [TestMethod]
+        public void CheckFullDownloadIsCorrectlyMarked()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("CheckPartialDownloadIsCorrectlyMarked");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo);
+            Assert.IsFalse(gf.CheckIfPartial("ds1.1.1"));
+        }
+
+        [TestMethod]
+        public void CheckFullDownloadWithNullFilterIsCorrectlyMarked()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("CheckPartialDownloadIsCorrectlyMarked");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo, fileFilter: flist => flist);
+            Assert.IsFalse(gf.CheckIfPartial("ds1.1.1"));
+        }
+
+        [TestMethod]
+        public void DownloadLimitedNumberOfFilesTwice()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("DownloadLimitedNumberOfFilesTwice");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
+            Assert.AreEqual(2, r.Length);
+
+            r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
+            Assert.AreEqual(2, r.Length);
+
+            Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
+        }
+
+        [TestMethod]
+        public void DownloadMoreFilesThanFirstTime()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("DownloadMoreFilesThanFirstTime");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(1).ToArray());
+            Assert.AreEqual(1, r.Length);
+
+            r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
+            Assert.AreEqual(2, r.Length);
+
+            Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
+        }
+
+        [TestMethod]
+        public void DownloadWeirdFileSecondTime()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("DownloadMoreFilesThanFirstTime");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(1).ToArray());
+            Assert.AreEqual(1, r.Length);
+
+            r = gf.GetDS(dsinfo, fileFilter: flist => flist.Where(f => f.Contains("5")).ToArray());
+            Assert.AreEqual(2, r.Length);
+            Assert.IsTrue(r[1].LocalPath.Contains("file.root.5"), r[1].LocalPath);
+
+            Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
+        }
+
+        [TestMethod]
+        public void DownloadAllFilesSecondTime()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("DownloadAllFilesSecondTime");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(1).ToArray());
+            Assert.AreEqual(1, r.Length);
+
+            r = gf.GetDS(dsinfo);
+            Assert.AreEqual(5, r.Length);
+
+            Assert.AreEqual(5, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
+        }
+        
+        [TestMethod]
         public void DownloadToLinuxDirectoryThatIsAWindowsDirectoryWithScoppedDS()
         {
             var dsinfo = MakeDSInfo("user.norm:ds1.1.1");
@@ -147,6 +281,20 @@ namespace AtlasWorkFlowsTest.Location
             }
 
             public string LinuxDest { get; private set; }
+
+            /// <summary>
+            /// Get the list of files we are going to be creating. This is the full list, without any pruning.
+            /// </summary>
+            /// <param name="p"></param>
+            /// <returns></returns>
+            public string[] GetListOfFiles(string dsname)
+            {
+                var d = new DirectoryInfo("forkit");
+                if (d.Exists)
+                    d.Delete(true);
+                utils.BuildSampleDirectory(d.FullName, dsname.SantizeDSName());
+                return d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Select(f => f.Name).ToArray();
+            }
         }
 
         /// <summary>

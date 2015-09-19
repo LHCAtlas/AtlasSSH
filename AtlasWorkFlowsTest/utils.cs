@@ -19,10 +19,6 @@ namespace AtlasWorkFlowsTest
         {
             // Start clean!
             var root = new DirectoryInfo(rootDirName);
-            if (root.Exists)
-            {
-                root.Delete(true);
-            }
 
             // Do any filtering that needs to be done.
             var goodFileNames = Enumerable.Range(1, 5)
@@ -58,6 +54,11 @@ namespace AtlasWorkFlowsTest
         }
         public static DirectoryInfo BuildSampleDirectory(string rootDirName, params string[] dsnames)
         {
+            var root = new DirectoryInfo(rootDirName);
+            if (root.Exists)
+            {
+                root.Delete(true);
+            }
             return BuildSampleDirectory(rootDirName, null, dsnames);
         }
 

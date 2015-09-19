@@ -41,5 +41,11 @@ namespace AtlasWorkFlows.Locations
                     .DownloadFromGRID(dsName, linuxDirDestination, statusUpdater, fileFilter);
             }
         }
+
+
+        public string[] GetListOfFiles(string p)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

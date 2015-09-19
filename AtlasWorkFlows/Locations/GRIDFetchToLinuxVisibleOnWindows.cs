@@ -18,6 +18,7 @@ namespace AtlasWorkFlows.Locations
         /// This file is left behind to indicate a dataset hasn't been fully downloaded.
         /// </summary>
         const string PartialDownloadTokenFilename = "aa_download_not_finished.txt";
+        const string DatasetFileList = "aa_dataset_complete_file_list.txt";
 
         /// <summary>
         /// Initialized the fetch to Linux code, where the Linux stuff is visible on windows.
@@ -61,11 +62,23 @@ namespace AtlasWorkFlows.Locations
                 return flist;
             }
 
-            // Ok, we are going to have to go the full route, unfortunately.
+            // Ok, we are going to have to go the full route, unfortunately. Till we are done, mark this as partial.
+            // That way, if there is a crash, it will be understood later on when we come back.
+            MarkAsPartialDownload(info.Name);
+
+            // If we have not yet cached the list of files in this dataset, then fetch it.
+            if (TotalFilesInDataset(info.Name) == -1)
+            {
+                SaveListOfDSFiles(info.Name, LinuxFetcher.GetListOfFiles(info.Name));
+            }
             LinuxFetcher.Fetch(info.Name, string.Format("{0}/{1}", LinuxRootDSDirectory, info.Name.SantizeDSName()), statusUpdate, fileFilter);
 
-            // And then the files should all be down!
-            return FindDSFiles(info.Name, fileFilter);
+            // And then the files should all be down! If we got them all, then don't mark it as partial.
+            var result = FindDSFiles(info.Name, fileFilter);
+            if (result.Length == TotalFilesInDataset(info.Name))
+                RemovePartialDownloadMark(info.Name);
+
+            return result;
         }
 
         /// <summary>
@@ -120,6 +133,31 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
+        /// Marks a dataset as being a partial download
+        /// </summary>
+        /// <param name="dsname"></param>
+        private void MarkAsPartialDownload(string dsname)
+        {
+            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, PartialDownloadTokenFilename));
+            if (!f.Directory.Exists)
+            {
+                f.Directory.Create();
+            }
+            using (var wr = f.CreateText()) { }
+        }
+
+        /// <summary>
+        /// Remove the downloading mark.
+        /// </summary>
+        /// <param name="dsname"></param>
+        private void RemovePartialDownloadMark (string dsname)
+        {
+            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, PartialDownloadTokenFilename));
+            if (f.Exists)
+                f.Delete();
+        }
+
+        /// <summary>
         /// Count the number of files that we have "locally".
         /// </summary>
         /// <param name="dsname"></param>
@@ -131,5 +169,51 @@ namespace AtlasWorkFlows.Locations
                 return 0;
             return flist.Length;
         }
+
+        /// <summary>
+        /// Save the list of files from the dataset.
+        /// </summary>
+        /// <param name="filenames"></param>
+        private void SaveListOfDSFiles(string dsname, string[] filenames)
+        {
+            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetFileList));
+            using (var wr = f.CreateText())
+            {
+                foreach (var fn in filenames)
+                {
+                    wr.WriteLine(fn);
+                }
+                wr.Close();
+            }
+        }
+
+        /// <summary>
+        /// Count the total number of files that are in this dataset by looking at what we have cached.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        private int TotalFilesInDataset(string dsname)
+        {
+            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetFileList));
+            if (!f.Exists)
+                return -1;
+
+            int index = 0;
+
+            using (var rd = f.OpenText())
+            {
+                while (!rd.EndOfStream)
+                {
+                    if (!string.IsNullOrWhiteSpace(rd.ReadLine()))
+                    {
+                        index++;
+                    }
+                }
+            }
+
+            return index;
+        }
+
+
     }
 }
