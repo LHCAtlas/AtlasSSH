@@ -30,7 +30,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="linuxDirDestination"></param>
-        public void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdater = null)
+        public void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdater = null, Func<string[], string[]> fileFilter = null)
         {
             using (var s = new SSHConnection(_linuxHost, _username))
             {
@@ -38,7 +38,7 @@ namespace AtlasWorkFlows.Locations
                     .setupATLAS()
                     .setupRucio(_username)
                     .VomsProxyInit("atlas", _username)
-                    .DownloadFromGRID(dsName, linuxDirDestination, statusUpdater);
+                    .DownloadFromGRID(dsName, linuxDirDestination, statusUpdater, fileFilter);
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
+using System.Linq;
 using AtlasWorkFlows.Locations;
 using AtlasWorkFlows;
 
@@ -52,6 +53,23 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void DownloadLimitedNumberOfFiles()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("DownloadToLinuxDirectoryThatIsAWindowsDirectory");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
+            Assert.AreEqual(2, r.Length);
+            Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Count());
+        }
+
+        [TestMethod]
         public void DownloadToLinuxDirectoryThatIsAWindowsDirectoryWithScoppedDS()
         {
             var dsinfo = MakeDSInfo("user.norm:ds1.1.1");
@@ -87,12 +105,12 @@ namespace AtlasWorkFlowsTest.Location
             /// </summary>
             /// <param name="dsName"></param>
             /// <param name="linuxDirDestination"></param>
-            public void Fetch(string dsName, string linuxDirDestination, Action<string> statsUpdate)
+            public void Fetch(string dsName, string linuxDirDestination, Action<string> statsUpdate, Func<string[], string[]> fileFilter = null)
             {
                 // Do some basic checks on the Dir destination.
                 Assert.IsFalse(linuxDirDestination.Contains(":"));
 
-                utils.BuildSampleDirectory(_dirHere.FullName, _dsNames);
+                utils.BuildSampleDirectory(_dirHere.FullName, fileFilter, _dsNames);
                 LinuxDest = linuxDirDestination;
             }
 

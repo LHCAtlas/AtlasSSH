@@ -51,7 +51,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Ok, we are going to have to go the full route, unfortunately.
-            LinuxFetcher.Fetch(info.Name, string.Format("{0}/{1}", LinuxRootDSDirectory, info.Name.SantizeDSName()), statusUpdate);
+            LinuxFetcher.Fetch(info.Name, string.Format("{0}/{1}", LinuxRootDSDirectory, info.Name.SantizeDSName()), statusUpdate, fileFilter);
 
             // And then the files should all be down!
             return FindDSFiles(info.Name, fileFilter);

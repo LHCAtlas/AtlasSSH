@@ -15,13 +15,22 @@ namespace AtlasWorkFlowsTest
         /// </summary>
         /// <param name="rootDirName"></param>
         /// <returns></returns>
-        public static DirectoryInfo BuildSampleDirectory(string rootDirName, params string[] dsnames)
+        public static DirectoryInfo BuildSampleDirectory(string rootDirName, Func<string[], string[]> fileFilter, params string[] dsnames)
         {
             // Start clean!
             var root = new DirectoryInfo(rootDirName);
             if (root.Exists)
             {
                 root.Delete(true);
+            }
+
+            // Do any filtering that needs to be done.
+            var goodFileNames = Enumerable.Range(1, 5)
+                .Select(index => string.Format("file.root.{0}", index))
+                .ToArray();
+
+            if (fileFilter != null) {
+                goodFileNames = fileFilter(goodFileNames);
             }
 
             // Now, create a dataset(s).
@@ -33,14 +42,20 @@ namespace AtlasWorkFlowsTest
                 dsDirSub1.Create();
                 var dsDirSub2 = new DirectoryInfo(Path.Combine(dsDir.FullName, "sub2"));
                 dsDirSub2.Create();
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub1.FullName, "file.root.1")));
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub1.FullName, "file.root.2")));
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub2.FullName, "file.root.1")));
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub2.FullName, "file.root.2")));
-                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub2.FullName, "file.root.3")));
+
+                int index = 0;
+                foreach (var gfname in goodFileNames)
+                {
+                    var dsDirForFile = index < goodFileNames.Length / 2 ? dsDirSub1 : dsDirSub2;
+                    WriteShortRootFile(new FileInfo(Path.Combine(dsDirForFile.FullName, gfname)));
+                }
             }
 
             return root;
+        }
+        public static DirectoryInfo BuildSampleDirectory(string rootDirName, params string[] dsnames)
+        {
+            return BuildSampleDirectory(rootDirName, dsnames);
         }
 
         /// <summary>
