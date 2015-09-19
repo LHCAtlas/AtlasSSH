@@ -1,8 +1,8 @@
-﻿using System;
+﻿using AtlasSSH;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AtlasSSH;
+using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 
 namespace AtlasSSHTest
 {
@@ -118,7 +118,7 @@ namespace AtlasSSHTest
                     .setupATLAS()
                     .setupRucio(info.Item2)
                     .VomsProxyInit("atlas", info.Item2)
-                    .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/furitcake/usergwattstempdata");
+                    .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/fruitcake/usergwattstempdata");
             }
         }
 
@@ -144,6 +144,35 @@ namespace AtlasSSHTest
                 }
 
                 Assert.AreEqual(10, files.Count);
+            }
+        }
+
+        [TestMethod]
+        public void downloadDSSelection()
+        {
+            var info = util.GetUsernameAndPassword();
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                s
+                    .setupATLAS()
+                    .setupRucio(info.Item2)
+                    .VomsProxyInit("atlas", info.Item2)
+                    .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/tmp/usergwattstempdataShort", fileNameFilter: files =>
+                    {
+                        Assert.AreEqual(10, files.Length);
+                        return files.OrderBy(f => f).Take(2).ToArray();
+                    });
+
+                // Now, check!
+                var foundfiles = new List<string>();
+                s.ExecuteCommand("find /tmp/usergwattstempdataShort -type f", l => foundfiles.Add(l));
+
+                foreach (var fname in foundfiles)
+                {
+                    Console.WriteLine("-> " + fname);
+                }
+
+                Assert.AreEqual(2, foundfiles.Count);
             }
         }
 

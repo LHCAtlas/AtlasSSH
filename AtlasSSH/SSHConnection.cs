@@ -25,6 +25,7 @@ namespace AtlasSSH
     public class SSHConnection : IDisposable
     {
         const string CrLf = "\r\n";
+        const int TerminalWidth = 240;
 
         public SSHConnection(string host, string username)
         {
@@ -55,7 +56,7 @@ namespace AtlasSSH
             // And create a shell stream. Initialize to find the prompt so we can figure out, later, when
             // a task has finished.
             _shell = new Lazy<ShellStream>(() => {
-                var s = _client.Value.CreateShellStream("Commands", 240, 200, 132, 80, 240*200);
+                var s = _client.Value.CreateShellStream("Commands", TerminalWidth, 200, 132, 80, 240 * 200);
                 s.WaitTillPromptText();
                 s.WriteLine("# this initialization");
                 DumpTillFind(s, "# this initialization");
@@ -157,7 +158,7 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="s"></param>
         /// <param name="p"></param>
-        private void DumpTillFind(ShellStream s, string matchText, Action<string> ongo = null, bool dontdumplineofmatch = true)
+        private void DumpTillFind(ShellStream s, string matchText, Action<string> ongo = null, bool dontdumplineofmatch = true, int secondsTimeout = 60*60)
         {
             var lb = new LineBuffer(ongo);
             if (dontdumplineofmatch)
@@ -165,14 +166,18 @@ namespace AtlasSSH
                 lb.Suppress(matchText);
             }
 
-            var timeout = DateTime.Now + TimeSpan.FromMinutes(60);
+            var timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
+            bool gotmatch = false;
             while (timeout > DateTime.Now)
             {
-                bool gotmatch = false;
                 s.Expect(TimeSpan.FromMilliseconds(100), new ExpectAction(matchText, l => { lb.Add(l); gotmatch = true; }));
                 if (gotmatch)
                     break;
                 lb.Add(s.Read());
+            }
+            if (!gotmatch)
+            {
+                throw new TimeoutException(string.Format("Waiting for '{0}' back from host and it was not seen inside of {1} seconds.", matchText, secondsTimeout));
             }
             lb.DumpRest();
         }
@@ -184,13 +189,13 @@ namespace AtlasSSH
         /// <param name="command"></param>
         /// <param name="output"></param>
         /// <returns></returns>
-        public SSHConnection ExecuteCommand(string command, Action<string> output = null)
+        public SSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60)
         {
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             _shell.Value.WriteLine(command);
-            DumpTillFind(_shell.Value, command); // The command is (normally) repeated back to us...
+            DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth-30, command.Length)), secondsTimeout: 10); // The command is (normally) repeated back to us...
             _shell.Value.ReadLine(); // Read back the end of line after the command is sent out.
-            DumpTillFind(_shell.Value, _prompt, output);
+            DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout);
             return this;
         }
 

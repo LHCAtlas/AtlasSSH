@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AtlasSSH
@@ -81,7 +82,8 @@ namespace AtlasSSH
                     l => { 
                         goodProxy = goodProxy || l.Contains("Your proxy is valid");
                         whatHappened.Add(l);
-                    }
+                    },
+                    secondsTimeout: 20
                     );
 
             // If we failed to get the proxy, then build an error message that can be understood. Since this
@@ -109,8 +111,11 @@ namespace AtlasSSH
         /// <param name="datasetName">The rucio dataset name</param>
         /// <param name="localDirectory">The local directory (on Linux) where the file should be downloaded</param>
         /// <param name="fileStatus">Gets updates as new files are downloaded. This will contain just the filename.</param>
+        /// <param name="fileNameFilter">Filter function to alter the files that are to be downloaded</param>
         /// <returns></returns>
-        public static SSHConnection DownloadFromGRID(this SSHConnection connection, string datasetName, string localDirectory, Action<string> fileStatus = null)
+        public static SSHConnection DownloadFromGRID(this SSHConnection connection, string datasetName, string localDirectory,
+            Action<string> fileStatus = null,
+            Func<string[],string[]> fileNameFilter = null)
         {
             // Does the dataset exist?
             var response = new List<string>();
@@ -128,12 +133,43 @@ namespace AtlasSSH
                 throw new ArgumentException(string.Format("Unable to find any datasets with the name '{0}'.", datasetName));
             }
 
+            // If we are going to filter files, then the next thing we need to do is look at all files in the dataset.
+            var toDownload = datasetName;
+            if (fileNameFilter != null)
+            {
+                var fileNameList = new List<string>();
+                var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +\S* +\| +\S* +\| +\S* +\| +\S* +\|");
+                connection.ExecuteCommand(string.Format("rucio list-files {0}", datasetName), l =>
+                {
+                    var m = filenameMatch.Match(l);
+                    if (m.Success) {
+                        var fname = m.Groups["fname"].Value;
+                        if (fname != "SCOPE:NAME")
+                        {
+                            fileNameList.Add(fname);
+                        }
+                    }
+                });
+                var goodFiles = fileNameFilter(fileNameList.ToArray());
+                if (goodFiles.Length == 0)
+                {
+                    return connection;
+                }
+
+                var toDownloadBuilder = new StringBuilder();
+                foreach (var f in goodFiles)
+                {
+                    toDownloadBuilder.Append(f + " ");
+                }
+                toDownload = toDownloadBuilder.ToString();
+            }
+
             // We good on creating the directory?
             connection.ExecuteCommand(string.Format("mkdir -p {0}", localDirectory), l => { throw new ArgumentException("Error trying to create directory {0} for dataset on remote machine.", localDirectory); });
 
             // Next, do the download
             response.Clear();
-            connection.ExecuteCommand(string.Format("rucio download {0} --dir {1}", datasetName, localDirectory), l =>
+            connection.ExecuteCommand(string.Format("rucio download --dir {1} {0}", toDownload, localDirectory), l =>
             {
                 if (fileStatus != null)
                 {
