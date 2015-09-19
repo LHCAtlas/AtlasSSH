@@ -49,13 +49,16 @@ namespace AtlasWorkFlowsTest
                     var dsDirForFile = index < goodFileNames.Length / 2 ? dsDirSub1 : dsDirSub2;
                     WriteShortRootFile(new FileInfo(Path.Combine(dsDirForFile.FullName, gfname)));
                 }
+
+                // Generate a .part files - a file that is only partially downloaded. Should never show up beyond this.
+                WriteShortRootFile(new FileInfo(Path.Combine(dsDirSub2.FullName, "file.weird.root.1.part")));
             }
 
             return root;
         }
         public static DirectoryInfo BuildSampleDirectory(string rootDirName, params string[] dsnames)
         {
-            return BuildSampleDirectory(rootDirName, dsnames);
+            return BuildSampleDirectory(rootDirName, null, dsnames);
         }
 
         /// <summary>

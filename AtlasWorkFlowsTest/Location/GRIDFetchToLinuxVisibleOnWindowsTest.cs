@@ -56,7 +56,7 @@ namespace AtlasWorkFlowsTest.Location
         public void DownloadLimitedNumberOfFiles()
         {
             var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = new DirectoryInfo("DownloadToLinuxDirectoryThatIsAWindowsDirectory");
+            var d = new DirectoryInfo("DownloadLimitedNumberOfFiles");
             if (d.Exists)
             {
                 d.Delete(true);
@@ -66,7 +66,7 @@ namespace AtlasWorkFlowsTest.Location
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
             Assert.AreEqual(2, r.Length);
-            Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Count());
+            Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
         }
 
         [TestMethod]

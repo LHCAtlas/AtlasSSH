@@ -71,6 +71,7 @@ namespace AtlasWorkFlows.Locations
                 return null;
 
             var fullList = dinfo.EnumerateFiles("*.root.*", SearchOption.AllDirectories)
+                .Where(f => !f.FullName.EndsWith(".part"))
                 .Select(f => f.FullName)
                 .ToArray();
 
