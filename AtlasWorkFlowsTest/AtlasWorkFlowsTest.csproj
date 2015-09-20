@@ -54,6 +54,7 @@
     <Compile Include="Location\LinuxWithWindowsReflectorTest.cs" />
     <Compile Include="Location\GRIDFetchToLinuxVisibleOnWindowsTest.cs" />
     <Compile Include="Location\LocatorTest.cs" />
+    <Compile Include="Location\LocalMachineTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="utils.cs" />
     <Compile Include="Utils\DataSetUtilsTest.cs" />
