@@ -248,8 +248,6 @@ namespace AtlasWorkFlows.Locations
             if (!f.Exists)
                 return null;
 
-            int index = 0;
-
             var files = new List<string>();
             using (var rd = f.OpenText())
             {

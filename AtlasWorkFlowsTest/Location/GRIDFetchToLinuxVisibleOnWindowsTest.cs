@@ -313,7 +313,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             return new DSInfo()
             {
-                CanBeGenerated = true,
+                CanBeGeneratedAutomatically = true,
                 Name = dsname,
                 NumberOfFiles = 0,
                 IsLocal = false

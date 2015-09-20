@@ -35,7 +35,7 @@ namespace AtlasWorkFlows.Locations
                     Name = name,
                     NumberOfFiles = nfiles,
                     IsLocal = nfiles > 0,
-                    CanBeGenerated = true,
+                    CanBeGeneratedAutomatically = true,
                     IsPartial = dsfinder.CheckIfPartial(name)
                 };
             };

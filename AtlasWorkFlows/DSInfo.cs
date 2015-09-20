@@ -25,12 +25,12 @@ namespace AtlasWorkFlows
         public bool IsLocal { get; set; }
 
         /// <summary>
-        /// The dataset can be "generated" at this location
+        /// The dataset can be "generated" at this location automatically (without user intervention/request).
         /// </summary>
         /// <remarks>
         /// This is not an absolute test - this makes the assumption that the dataset does exist somewhere in the world
         /// </remarks>
-        public bool CanBeGenerated { get; set; }
+        public bool CanBeGeneratedAutomatically { get; set; }
 
         /// <summary>
         /// The number of files in the data set with some special meanings:

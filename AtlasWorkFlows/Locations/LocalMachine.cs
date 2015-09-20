@@ -32,7 +32,7 @@ namespace AtlasWorkFlows.Locations
                     Name = name,
                     NumberOfFiles = files.Length,
                     IsLocal = files.Any(),
-                    CanBeGenerated = false,
+                    CanBeGeneratedAutomatically = false,
                     IsPartial = IsPartial(dirCacheLocations, name)
                 };
             };

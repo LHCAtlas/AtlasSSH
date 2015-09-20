@@ -28,11 +28,6 @@ namespace PSAtlasDatasetCommands
         public int nFiles { get; set; }
 
         /// <summary>
-        /// The location against which we will be doing all the download and fetching work
-        /// </summary>
-        private Location _location = null;
-
-        /// <summary>
         /// Fast listener
         /// </summary>
         class PSListener : TextWriterTraceListener

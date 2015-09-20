@@ -47,7 +47,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = LinuxWithWindowsReflector.GetLocation(Config.GetLocationConfigs()["CERN"]);
             var dsinfo = c.GetDSInfo("bogus.dataset.version.1");
             Assert.IsNotNull(dsinfo);
-            Assert.AreEqual(true, dsinfo.CanBeGenerated);
+            Assert.AreEqual(true, dsinfo.CanBeGeneratedAutomatically);
             Assert.AreEqual(false, dsinfo.IsLocal);
             Assert.AreEqual("bogus.dataset.version.1", dsinfo.Name);
             Assert.AreEqual(0, dsinfo.NumberOfFiles);
