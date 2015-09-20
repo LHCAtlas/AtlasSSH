@@ -31,23 +31,26 @@ namespace AtlasWorkFlows.Locations
 
             l.GetDSInfo = name =>
             {
-                int nfiles = 0;
-                bool ispartial = false;
                 var d = FindDataset(dirCacheLocations, name);
-                if (d != null)
+                if (d == null)
+                {
+                    return new DSInfo()
+                    {
+                        Name = name,
+                        IsLocal = filter => false,
+                        CanBeGeneratedAutomatically = false,
+                    };
+                }
+                else
                 {
                     var w = new WindowsDataset(d.Parent);
-                    nfiles = w.CheckNumberOfFiles(name);
-                    ispartial = w.CheckIfPartial(name);
+                    return new DSInfo()
+                    {
+                        Name = name,
+                        IsLocal = filter => w.FindDSFiles(name, filter) != null,
+                        CanBeGeneratedAutomatically = false,
+                    };
                 }
-                return new DSInfo()
-                {
-                    Name = name,
-                    NumberOfFiles = nfiles,
-                    IsLocal = nfiles > 0,
-                    CanBeGeneratedAutomatically = false,
-                    IsPartial = ispartial
-                };
             };
 
             // Even though we claim we can't download a data file locally - we can. It is just that we won't do it automatically.
@@ -59,17 +62,6 @@ namespace AtlasWorkFlows.Locations
                     var w = new WindowsDataset(d.Parent);
                     return w.FindDSFiles(dsinfo.Name, filter);
                 };
-
-            // Has all files just look at, basically, the GetDS and returns that info.
-            l.HasAllFiles = (dsinfo, filter) =>
-            {
-                var d = FindDataset(dirCacheLocations, dsinfo.Name);
-                if (d == null)
-                    return false;
-                var w = new WindowsDataset(d.Parent);
-                var files = w.FindDSFiles(dsinfo.Name, filter);
-                return files != null;
-            };
 
             return l;
         }

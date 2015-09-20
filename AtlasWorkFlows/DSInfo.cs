@@ -17,12 +17,14 @@ namespace AtlasWorkFlows
         public string Name { get; set; }
 
         /// <summary>
-        /// True if some files are available locally (eg, on local disk, or close by network disk).
+        /// True if all the files that pass the filter function are available locally. That is, no serious
+        /// network time is required (e.g. downloading from GRID bad, loading from remote network location ok).
+        /// Pass "null" as the filter function to test if complete dataset is local.
         /// </summary>
         /// <remarks>
-        /// This is true even if the dataset is a partial dataset, which means some are local and some aren't!
+        /// This is compared against the full dataset.
         /// </remarks>
-        public bool IsLocal { get; set; }
+        public Func<Func<string[], string[]>, bool> IsLocal { get; set; }
 
         /// <summary>
         /// The dataset can be "generated" at this location automatically (without user intervention/request).
@@ -31,18 +33,5 @@ namespace AtlasWorkFlows
         /// This is not an absolute test - this makes the assumption that the dataset does exist somewhere in the world
         /// </remarks>
         public bool CanBeGeneratedAutomatically { get; set; }
-
-        /// <summary>
-        /// The number of files in the data set with some special meanings:
-        ///   If CanBeGenerated is false, then this field has no meaning.
-        ///   0: Unknown number of files are present
-        ///   n: n>0 - a subset of all the files, and this contains the number.
-        /// </summary>
-        public int NumberOfFiles { get; set; }
-
-        /// <summary>
-        /// Some files have been downloaded already, but not everything.
-        /// </summary>
-        public bool IsPartial { get; set; }
     }
 }

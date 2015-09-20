@@ -46,18 +46,6 @@ namespace AtlasWorkFlows
         public Func<DSInfo, Action<string>, Func<string[], string[]>, Uri[]> GetDS { get; set; }
 
         /// <summary>
-        /// Function that returns true if all files are (or will be) available given
-        /// the request. Note that a "true" doesn't mean that the files are already local, just
-        /// that they can be made local.
-        /// </summary>
-        /// <remarks>
-        /// For a GRID enabled location, one would expect this to always return true. If the
-        /// store can't fetch files from other places by default, then don't expect this to
-        /// always return true.
-        /// </remarks>
-        public Func<DSInfo, Func<string[], string[]>, bool> HasAllFiles { get; set; }
-
-        /// <summary>
         /// Setup default object configuration
         /// </summary>
         public Location()

@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AtlasWorkFlows.Locations;
 using System.Linq;
 using AtlasWorkFlows.Utils;
+using System.IO;
 
 namespace AtlasWorkFlowsTest.Location
 {
@@ -48,9 +49,8 @@ namespace AtlasWorkFlowsTest.Location
             var dsinfo = c.GetDSInfo("bogus.dataset.version.1");
             Assert.IsNotNull(dsinfo);
             Assert.AreEqual(true, dsinfo.CanBeGeneratedAutomatically);
-            Assert.AreEqual(false, dsinfo.IsLocal);
+            Assert.AreEqual(false, dsinfo.IsLocal(null));
             Assert.AreEqual("bogus.dataset.version.1", dsinfo.Name);
-            Assert.AreEqual(0, dsinfo.NumberOfFiles);
         }
 
         [TestMethod]
@@ -62,9 +62,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = LinuxWithWindowsReflector.GetLocation(configInfo["MyTestLocation"]);
             var dsinfo = c.GetDSInfo("bogus.dataset.version.1");
             Assert.IsNotNull(dsinfo);
-            Assert.IsTrue(dsinfo.IsLocal);
-            Assert.IsFalse(dsinfo.IsPartial);
-            Assert.AreEqual(5, dsinfo.NumberOfFiles);
+            Assert.IsTrue(dsinfo.IsLocal(null));
         }
 
         [TestMethod]
@@ -76,10 +74,11 @@ namespace AtlasWorkFlowsTest.Location
             var configInfo = utils.GetLocal(dataStore);
             var c = LinuxWithWindowsReflector.GetLocation(configInfo["MyTestLocation"]);
             var dsinfo = c.GetDSInfo("bogus.dataset.version.1");
+            var badFile = new FileInfo(Path.Combine(dataStore.FullName, dsinfo.Name, "sub2", "file.root.5"));
+            Assert.IsTrue(badFile.Exists);
+            badFile.Delete();
             Assert.IsNotNull(dsinfo);
-            Assert.IsTrue(dsinfo.IsLocal);
-            Assert.IsTrue(dsinfo.IsPartial);
-            Assert.AreEqual(5, dsinfo.NumberOfFiles);
+            Assert.IsFalse(dsinfo.IsLocal(null));
         }
 
         [TestMethod]

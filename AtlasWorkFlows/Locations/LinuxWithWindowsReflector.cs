@@ -33,10 +33,8 @@ namespace AtlasWorkFlows.Locations
                 return new DSInfo()
                 {
                     Name = name,
-                    NumberOfFiles = nfiles,
-                    IsLocal = nfiles > 0,
+                    IsLocal = filter => dsfinder.CheckIfLocal(name, filter),
                     CanBeGeneratedAutomatically = true,
-                    IsPartial = dsfinder.CheckIfPartial(name)
                 };
             };
 

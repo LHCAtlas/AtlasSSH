@@ -315,8 +315,7 @@ namespace AtlasWorkFlowsTest.Location
             {
                 CanBeGeneratedAutomatically = true,
                 Name = dsname,
-                NumberOfFiles = 0,
-                IsLocal = false
+                IsLocal = null
             };
         }
 

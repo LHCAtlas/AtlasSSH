@@ -210,7 +210,7 @@ namespace AtlasSSH
 
             if (bad)
             {
-                throw new ArgumentException("Dataset '{0}' does not exist - cant get its list of files.", datasetName);
+                throw new ArgumentException("Dataset '{0}' does not exist - can't get its list of files.", datasetName);
             }
 
             return fileNameList.ToArray();

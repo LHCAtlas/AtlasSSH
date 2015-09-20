@@ -48,10 +48,10 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="info"></param>
         /// <returns></returns>
-        public Uri[] GetDS (DSInfo info, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null)
+        public Uri[] GetDS (string dsname, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null)
         {
             // First, we attempt to get the files from the downloaded directory.
-            var flist = _winDataset.FindDSFiles(info.Name, fileFilter);
+            var flist = _winDataset.FindDSFiles(dsname, fileFilter);
             if (flist != null)
             {
                 return flist;
@@ -59,25 +59,29 @@ namespace AtlasWorkFlows.Locations
 
             // Ok, we are going to have to go the full route, unfortunately. Till we are done, mark this as partial.
             // That way, if there is a crash, it will be understood later on when we come back.
-            _winDataset.MarkAsPartialDownload(info.Name);
+            _winDataset.MarkAsPartialDownload(dsname);
 
             // If we have not yet cached the list of files in this dataset, then fetch it.
-            if (_winDataset.TotalFilesInDataset(info.Name) == -1)
+            if (_winDataset.TotalFilesInDataset(dsname) == -1)
             {
-                _winDataset.SaveListOfDSFiles(info.Name, LinuxFetcher.GetListOfFiles(info.Name));
+                _winDataset.SaveListOfDSFiles(dsname, LinuxFetcher.GetListOfFiles(dsname));
             }
-            LinuxFetcher.Fetch(info.Name, string.Format("{0}/{1}", LinuxRootDSDirectory, info.Name.SantizeDSName()), statusUpdate, fileFilter);
+            LinuxFetcher.Fetch(dsname, string.Format("{0}/{1}", LinuxRootDSDirectory, dsname.SantizeDSName()), statusUpdate, fileFilter);
 
             // And then the files should all be down! If we got them all, then don't mark it as partial.
-            var result = _winDataset.FindDSFiles(info.Name, fileFilter, returnWhatWeHave: true);
-            if (result.Length == _winDataset.TotalFilesInDataset(info.Name))
-                _winDataset.RemovePartialDownloadMark(info.Name);
+            var result = _winDataset.FindDSFiles(dsname, fileFilter, returnWhatWeHave: true);
+            if (result.Length == _winDataset.TotalFilesInDataset(dsname))
+                _winDataset.RemovePartialDownloadMark(dsname);
 
             return result;
         }
+        public Uri[] GetDS (DSInfo info, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null)
+        {
+            return GetDS(info.Name, statusUpdate, fileFilter);
+        }
 
         /// <summary>
-        /// Return the nubmer of files in the dataset.
+        /// Return the number of files in the dataset.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -94,6 +98,17 @@ namespace AtlasWorkFlows.Locations
         internal bool CheckIfPartial(string name)
         {
             return _winDataset.CheckIfPartial(name);
+        }
+
+        /// <summary>
+        /// Check to see if the files listed actually match the full dataset that we have
+        /// on disk.
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        internal bool CheckIfLocal(string dsname, Func<string[], string[]> filter)
+        {
+            return _winDataset.FindDSFiles(dsname, filter) != null;
         }
     }
 }

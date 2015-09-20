@@ -25,9 +25,8 @@ namespace AtlasWorkFlowsTest.Location
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("bogus");
             Assert.AreEqual("bogus", r.Name);
-            Assert.AreEqual(0, r.NumberOfFiles);
-            Assert.IsFalse(r.IsLocal);
-            Assert.IsFalse(r.IsPartial);
+            Assert.IsNotNull(r.IsLocal);
+            Assert.IsFalse(r.IsLocal(null));
             Assert.IsFalse(r.CanBeGeneratedAutomatically);
         }
 
@@ -39,9 +38,7 @@ namespace AtlasWorkFlowsTest.Location
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
             Assert.AreEqual("ds1.1.1", r.Name);
-            Assert.AreEqual(5, r.NumberOfFiles);
-            Assert.IsTrue(r.IsLocal);
-            Assert.IsFalse(r.IsPartial);
+            Assert.IsTrue(r.IsLocal(null)); // They are all local.
             Assert.IsFalse(r.CanBeGeneratedAutomatically);
         }
 
@@ -53,23 +50,30 @@ namespace AtlasWorkFlowsTest.Location
             var c = GenerateLocalConfig(d);
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
+            var badFile = new FileInfo(Path.Combine(d.FullName, r.Name, "sub2", "file.root.5"));
+            Assert.IsTrue(badFile.Exists);
+            badFile.Delete();
             Assert.AreEqual("ds1.1.1", r.Name);
-            Assert.AreEqual(5, r.NumberOfFiles);
-            Assert.IsTrue(r.IsLocal);
-            Assert.IsTrue(r.IsPartial);
+            Assert.IsFalse(r.IsLocal(null));
             Assert.IsFalse(r.CanBeGeneratedAutomatically);
         }
 
         [TestMethod]
-        public void LookForCompleteDataset()
+        public void LocalFilesExistInPartialDataset()
         {
-            var d = utils.BuildSampleDirectoryBeforeBuild("LookForCompleteDataset", "ds1.1.1");
+            var d = utils.BuildSampleDirectoryBeforeBuild("LocalFilesInExistingDatasetIsPartial", "ds1.1.1");
+            utils.MakePartial(d, "ds1.1.1");
             var c = GenerateLocalConfig(d);
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
-            Assert.IsTrue(l.HasAllFiles(r, null));
+            var badFile = new FileInfo(Path.Combine(d.FullName, r.Name, "sub2", "file.root.5"));
+            Assert.IsTrue(badFile.Exists);
+            badFile.Delete();
+            Assert.AreEqual("ds1.1.1", r.Name);
+            Assert.IsTrue(r.IsLocal(fs => fs.Where(fname => fname.Contains(".root.1")).ToArray()));
+            Assert.IsFalse(r.CanBeGeneratedAutomatically);
         }
-
+        
         [TestMethod]
         public void GetForCompleteDataset()
         {
@@ -87,7 +91,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = GenerateLocalConfig(d);
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
-            Assert.IsTrue(l.HasAllFiles(r, fslist => fslist.Take(1).ToArray()));
+            Assert.IsTrue(r.IsLocal(fslist => fslist.Take(1).ToArray()));
         }
 
         [TestMethod]
@@ -108,7 +112,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = GenerateLocalConfig(d);
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
-            Assert.IsTrue(l.HasAllFiles(r, fslist => fslist.Take(1).ToArray()));
+            Assert.IsTrue(r.IsLocal(fslist => fslist.Take(1).ToArray()));
         }
 
         [TestMethod]
@@ -133,7 +137,7 @@ namespace AtlasWorkFlowsTest.Location
             var badFile = new FileInfo(Path.Combine(d.FullName, r.Name, "sub2", "file.root.5"));
             Assert.IsTrue(badFile.Exists);
             badFile.Delete();
-            Assert.IsFalse(l.HasAllFiles(r, fslist => fslist.Where(f => f.Contains(".5")).Take(1).ToArray()));
+            Assert.IsFalse(r.IsLocal(fslist => fslist.Where(f => f.Contains(".5")).Take(1).ToArray()));
         }
 
         [TestMethod]
