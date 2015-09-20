@@ -138,6 +138,16 @@ namespace AtlasSSH
             }
 
             /// <summary>
+            /// See if the text is in the current buffer
+            /// </summary>
+            /// <param name="text"></param>
+            /// <returns></returns>
+            public bool Match (string text)
+            {
+                return _text.Contains(text);
+            }
+
+            /// <summary>
             /// Dump out a line, safely.
             /// </summary>
             /// <param name="line"></param>
@@ -171,6 +181,7 @@ namespace AtlasSSH
             while (timeout > DateTime.Now)
             {
                 s.Expect(TimeSpan.FromMilliseconds(100), new ExpectAction(matchText, l => { lb.Add(l); gotmatch = true; }));
+                gotmatch = gotmatch || lb.Match(matchText); 
                 if (gotmatch)
                     break;
                 lb.Add(s.Read());
