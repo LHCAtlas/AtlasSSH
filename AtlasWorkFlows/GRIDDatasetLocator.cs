@@ -33,7 +33,8 @@ namespace AtlasWorkFlows
                 throw new InvalidOperationException(string.Format("There are no valid ways to download dataset '{0}' from your current location.", datasetname));
             }
 
-            // Next, determine the location we will use to fetch the dataset.
+            // Next, determine the location we will use to fetch the dataset. We get the dsInfo
+            // from each, and we have to ask if the dataset is local or not.
             var location = locationList.First();
 
             // And delegate all the rest of our work to fetching.

@@ -106,21 +106,35 @@ namespace AtlasWorkFlowsTest
         /// Generate a location that is local for this test environment.
         /// </summary>
         /// <returns></returns>
-        public static Dictionary<string, Dictionary<string, string>> GetLocal(DirectoryInfo location)
+        public static Dictionary<string, Dictionary<string, string>> GetLocal(DirectoryInfo locLinuxWithWindows = null, DirectoryInfo locLocal = null)
         {
             var r = new Dictionary<string, Dictionary<string, string>>();
 
             // CERN
-            var c = new Dictionary<string, string>();
-            c["DNSEndString"] = ".cern.ch";
-            c["Name"] = "MyTestLocation";
-            c["WindowsPath"] = location.FullName;
-            c["LinuxPath"] = "/LLPData/GRIDDS";
-            c["LocationType"] = "LinuxWithWindowsReflector";
-            c["LinuxUserName"] = "gwatts";
-            c["LinuxHost"] = "pcatuw4.cern.ch";
+            if (locLinuxWithWindows != null)
+            {
+                var c = new Dictionary<string, string>();
+                c["DNSEndString"] = ".cern.ch";
+                c["Name"] = "MyTestLocation";
+                c["WindowsPath"] = locLinuxWithWindows.FullName;
+                c["LinuxPath"] = "/LLPData/GRIDDS";
+                c["LocationType"] = "LinuxWithWindowsReflector";
+                c["LinuxUserName"] = "gwatts";
+                c["LinuxHost"] = "pcatuw4.cern.ch";
 
-            r["MyTestLocation"] = c;
+                r["MyTestLocation"] = c;
+            }
+
+            // Local
+            if (locLocal != null)
+            {
+                var c = new Dictionary<string, string>();
+                c["Name"] = "MyTestLocalLocation";
+                c["Paths"] = locLocal.FullName;
+                c["LocationType"] = "LocalWindowsFilesystem";
+
+                r["MyTestLocalLocation"] = c; 
+            }
 
             return r;
         }

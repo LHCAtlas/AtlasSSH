@@ -71,6 +71,16 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void GetForCompleteDataset()
+        {
+            var d = utils.BuildSampleDirectoryBeforeBuild("GetForCompleteDataset", "ds1.1.1");
+            var c = GenerateLocalConfig(d);
+            var l = LocalMachine.GetLocation(c);
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.AreEqual(5, l.GetDS(r, null, null).Length);
+        }
+
+        [TestMethod]
         public void LookForLocalFileInCompleteDataset()
         {
             var d = utils.BuildSampleDirectoryBeforeBuild("LookForLocalFileInCompleteDataset", "ds1.1.1");
@@ -78,6 +88,16 @@ namespace AtlasWorkFlowsTest.Location
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
             Assert.IsTrue(l.HasAllFiles(r, fslist => fslist.Take(1).ToArray()));
+        }
+
+        [TestMethod]
+        public void GetForLocalFileInCompleteDataset()
+        {
+            var d = utils.BuildSampleDirectoryBeforeBuild("GetForLocalFileInCompleteDataset", "ds1.1.1");
+            var c = GenerateLocalConfig(d);
+            var l = LocalMachine.GetLocation(c);
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.AreEqual(1, l.GetDS(r, null, fslist => fslist.Take(1).ToArray()).Length);
         }
 
         [TestMethod]
@@ -92,6 +112,17 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void GetForLocalFileInPartialDataset()
+        {
+            var d = utils.BuildSampleDirectoryBeforeBuild("GetForLocalFileInPartialDataset", "ds1.1.1");
+            utils.MakePartial(d, "ds1.1.1");
+            var c = GenerateLocalConfig(d);
+            var l = LocalMachine.GetLocation(c);
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.AreEqual(1, l.GetDS(r, null, fslist => fslist.Take(1).ToArray()).Length);
+        }
+
+        [TestMethod]
         public void LookForMissingLocalFileInPartialDataset()
         {
             var d = utils.BuildSampleDirectoryBeforeBuild("LookForMissingLocalFileInPartialDataset", "ds1.1.1");
@@ -103,6 +134,15 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsTrue(badFile.Exists);
             badFile.Delete();
             Assert.IsFalse(l.HasAllFiles(r, fslist => fslist.Where(f => f.Contains(".5")).Take(1).ToArray()));
+        }
+
+        [TestMethod]
+        public void GetForMissingLocalFileInPartialDataset()
+        {
+            Assert.Inconclusive();
+            // A copy of the Look version of this will trigger a copy, so write this
+            // test when we implement the local downloads.
+            
         }
 
         /// <summary>

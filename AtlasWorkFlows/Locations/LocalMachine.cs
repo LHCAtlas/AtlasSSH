@@ -51,8 +51,16 @@ namespace AtlasWorkFlows.Locations
             };
 
             // Even though we claim we can't download a data file locally - we can. It is just that we won't do it automatically.
-            l.GetDS = null;
+            l.GetDS = (dsinfo, status, filter) =>
+                {
+                    var d = FindDataset(dirCacheLocations, dsinfo.Name);
+                    if (d == null)
+                        return null;
+                    var w = new WindowsDataset(d.Parent);
+                    return w.FindDSFiles(dsinfo.Name, filter);
+                };
 
+            // Has all files just look at, basically, the GetDS and returns that info.
             l.HasAllFiles = (dsinfo, filter) =>
             {
                 var d = FindDataset(dirCacheLocations, dsinfo.Name);

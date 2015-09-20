@@ -56,20 +56,24 @@ namespace AtlasWorkFlows.Locations
                 _allLocations = new List<Location>();
 
                 var infoOnLocations = _getLocations == null ? Config.GetLocationConfigs() : _getLocations();
-                Location newLocation = null;
                 foreach (var loc in infoOnLocations)
                 {
+                    Location newLocation = null;
                     if (loc.Value["LocationType"] == "LinuxWithWindowsReflector")
                     {
                         newLocation = LinuxWithWindowsReflector.GetLocation(loc.Value);
+                    }
+                    else if (loc.Value["LocationType"] == "LocalWindowsFilesystem")
+                    {
+                        newLocation = LocalMachine.GetLocation(loc.Value);
                     }
                     else
                     {
                         throw new InvalidOperationException(string.Format("Location '{0}' requires a setup of type '{1}' which we don't understand how to do.", loc.Key, loc.Value["LocationType"]));
                     }
+                    _allLocations.Add(newLocation);
                 }
 
-                _allLocations.Add(newLocation);
             }
             return _allLocations;
         }
