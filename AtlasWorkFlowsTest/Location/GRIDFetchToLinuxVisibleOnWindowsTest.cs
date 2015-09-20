@@ -14,8 +14,8 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void FindLocalFilesWithNoWork()
         {
-            var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = utils.BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
+            var dsinfo = MakeDSInfo("ds1.1.1.1");
+            var d = utils.BuildSampleDirectoryBeforeBuild("FindLocalFilesWithNoWork", dsinfo.Name);
 
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
             var r = gf.GetDS(dsinfo);
@@ -26,40 +26,40 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CheckNonPartialDataset()
         {
-            var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = utils.BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
+            var dsinfo = MakeDSInfo("ds1.1.1.1");
+            var d = utils.BuildSampleDirectoryBeforeBuild("FindLocalFilesWithNoWork", dsinfo.Name);
 
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
-            Assert.IsFalse(gf.CheckIfPartial("ds1.1.1"));
+            Assert.IsFalse(gf.CheckIfPartial(dsinfo.Name));
         }
 
         [TestMethod]
         public void CheckPartialDataset()
         {
             var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = utils.BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
-            utils.MakePartial(d, "ds1.1.1");
+            var d = utils.BuildSampleDirectoryBeforeBuild("FindLocalFilesWithNoWork", dsinfo.Name);
+            utils.MakePartial(d, dsinfo.Name);
 
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
-            Assert.IsTrue(gf.CheckIfPartial("ds1.1.1"));
+            Assert.IsTrue(gf.CheckIfPartial(dsinfo.Name));
         }
 
         [TestMethod]
         public void CountFilesDownloaded()
         {
             var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = utils.BuildSampleDirectory("FindLocalFilesWithNoWork", dsinfo.Name);
-            utils.MakePartial(d, "ds1.1.1");
+            var d = utils.BuildSampleDirectoryBeforeBuild("CountFilesDownloaded", dsinfo.Name);
+            utils.MakePartial(d, dsinfo.Name);
 
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
-            Assert.AreEqual(5, gf.CheckNumberOfFiles("ds1.1.1"));
+            Assert.AreEqual(5, gf.CheckNumberOfFiles(dsinfo.Name));
         }
 
         [TestMethod]
         public void FindLocationWithScopedDataset()
         {
             var dsinfo = MakeDSInfo("user.norm:ds1.1.1");
-            var d = utils.BuildSampleDirectory("FindLocationWithScopedDataset", "ds1.1.1");
+            var d = utils.BuildSampleDirectoryBeforeBuild("FindLocationWithScopedDataset", "ds1.1.1");
 
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
             var r = gf.GetDS(dsinfo);
@@ -77,7 +77,7 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo);
             Assert.IsNotNull(r);
@@ -95,7 +95,7 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
             Assert.AreEqual(2, r.Length);
@@ -112,10 +112,10 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
-            Assert.IsTrue(gf.CheckIfPartial("ds1.1.1"));
+            Assert.IsTrue(gf.CheckIfPartial(dsinfo.Name));
         }
 
         [TestMethod]
@@ -128,10 +128,10 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo);
-            Assert.IsFalse(gf.CheckIfPartial("ds1.1.1"));
+            Assert.IsFalse(gf.CheckIfPartial(dsinfo.Name));
         }
 
         [TestMethod]
@@ -144,10 +144,10 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist);
-            Assert.IsFalse(gf.CheckIfPartial("ds1.1.1"));
+            Assert.IsFalse(gf.CheckIfPartial(dsinfo.Name));
         }
 
         [TestMethod]
@@ -160,7 +160,7 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
             Assert.AreEqual(2, r.Length);
@@ -181,7 +181,7 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(1).ToArray());
             Assert.AreEqual(1, r.Length);
@@ -202,7 +202,7 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(1).ToArray());
             Assert.AreEqual(1, r.Length);
@@ -224,7 +224,7 @@ namespace AtlasWorkFlowsTest.Location
                 d.Delete(true);
             }
 
-            var ld = new LinuxMirrorDownloaderPretend(d, "ds1.1.1");
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
             var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(1).ToArray());
             Assert.AreEqual(1, r.Length);
@@ -293,7 +293,7 @@ namespace AtlasWorkFlowsTest.Location
                 var d = new DirectoryInfo("forkit");
                 if (d.Exists)
                     d.Delete(true);
-                utils.BuildSampleDirectory(d.FullName, dsname.SantizeDSName());
+                utils.BuildSampleDirectoryBeforeBuild(d.FullName, dsname.SantizeDSName());
                 return d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Select(f => f.Name).ToArray();
             }
         }

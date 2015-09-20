@@ -57,7 +57,7 @@ namespace AtlasWorkFlowsTest.Location
         public void CERNFetchDSInfoForFullDS()
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
-            var dataStore = utils.BuildSampleDirectory("CERNFetchDSInfoForFullDS", "bogus.dataset.version.1");
+            var dataStore = utils.BuildSampleDirectoryBeforeBuild("CERNFetchDSInfoForFullDS", "bogus.dataset.version.1");
             var configInfo = utils.GetLocal(dataStore);
             var c = LinuxWithWindowsReflector.GetLocation(configInfo["MyTestLocation"]);
             var dsinfo = c.GetDSInfo("bogus.dataset.version.1");
@@ -71,7 +71,7 @@ namespace AtlasWorkFlowsTest.Location
         public void CERNFetchDSInfoForPartialDS()
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
-            var dataStore = utils.BuildSampleDirectory("CERNFetchDSInfoForPartialDS", "bogus.dataset.version.1");
+            var dataStore = utils.BuildSampleDirectoryBeforeBuild("CERNFetchDSInfoForPartialDS", "bogus.dataset.version.1");
             utils.MakePartial(dataStore, "bogus.dataset.version.1");
             var configInfo = utils.GetLocal(dataStore);
             var c = LinuxWithWindowsReflector.GetLocation(configInfo["MyTestLocation"]);

@@ -30,7 +30,7 @@ namespace AtlasWorkFlowsTest
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
             var dsname = "ds1.1.1";
-            var d = utils.BuildSampleDirectory("DatasetAlreadyAtCERN", dsname);
+            var d = utils.BuildSampleDirectoryBeforeBuild("DatasetAlreadyAtCERN", dsname);
             Locator._getLocations = () => utils.GetLocal(d);
 
             var r = GRIDDatasetLocator.FetchDatasetUris(dsname);
@@ -44,7 +44,7 @@ namespace AtlasWorkFlowsTest
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
             var dsname = "ds1.1.1";
-            var d = utils.BuildSampleDirectory("DatasetAlreadyAtCERN", dsname);
+            var d = utils.BuildSampleDirectoryBeforeBuild("DatasetAlreadyAtCERN", dsname);
             Locator._getLocations = () => utils.GetLocal(d);
 
             var r = GRIDDatasetLocator.FetchDatasetUris(dsname, fileFilter: fs => fs.OrderBy(f => f).Take(1).ToArray());
@@ -52,13 +52,5 @@ namespace AtlasWorkFlowsTest
             Assert.IsNotNull(r);
             Assert.AreEqual(1, r.Length);
         }
-
-        [TestMethod]
-        public void DatasetAlreadyLocal()
-        {
-            Assert.Inconclusive();
-        }
-
-        // ALso, need tests for small numbers of files.
     }
 }

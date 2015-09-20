@@ -187,7 +187,7 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         internal int CheckNumberOfFiles(string dsname)
         {
-            var flist = FindDSFiles(dsname);
+            var flist = FindDSFiles(dsname, returnWhatWeHave: true);
             if (flist == null)
                 return 0;
             return flist.Length;

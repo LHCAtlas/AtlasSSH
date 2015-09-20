@@ -123,6 +123,40 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        public void getDSFileList()
+        {
+            var info = util.GetUsernameAndPassword();
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                var r = s
+                    .setupATLAS()
+                    .setupRucio(info.Item2)
+                    .VomsProxyInit("atlas", info.Item2)
+                    .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1");
+                foreach (var fname in r)
+                {
+                    Console.WriteLine(fname);
+                }
+                Assert.AreEqual(10, r.Length);
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void getBadDSFileList()
+        {
+            var info = util.GetUsernameAndPassword();
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                var r = s
+                    .setupATLAS()
+                    .setupRucio(info.Item2)
+                    .VomsProxyInit("atlas", info.Item2)
+                    .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1111");
+            }
+        }
+
+        [TestMethod]
         public void downloadDS()
         {
             var info = util.GetUsernameAndPassword();

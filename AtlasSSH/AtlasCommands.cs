@@ -119,7 +119,7 @@ namespace AtlasSSH
         {
             // Does the dataset exist?
             var response = new List<string>();
-            connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l));
+            connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60);
 
             var dsnames = response
                 .Where(l => l.Contains("DATASET"))
@@ -137,20 +137,8 @@ namespace AtlasSSH
             var toDownload = datasetName;
             if (fileNameFilter != null)
             {
-                var fileNameList = new List<string>();
-                var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +\S* +\| +\S* +\| +\S* +\| +\S* +\|");
-                connection.ExecuteCommand(string.Format("rucio list-files {0}", datasetName), l =>
-                {
-                    var m = filenameMatch.Match(l);
-                    if (m.Success) {
-                        var fname = m.Groups["fname"].Value;
-                        if (fname != "SCOPE:NAME")
-                        {
-                            fileNameList.Add(fname);
-                        }
-                    }
-                });
-                var goodFiles = fileNameFilter(fileNameList.ToArray());
+                var fileNameList = connection.FilelistFromGRID(datasetName);
+                var goodFiles = fileNameFilter(fileNameList);
                 if (goodFiles.Length == 0)
                 {
                     return connection;
@@ -165,7 +153,9 @@ namespace AtlasSSH
             }
 
             // We good on creating the directory?
-            connection.ExecuteCommand(string.Format("mkdir -p {0}", localDirectory), l => { throw new ArgumentException("Error trying to create directory {0} for dataset on remote machine.", localDirectory); });
+            connection.ExecuteCommand(string.Format("mkdir -p {0}", localDirectory),
+                l => { throw new ArgumentException("Error trying to create directory {0} for dataset on remote machine.", localDirectory); },
+                secondsTimeout: 20);
 
             // Next, do the download
             response.Clear();
@@ -185,6 +175,45 @@ namespace AtlasSSH
             });
 
             return connection;
+        }
+
+        /// <summary>
+        /// Returns the list of files associated with a dataset.
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="datasetName"></param>
+        /// <returns></returns>
+        public static string[] FilelistFromGRID(this SSHConnection connection, string datasetName)
+        {
+            var fileNameList = new List<string>();
+            var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +\S* +\| +\S* +\| +\S* +\| +\S* +\|");
+            bool bad = false;
+            connection.ExecuteCommand(string.Format("rucio list-files {0}", datasetName), l =>
+            {
+                if (l.Contains("Data identifier not found"))
+                {
+                    bad = true;
+                }
+                if (!bad)
+                {
+                    var m = filenameMatch.Match(l);
+                    if (m.Success)
+                    {
+                        var fname = m.Groups["fname"].Value;
+                        if (fname != "SCOPE:NAME")
+                        {
+                            fileNameList.Add(fname);
+                        }
+                    }
+                }
+            });
+
+            if (bad)
+            {
+                throw new ArgumentException("Dataset '{0}' does not exist - cant get its list of files.", datasetName);
+            }
+
+            return fileNameList.ToArray();
         }
     }
 }

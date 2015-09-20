@@ -53,18 +53,32 @@ namespace AtlasWorkFlowsTest
 
             return root;
         }
-        public static DirectoryInfo BuildSampleDirectory(string rootDirName, params string[] dsnames)
+        public static DirectoryInfo BuildSampleDirectoryBeforeBuild(string rootDirName, params string[] dsnames)
         {
             var root = new DirectoryInfo(rootDirName);
             if (root.Exists)
             {
                 root.Delete(true);
             }
-            return BuildSampleDirectory(rootDirName, null, dsnames);
+
+            var r = BuildSampleDirectory(rootDirName, null, dsnames);
+
+            foreach (var ds in dsnames)
+            {
+                using (var wr = File.CreateText(Path.Combine(root.FullName, ds, "aa_dataset_complete_file_list.txt")))
+                {
+                    foreach (var fname in r.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")))
+                    {
+                        wr.WriteLine(fname);
+                    }
+                }                
+            }
+
+            return r;
         }
 
         /// <summary>
-        /// Mark the ds as partially downloaded.
+        /// Mark the dataset as partially downloaded.
         /// </summary>
         /// <param name="rootDir"></param>
         /// <param name="dsnames"></param>
