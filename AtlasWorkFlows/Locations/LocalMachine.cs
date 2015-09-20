@@ -17,9 +17,6 @@ namespace AtlasWorkFlows.Locations
     /// </remarks>
     class LocalMachine
     {
-        const string PartialDownloadTokenFilename = "aa_download_not_finished.txt";
-        const string DatasetFileList = "aa_dataset_complete_file_list.txt";
-
         public static Location GetLocation(Dictionary<string, string> props)
         {
             var l = new Location();
@@ -34,51 +31,39 @@ namespace AtlasWorkFlows.Locations
 
             l.GetDSInfo = name =>
             {
-                var files = GetListOfFiles(dirCacheLocations, name);
+                int nfiles = 0;
+                bool ispartial = false;
+                var d = FindDataset(dirCacheLocations, name);
+                if (d != null)
+                {
+                    var w = new WindowsDataset(d.Parent);
+                    nfiles = w.CheckNumberOfFiles(name);
+                    ispartial = w.CheckIfPartial(name);
+                }
                 return new DSInfo()
                 {
                     Name = name,
-                    NumberOfFiles = files.Length,
-                    IsLocal = files.Any(),
+                    NumberOfFiles = nfiles,
+                    IsLocal = nfiles > 0,
                     CanBeGeneratedAutomatically = false,
-                    IsPartial = IsPartial(dirCacheLocations, name)
+                    IsPartial = ispartial
                 };
             };
 
             // Even though we claim we can't download a data file locally - we can. It is just that we won't do it automatically.
             l.GetDS = null;
 
+            l.HasAllFiles = (dsinfo, filter) =>
+            {
+                var d = FindDataset(dirCacheLocations, dsinfo.Name);
+                if (d == null)
+                    return false;
+                var w = new WindowsDataset(d.Parent);
+                var files = w.FindDSFiles(dsinfo.Name, filter);
+                return files != null;
+            };
+
             return l;
-        }
-
-        /// <summary>
-        /// Return true if the dataset has been downloaded locally
-        /// </summary>
-        /// <param name="dirCacheLocations"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        private static bool IsPartial(DirectoryInfo[] dirCacheLocations, string name)
-        {
-            var d = FindDataset(dirCacheLocations, name);
-            if (d == null)
-                return false;
-
-            return File.Exists(Path.Combine(d.FullName, PartialDownloadTokenFilename));
-        }
-
-        /// <summary>
-        /// Scan all directories for a list of files. We will combine as if in the same directory.
-        /// </summary>
-        /// <param name="dirs"></param>
-        /// <param name="dsname"></param>
-        private static FileInfo[] GetListOfFiles(DirectoryInfo[] dirs, string dsname)
-        {
-            var d = FindDataset(dirs, dsname);
-            if (d == null)
-                return new FileInfo[0];
-            return d.EnumerateFiles("*.root.*", SearchOption.AllDirectories)
-                .Where(f => !f.FullName.EndsWith(".part"))
-                .ToArray();
         }
 
         /// <summary>

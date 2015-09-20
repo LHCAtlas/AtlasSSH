@@ -43,8 +43,9 @@ namespace AtlasWorkFlowsTest
                 int index = 0;
                 foreach (var gfname in goodFileNames)
                 {
-                    var dsDirForFile = index < nfiles / 2 ? dsDirSub1 : dsDirSub2;
+                    var dsDirForFile = index < (nfiles / 2) ? dsDirSub1 : dsDirSub2;
                     WriteShortRootFile(new FileInfo(Path.Combine(dsDirForFile.FullName, gfname)));
+                    index++;
                 }
 
                 // Generate a .part files - a file that is only partially downloaded. Should never show up beyond this.
