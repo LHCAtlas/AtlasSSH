@@ -69,7 +69,7 @@ namespace AtlasWorkFlowsTest
                 {
                     foreach (var fname in r.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")))
                     {
-                        wr.WriteLine(fname);
+                        wr.WriteLine("user.norm:" + fname);
                     }
                 }                
             }

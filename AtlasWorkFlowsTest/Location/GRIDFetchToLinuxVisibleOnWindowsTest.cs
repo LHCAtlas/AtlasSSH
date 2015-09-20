@@ -167,6 +167,7 @@ namespace AtlasWorkFlowsTest.Location
 
             r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
             Assert.AreEqual(2, r.Length);
+            Assert.AreEqual(1, ld.NumberOfTimesWeFetched);
 
             Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
         }
@@ -265,7 +266,10 @@ namespace AtlasWorkFlowsTest.Location
             {
                 _dirHere = dirHere;
                 _dsNames = dsnames;
+                NumberOfTimesWeFetched = 0;
             }
+
+            public int NumberOfTimesWeFetched { get; set; }
 
             /// <summary>
             /// When we fetch, we just make it looks like it exists on windows now.
@@ -279,6 +283,8 @@ namespace AtlasWorkFlowsTest.Location
 
                 utils.BuildSampleDirectory(_dirHere.FullName, fileFilter, _dsNames);
                 LinuxDest = linuxDirDestination;
+
+                NumberOfTimesWeFetched++;
             }
 
             public string LinuxDest { get; private set; }
@@ -294,7 +300,7 @@ namespace AtlasWorkFlowsTest.Location
                 if (d.Exists)
                     d.Delete(true);
                 utils.BuildSampleDirectoryBeforeBuild(d.FullName, dsname.SantizeDSName());
-                return d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Select(f => f.Name).ToArray();
+                return d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Select(f => "user.norm:" + f.Name).ToArray();
             }
         }
 
