@@ -25,6 +25,7 @@ namespace AtlasWorkFlows.Utils
             c["LocationType"] = "LinuxWithWindowsReflector";
             c["LinuxHost"] = "pcatuw4.cern.ch";
             c["LinuxUserName"] = "gwatts";
+            c["Priority"] = "10";
 
             r["CERN"] = c;
 
