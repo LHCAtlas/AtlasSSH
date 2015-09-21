@@ -29,6 +29,15 @@ namespace AtlasWorkFlows.Utils
 
             r["CERN"] = c;
 
+            // Local
+            c = new Dictionary<string, string>();
+            c["Name"] = "Local";
+            c["Paths"] = @"D:\GRIDDS";
+            c["LocationType"] = "LocalWindowsFilesystem";
+            c["Priority"] = "100";
+
+            r["Local"] = c;
+
             return r;
         }
     }
