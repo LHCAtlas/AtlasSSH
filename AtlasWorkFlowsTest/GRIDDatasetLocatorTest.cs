@@ -97,8 +97,9 @@ namespace AtlasWorkFlowsTest
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
             var dsname = "ds1.1.1";
             var d1 = new DirectoryInfo("ChooseLocalIfNothingRemoteRemote");
-            if (!d1.Exists)
-                d1.Create();
+            if (d1.Exists)
+                d1.Delete(true);
+            d1.Create();
             var d2 = utils.BuildSampleDirectoryBeforeBuild("ChooseLocalIfNothingRemoteLocal", dsname);
             Locator._getLocations = () => utils.GetLocal(d1, d2);
 
@@ -107,7 +108,20 @@ namespace AtlasWorkFlowsTest
             Assert.IsNotNull(r);
             Assert.AreEqual(1, r.Length);
             Console.WriteLine(r[0].LocalPath);
-            Assert.IsTrue(r[0].LocalPath.Contains("ChooseLocalIfPossibleLocal"));
+            Assert.IsTrue(r[0].LocalPath.Contains("ChooseLocalIfNothingRemoteLocal"));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void BombWhenLocalEmptyAndNoRemote()
+        {
+            // Local dataset is complete, and should be chosen over remote!
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
+            var dsname = "ds1.1.1";
+            var d2 = utils.BuildSampleDirectoryBeforeBuild("BombWhenLocalEmptyAndNoRemote", dsname);
+            Locator._getLocations = () => utils.GetLocal(null, d2);
+
+            var r = GRIDDatasetLocator.FetchDatasetUris("bogusnewdataset", fileFilter: fs => fs.OrderBy(f => f).Take(1).ToArray());
         }
 
         [TestMethod]
@@ -128,7 +142,7 @@ namespace AtlasWorkFlowsTest
             var r = GRIDDatasetLocator.FetchDatasetUris(dsname);
 
             Assert.IsNotNull(r);
-            Assert.AreEqual(1, r.Length);
+            Assert.AreEqual(5, r.Length);
             Console.WriteLine(r[0].LocalPath);
             Assert.IsTrue(r[0].LocalPath.Contains("ChooseRemoteWhenLocalNotCompleteRemote"));
         }

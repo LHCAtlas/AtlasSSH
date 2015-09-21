@@ -46,6 +46,16 @@ namespace AtlasWorkFlows
         public Func<DSInfo, Action<string>, Func<string[], string[]>, Uri[]> GetDS { get; set; }
 
         /// <summary>
+        /// If you have more than one store and they will be able to answer similar with others,
+        /// this is a way of doing it. Higher priority is better.
+        /// </summary>
+        /// <remarks>
+        /// As an example, if you have the same dataset downloaded remotely and also locally, you want the
+        /// local one to win out (usually...), so make sure it has a higher priority.
+        /// </remarks>
+        public int Priority { get; set; }
+
+        /// <summary>
         /// Setup default object configuration
         /// </summary>
         public Location()

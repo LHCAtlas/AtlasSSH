@@ -71,6 +71,7 @@ namespace AtlasWorkFlows.Locations
                     {
                         throw new InvalidOperationException(string.Format("Location '{0}' requires a setup of type '{1}' which we don't understand how to do.", loc.Key, loc.Value["LocationType"]));
                     }
+                    newLocation.Priority = int.Parse(loc.Value["Priority"]);
                     _allLocations.Add(newLocation);
                 }
 

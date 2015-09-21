@@ -33,13 +33,39 @@ namespace AtlasWorkFlows
                 throw new InvalidOperationException(string.Format("There are no valid ways to download dataset '{0}' from your current location.", datasetname));
             }
 
-            // Find out who has the data locally. If that is the case, then we are
-            // pretty much set.
-            var location = locationList.First();
+            // Get the info for each dataset.
+            var allDSInfo = (from loc in locationList
+                             let dsi = loc.GetDSInfo(datasetname)
+                             select new
+                             {
+                                 loc = loc,
+                                 dsinfo = dsi,
+                                 islocal = dsi.IsLocal(fileFilter)
+                             }).ToArray();
+
+            // First, if anyone has something local, then we should grab that.
+            var localDS = allDSInfo.Where(d => d.islocal).OrderByDescending(d => d.loc.Priority).ToArray();
+
+            // Ok, now we need the ones that can generate it.
+            if (localDS.Length == 0)
+            {
+                localDS = allDSInfo.Where(d => d.dsinfo.CanBeGeneratedAutomatically).OrderByDescending(d => d.loc.Priority).ToArray();
+            }
+
+            // Did we strike out?
+            var locationInfo = localDS.FirstOrDefault();
+            if (locationInfo == null)
+            {
+                var locationListText = "";
+                foreach (var l in locationList)
+                {
+                    locationListText += l.Name + " ";
+                }
+                throw new ArgumentException(string.Format("Do not know how to generate the dataset '{0}' at any of the locations {1} (which are the only ones working where the computer is located)", datasetname, locationListText));
+            }
 
             // And delegate all the rest of our work to fetching.
-            var dsinfo = location.GetDSInfo(datasetname);
-            return location.GetDS(dsinfo, statusUpdate, fileFilter);
+            return locationInfo.loc.GetDS(locationInfo.dsinfo, statusUpdate, fileFilter);
         }
     }
 }

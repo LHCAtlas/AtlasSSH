@@ -113,7 +113,7 @@ namespace AtlasWorkFlows.Locations
         {
             var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetFileList));
             if (!f.Exists)
-                return null;
+                return new string[0];
 
             var files = new List<string>();
             using (var rd = f.OpenText())

@@ -121,6 +121,7 @@ namespace AtlasWorkFlowsTest
                 c["LocationType"] = "LinuxWithWindowsReflector";
                 c["LinuxUserName"] = "gwatts";
                 c["LinuxHost"] = "pcatuw4.cern.ch";
+                c["Priority"] = "10";
 
                 r["MyTestLocation"] = c;
             }
@@ -132,6 +133,7 @@ namespace AtlasWorkFlowsTest
                 c["Name"] = "MyTestLocalLocation";
                 c["Paths"] = locLocal.FullName;
                 c["LocationType"] = "LocalWindowsFilesystem";
+                c["Priority"] = "100";
 
                 r["MyTestLocalLocation"] = c; 
             }
