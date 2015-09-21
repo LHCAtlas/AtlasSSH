@@ -24,6 +24,16 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void GetFileListForLocalFilesWithNoWork()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1.1");
+            var d = utils.BuildSampleDirectoryBeforeBuild("GetFileListForLocalFilesWithNoWork", dsinfo.Name);
+
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
+            Assert.AreEqual(5, gf.ListOfFiles("ds1.1.1.1").Length);
+        }
+
+        [TestMethod]
         public void CheckNonPartialDataset()
         {
             var dsinfo = MakeDSInfo("ds1.1.1.1");

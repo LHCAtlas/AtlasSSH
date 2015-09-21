@@ -9,7 +9,8 @@ using AtlasWorkFlows.Utils;
 namespace AtlasWorkFlows.Locations
 {
     /// <summary>
-    /// Represents a cache of files on the local machine
+    /// Represents a cache of files on the local machine. If a GetDS is issued on this repo, it will look for other
+    /// sources to download the files.
     /// </summary>
     /// <remarks>
     /// Though multiple directories can exist that hold the data cache, be warned:
@@ -40,6 +41,7 @@ namespace AtlasWorkFlows.Locations
                         Name = name,
                         IsLocal = filter => false,
                         CanBeGeneratedAutomatically = false,
+                        ListOfFiles = () => new string[0],
                     };
                 }
                 else
@@ -50,6 +52,8 @@ namespace AtlasWorkFlows.Locations
                         Name = name,
                         IsLocal = filter => w.FindDSFiles(name, filter) != null,
                         CanBeGeneratedAutomatically = false,
+                        ListOfFiles = () => w.ListOfDSFiles(name),
+                        LocationProvider = l,
                     };
                 }
             };
@@ -59,12 +63,62 @@ namespace AtlasWorkFlows.Locations
                 {
                     var d = FindDataset(dirCacheLocations, dsinfo.Name);
                     if (d == null)
-                        return null;
+                    {
+                        var dsdir = new DirectoryInfo(Path.Combine(dirCacheLocations[0].FullName, dsinfo.Name));
+                        dsdir.Create();
+                        return LoadDatasetFromOtherSource(new WindowsDataset(dsdir.Parent), dsinfo, status, filter, l.Name);
+                    }
                     var w = new WindowsDataset(d.Parent);
-                    return w.FindDSFiles(dsinfo.Name, filter);
+                    var result = w.FindDSFiles(dsinfo.Name, filter);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                    return LoadDatasetFromOtherSource(w, dsinfo, status, filter, l.Name);
                 };
 
             return l;
+        }
+
+        /// <summary>
+        /// Attempt to load the dataset from another location.
+        /// </summary>
+        /// <param name="dsinfo"></param>
+        /// <param name="status"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        private static Uri[] LoadDatasetFromOtherSource(WindowsDataset dsLocalLocation, DSInfo dsinfo, Action<string> status, Func<string[], string[]> filter, string locName)
+        {
+            // First, attempt to find the Uri's from somewhere that we can see and easily copy.
+            var files = GRIDDatasetLocator.FetchDatasetUris(dsinfo.Name, status, filter, locationFilter: locname => locname != locName);
+            var dsinfoRemote = GRIDDatasetLocator.FetchDSInfo(dsinfo.Name, filter, locationFilter: locname => locname != locName);
+            if (files != null)
+            {
+                dsLocalLocation.MarkAsPartialDownload(dsinfo.Name);
+                var flookup = new HashSet<string>(dsLocalLocation.FindDSFiles(dsinfo.Name, returnWhatWeHave: true).Select(u => Path.GetFileName(u.LocalPath)));
+                foreach (var fremote in files)
+                {
+                    if (!flookup.Contains(Path.GetFileName(fremote.LocalPath)))
+                    {
+                        var f = new FileInfo(fremote.LocalPath);
+                        if (status != null)
+                        {
+                            status(string.Format("Copying file {0}.", f.Name));
+                        }
+                        f.CopyTo(Path.Combine(dsLocalLocation.LocationOfDataset(dsinfo.Name).FullName, f.Name));
+                    }
+                }
+
+                // And update the meta data.
+                dsLocalLocation.SaveListOfDSFiles(dsinfo.Name, dsinfoRemote.ListOfFiles());
+                dsLocalLocation.RemovePartialDownloadMark(dsinfo.Name);
+
+                // The files are all local. So...
+                return dsLocalLocation.FindDSFiles(dsinfo.Name, filter);
+            }
+
+            // Ok, nothing could get them. We need to fall back on our secondary copy method.
+            throw new NotImplementedException();
         }
 
         /// <summary>

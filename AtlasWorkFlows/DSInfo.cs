@@ -33,5 +33,16 @@ namespace AtlasWorkFlows
         /// This is not an absolute test - this makes the assumption that the dataset does exist somewhere in the world
         /// </remarks>
         public bool CanBeGeneratedAutomatically { get; set; }
+
+        /// <summary>
+        /// Function that will return a complete list of files in the dataset. These aren't just the files
+        /// that might be IsLocal, but all files stored on the GRID.
+        /// </summary>
+        public Func<string[]> ListOfFiles { get; set; }
+
+        /// <summary>
+        /// The location we are connected to
+        /// </summary>
+        public Location LocationProvider { get; set; }
     }
 }

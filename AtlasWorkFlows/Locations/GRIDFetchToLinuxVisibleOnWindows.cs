@@ -110,5 +110,15 @@ namespace AtlasWorkFlows.Locations
         {
             return _winDataset.FindDSFiles(dsname, filter) != null;
         }
+
+        /// <summary>
+        /// Return a list of files that are in the complete dataset.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public string[] ListOfFiles(string name)
+        {
+            return _winDataset.ListOfDSFiles(name);
+        }
     }
 }

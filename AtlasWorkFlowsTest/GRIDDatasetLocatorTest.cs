@@ -40,6 +40,19 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void LocationsAllMaskedOut()
+        {
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
+            var dsname = "ds1.1.1";
+            var d = utils.BuildSampleDirectoryBeforeBuild("LocationsAllMaskedOut", dsname);
+            Locator._getLocations = () => utils.GetLocal(d);
+
+            // No locations allowed, which should cause this to bomb.
+            var r = GRIDDatasetLocator.FetchDatasetUris(dsname, locationFilter: locName => false);
+        }
+
+        [TestMethod]
         public void DatasetAlreadyAtCERNWithLocal()
         {
             // Make sure having an empty local dataset doesn't confuse where we pick stuff up!

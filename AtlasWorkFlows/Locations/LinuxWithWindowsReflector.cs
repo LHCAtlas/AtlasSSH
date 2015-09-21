@@ -35,6 +35,8 @@ namespace AtlasWorkFlows.Locations
                     Name = name,
                     IsLocal = filter => dsfinder.CheckIfLocal(name, filter),
                     CanBeGeneratedAutomatically = true,
+                    ListOfFiles = () => dsfinder.ListOfFiles(name),
+                    LocationProvider = l,
                 };
             };
 

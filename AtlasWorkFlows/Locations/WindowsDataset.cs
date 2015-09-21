@@ -105,11 +105,21 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
+        /// Return the local directory of a particular dataset.
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        public DirectoryInfo LocationOfDataset(string dsname)
+        {
+            return BuildDSRootDirectory(dsname);
+        }
+
+        /// <summary>
         /// Return the list of dataset files from the locally stored text file.
         /// </summary>
         /// <param name="dsname"></param>
         /// <returns></returns>
-        private string[] ListOfDSFiles(string dsname)
+        public string[] ListOfDSFiles(string dsname)
         {
             var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetFileList));
             if (!f.Exists)
@@ -223,6 +233,5 @@ namespace AtlasWorkFlows.Locations
 
             return index;
         }
-
     }
 }

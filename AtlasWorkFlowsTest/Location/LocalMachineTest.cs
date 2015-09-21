@@ -28,6 +28,7 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsNotNull(r.IsLocal);
             Assert.IsFalse(r.IsLocal(null));
             Assert.IsFalse(r.CanBeGeneratedAutomatically);
+            Assert.AreEqual(0, r.ListOfFiles().Length);
         }
 
         [TestMethod]
@@ -52,6 +53,7 @@ namespace AtlasWorkFlowsTest.Location
             Assert.AreEqual("ds1.1.1", r.Name);
             Assert.IsTrue(r.IsLocal(null)); // They are all local.
             Assert.IsFalse(r.CanBeGeneratedAutomatically);
+            Assert.AreEqual(5, r.ListOfFiles().Length);
         }
 
         [TestMethod]
@@ -165,12 +167,84 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        public void GetForMissingLocalFileInPartialDataset()
+        public void LoadNewFilesToLocalWhenMissing()
         {
-            Assert.Inconclusive();
-            // A copy of the Look version of this will trigger a copy, so write this
-            // test when we implement the local downloads.
-            
+            // Setup the infrastructure. For Local to fetch files, it will callback into the global
+            // infrastructure - so that needs to be setup for the test.
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
+            var dsname = "ds1.1.1";
+            var d1 = utils.BuildSampleDirectoryBeforeBuild("LoadNewFilesToLocalWhenMissingRemote", dsname);
+            var d2 = new DirectoryInfo("LoadNewFilesToLocalWhenMissingLocal");
+            if (d2.Exists)
+            {
+                d2.Delete(true);
+            }
+            d2.Create();
+            d2.Refresh();
+            Locator._getLocations = () => utils.GetLocal(d1, d2);
+
+            var locator = new Locator();
+            var l = locator.FindLocation("MyTestLocalLocation");
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.IsFalse(r.IsLocal(null));
+            var files = l.GetDS(r, null, null);
+            Assert.AreEqual(5, files.Length);
+            Assert.IsTrue(files[0].LocalPath.Contains("LoadNewFilesToLocalWhenMissingLocal"));
+            Assert.AreEqual("ds1.1.1", d2.EnumerateDirectories().First().Name);
+        }
+
+        [TestMethod]
+        public void LoadTwoFilesToLocalWhenMissing()
+        {
+            // Setup the infrastructure. For Local to fetch files, it will callback into the global
+            // infrastructure - so that needs to be setup for the test.
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
+            var dsname = "ds1.1.1";
+            var d1 = utils.BuildSampleDirectoryBeforeBuild("LoadNewFilesToLocalWhenMissingRemote", dsname);
+            var d2 = new DirectoryInfo("LoadNewFilesToLocalWhenMissingLocal");
+            if (d2.Exists)
+            {
+                d2.Delete(true);
+            }
+            d2.Create();
+            d2.Refresh();
+            Locator._getLocations = () => utils.GetLocal(d1, d2);
+
+            var locator = new Locator();
+            var l = locator.FindLocation("MyTestLocalLocation");
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.IsFalse(r.IsLocal(null));
+            var files = l.GetDS(r, null, fslist => fslist.Take(2).ToArray());
+            Assert.AreEqual(2, files.Length);
+            Assert.IsTrue(files[0].LocalPath.Contains("LoadNewFilesToLocalWhenMissingLocal"));
+            Assert.AreEqual(2, d2.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Count());
+        }
+
+        [TestMethod]
+        public void FetchOneMissingFileFromRemote()
+        {
+            // Local is complete in all but one file. Force a fetch of just that one file.
+            // Setup the infrastructure. For Local to fetch files, it will callback into the global
+            // infrastructure - so that needs to be setup for the test.
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
+            var dsname = "ds1.1.1";
+            var d1 = utils.BuildSampleDirectoryBeforeBuild("FetchOneMissingFileFromRemoteRemote", dsname);
+            var d2 = utils.BuildSampleDirectoryBeforeBuild("FetchOneMissingFileFromRemoteLocal", dsname);
+            Locator._getLocations = () => utils.GetLocal(d1, d2);
+
+            var fbad = new FileInfo(Path.Combine(d2.FullName, "ds1.1.1", "sub2", "file.root.5"));
+            Assert.IsTrue(fbad.Exists);
+            fbad.Delete();
+            utils.MakePartial(d2, "ds1.1.1");
+
+            var locator = new Locator();
+            var l = locator.FindLocation("MyTestLocalLocation");
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.IsFalse(r.IsLocal(null));
+            var files = l.GetDS(r, null, null);
+            Assert.AreEqual(5, files.Length);
+            Assert.IsTrue(files[0].LocalPath.Contains("FetchOneMissingFileFromRemoteLocal"));
+            Assert.AreEqual(5, d2.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Count());
         }
 
         /// <summary>
