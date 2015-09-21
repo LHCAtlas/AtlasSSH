@@ -68,6 +68,18 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void FindSomeFilesWithScopedDataset()
+        {
+            var dsinfo = MakeDSInfo("user.norm:ds1.1.1");
+            var d = utils.BuildSampleDirectoryBeforeBuild("FindLocationWithScopedDataset", "ds1.1.1");
+
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
+            var r = gf.GetDS(dsinfo, fileFilter: fs => fs.Where(fname => fname.Contains("root.1")).ToArray());
+            Assert.IsNotNull(r);
+            Assert.AreEqual(1, r.Length);
+        }
+
+        [TestMethod]
         public void DownloadToLinuxDirectoryThatIsAWindowsDirectory()
         {
             var dsinfo = MakeDSInfo("ds1.1.1");

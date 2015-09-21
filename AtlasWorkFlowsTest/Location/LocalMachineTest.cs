@@ -31,6 +31,18 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void LocalNotExistingScopedDataset()
+        {
+            var c = GenerateLocalConfig();
+            var l = LocalMachine.GetLocation(c);
+            var r = l.GetDSInfo("user.gwatts:bogus");
+            Assert.AreEqual("user.gwatts:bogus", r.Name);
+            Assert.IsNotNull(r.IsLocal);
+            Assert.IsFalse(r.IsLocal(null));
+            Assert.IsFalse(r.CanBeGeneratedAutomatically);
+        }
+
+        [TestMethod]
         public void LocalFilesInExistingDataset()
         {
             var d = utils.BuildSampleDirectoryBeforeBuild("LocalFilesInExistingDataset", "ds1.1.1");
@@ -38,6 +50,18 @@ namespace AtlasWorkFlowsTest.Location
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
             Assert.AreEqual("ds1.1.1", r.Name);
+            Assert.IsTrue(r.IsLocal(null)); // They are all local.
+            Assert.IsFalse(r.CanBeGeneratedAutomatically);
+        }
+
+        [TestMethod]
+        public void LocalFilesInExistingScopedDataset()
+        {
+            var d = utils.BuildSampleDirectoryBeforeBuild("LocalFilesInExistingDataset", "ds1.1.1");
+            var c = GenerateLocalConfig(d);
+            var l = LocalMachine.GetLocation(c);
+            var r = l.GetDSInfo("user.gwatts:ds1.1.1");
+            Assert.AreEqual("user.gwatts:ds1.1.1", r.Name);
             Assert.IsTrue(r.IsLocal(null)); // They are all local.
             Assert.IsFalse(r.CanBeGeneratedAutomatically);
         }

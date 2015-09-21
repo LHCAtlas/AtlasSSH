@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -73,8 +74,9 @@ namespace AtlasWorkFlows.Locations
         /// <returns>The DirectoryInfo object of the dataset directory if found. Null otherwise.</returns>
         private static DirectoryInfo FindDataset(DirectoryInfo[] dirs, string dsname)
         {
+            var sanitizedname = dsname.SantizeDSName();
             return dirs
-                .Select(d => new DirectoryInfo(Path.Combine(d.FullName, dsname)))
+                .Select(d => new DirectoryInfo(Path.Combine(d.FullName, sanitizedname)))
                 .Where(d => d.Exists)
                 .FirstOrDefault();
         }
