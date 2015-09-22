@@ -34,27 +34,6 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        public void CheckNonPartialDataset()
-        {
-            var dsinfo = MakeDSInfo("ds1.1.1.1");
-            var d = utils.BuildSampleDirectoryBeforeBuild("FindLocalFilesWithNoWork", dsinfo.Name);
-
-            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
-            Assert.IsFalse(gf.CheckIfPartial(dsinfo.Name));
-        }
-
-        [TestMethod]
-        public void CheckPartialDataset()
-        {
-            var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = utils.BuildSampleDirectoryBeforeBuild("FindLocalFilesWithNoWork", dsinfo.Name);
-            utils.MakePartial(d, dsinfo.Name);
-
-            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, null, null);
-            Assert.IsTrue(gf.CheckIfPartial(dsinfo.Name));
-        }
-
-        [TestMethod]
         public void CountFilesDownloaded()
         {
             var dsinfo = MakeDSInfo("ds1.1.1");
@@ -122,54 +101,6 @@ namespace AtlasWorkFlowsTest.Location
             var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
             Assert.AreEqual(2, r.Length);
             Assert.AreEqual(2, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
-        }
-
-        [TestMethod]
-        public void CheckPartialDownloadIsCorrectlyMarked()
-        {
-            var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = new DirectoryInfo("CheckPartialDownloadIsCorrectlyMarked");
-            if (d.Exists)
-            {
-                d.Delete(true);
-            }
-
-            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
-            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
-            var r = gf.GetDS(dsinfo, fileFilter: flist => flist.OrderBy(f => f).Take(2).ToArray());
-            Assert.IsTrue(gf.CheckIfPartial(dsinfo.Name));
-        }
-
-        [TestMethod]
-        public void CheckFullDownloadIsCorrectlyMarked()
-        {
-            var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = new DirectoryInfo("CheckPartialDownloadIsCorrectlyMarked");
-            if (d.Exists)
-            {
-                d.Delete(true);
-            }
-
-            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
-            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
-            var r = gf.GetDS(dsinfo);
-            Assert.IsFalse(gf.CheckIfPartial(dsinfo.Name));
-        }
-
-        [TestMethod]
-        public void CheckFullDownloadWithNullFilterIsCorrectlyMarked()
-        {
-            var dsinfo = MakeDSInfo("ds1.1.1");
-            var d = new DirectoryInfo("CheckPartialDownloadIsCorrectlyMarked");
-            if (d.Exists)
-            {
-                d.Delete(true);
-            }
-
-            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
-            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
-            var r = gf.GetDS(dsinfo, fileFilter: flist => flist);
-            Assert.IsFalse(gf.CheckIfPartial(dsinfo.Name));
         }
 
         [TestMethod]
@@ -256,7 +187,6 @@ namespace AtlasWorkFlowsTest.Location
             Assert.AreEqual(5, r.Length);
 
             Assert.AreEqual(5, d.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.FullName.EndsWith(".part")).Count());
-            Assert.IsFalse(gf.CheckIfPartial(dsinfo.Name));
         }
         
         [TestMethod]

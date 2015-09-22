@@ -91,16 +91,6 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
-        /// Return true if the dataset is partial.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        internal bool CheckIfPartial(string name)
-        {
-            return _winDataset.CheckIfPartial(name);
-        }
-
-        /// <summary>
         /// Check to see if the files listed actually match the full dataset that we have
         /// on disk.
         /// </summary>

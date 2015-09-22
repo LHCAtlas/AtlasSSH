@@ -57,37 +57,31 @@ namespace AtlasWorkFlows.Locations
                 .Select(f => f.FullName)
                 .ToArray();
 
-            if (fileFilter != null)
+            // If there is no filter, we keep it as no filter.
+            if (fileFilter == null)
             {
-
-                // This is tricky. We must see if we get back the same files from the full dataset list and from the search of the files
-                // that are already downloaded. If they aren't, then we don't have the files the user wants, so we return null.
-                var namesOfLocalFiles = fullList.Select(f => Path.GetFileName(f)).ToArray();
-                namesOfLocalFiles = fileFilter(namesOfLocalFiles);
-
-                var namesOfRemoteFiles = fileFilter(ListOfDSFiles(dsname).Select(fn => fn.SantizeDSName()).ToArray());
-
-                var namedHashSet = new HashSet<string>();
-                namedHashSet.AddRange(namesOfLocalFiles);
-                namedHashSet.AddRange(namesOfRemoteFiles);
-                if (!returnWhatWeHave && (namedHashSet.Count != namesOfLocalFiles.Length
-                    || namedHashSet.Count != namesOfRemoteFiles.Length))
-                {
-                    return null;
-                }
-
-                var fullList1 = (from nOnly in namesOfLocalFiles
-                                 select (from f in fullList where Path.GetFileName(f) == nOnly select f).First()).ToArray();
-                fullList = fullList1;
+                fileFilter = alist => alist;
             }
-            else
+
+            // This is tricky. We must see if we get back the same files from the full dataset list and from the search of the files
+            // that are already downloaded. If they aren't, then we don't have the files the user wants, so we return null.
+            var namesOfLocalFiles = fullList.Select(f => Path.GetFileName(f)).ToArray();
+            namesOfLocalFiles = fileFilter(namesOfLocalFiles);
+
+            var namesOfRemoteFiles = fileFilter(ListOfDSFiles(dsname).Select(fn => fn.SantizeDSName()).ToArray());
+
+            var namedHashSet = new HashSet<string>();
+            namedHashSet.AddRange(namesOfLocalFiles);
+            namedHashSet.AddRange(namesOfRemoteFiles);
+            if (!returnWhatWeHave && (namedHashSet.Count != namesOfLocalFiles.Length
+                || namedHashSet.Count != namesOfRemoteFiles.Length))
             {
-                // If we are doing the full download, and this is a partial dataset, then we need to go back and re-do it.
-                if (!returnWhatWeHave && CheckIfPartial(dsname))
-                {
-                    return null;
-                }
+                return null;
             }
+
+            var fullList1 = (from nOnly in namesOfLocalFiles
+                             select (from f in fullList where Path.GetFileName(f) == nOnly select f).First()).ToArray();
+            fullList = fullList1;
 
             return fullList
                 .Select(f => new Uri(string.Format("file://" + f)))
@@ -154,16 +148,6 @@ namespace AtlasWorkFlows.Locations
                 return new string[0];
 
             return loc.EnumerateFiles("*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Select(f => f.Name).ToArray();
-        }
-
-        /// <summary>
-        /// Look for the partial marker file in the download.
-        /// </summary>
-        /// <param name="dsname"></param>
-        /// <returns></returns>
-        public bool CheckIfPartial(string dsname)
-        {
-            return File.Exists(Path.Combine(BuildDSRootDirectory(dsname).FullName, PartialDownloadTokenFilename));
         }
 
         /// <summary>
