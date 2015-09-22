@@ -1,6 +1,8 @@
-﻿using Sprache;
+﻿using Microsoft.Win32;
+using Sprache;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,44 +10,27 @@ using System.Threading.Tasks;
 namespace AtlasWorkFlows.Utils
 {
     /// <summary>
-    /// Build config for various things.
+    /// Build configuration for various things.
     /// Eventually I hope most of this can be loaded dynamically. But for initial setup, this seems simplest.
     /// </summary>
     class Config
     {
         public static Dictionary<string, Dictionary<string, string>> GetLocationConfigs()
         {
-            var r = new Dictionary<string, Dictionary<string, string>>();
+            const string defaultName = "AtlasSSHConfig.txt";
+            var files = new FileInfo[] {
+                new FileInfo("./" + defaultName),
+                new FileInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), defaultName)),
+                new FileInfo(Path.Combine(getOneDriveFolderPath(), defaultName)),
+            };
 
-            // CERN
-            var c = new Dictionary<string, string>();
-            c["DNSEndString"] = ".cern.ch";
-            c["Name"] = "CERN";
-            c["WindowsPath"] = @"\\uw01.myds.me\LLPData\GRIDDS";
-            c["LinuxPath"] = "/LLPData/GRIDDS";
-            c["LocationType"] = "LinuxWithWindowsReflector";
-            c["LinuxHost"] = "pcatuw4.cern.ch";
-            c["LinuxUserName"] = "gwatts";
-            c["LinuxFetcherType"] = "LinuxFetcher";
-            c["Priority"] = "10";
+            var goodFile = files.Where(f => f.Exists).FirstOrDefault();
+            if (goodFile == null)
+            {
+                throw new FileNotFoundException(string.Format("Unable to find the file {0} in the current directory, the Documents folder, or the root OneDrive folder! Without configuration we can't continue!", defaultName));
+            }
 
-            r["CERN"] = c;
-
-            // Local
-            c = new Dictionary<string, string>();
-            c["Name"] = "Local";
-            c["Paths"] = @"D:\GRIDDS";
-            c["LocationType"] = "LocalWindowsFilesystem";
-            c["Priority"] = "100";
-
-            c["LinuxFetcherType"] = "LinuxFetcher";
-            c["LinuxHost"] = "tev01.phys.washington.edu";
-            c["LinuxUserName"] = "gwatts";
-            c["LinuxTempLocation"] = "/tmp/gwattsdownloads";
-
-            r["Local"] = c;
-
-            return r;
+            return ParseConfigFile(goodFile);
         }
 
         #region Parsers
@@ -86,7 +71,7 @@ namespace AtlasWorkFlows.Utils
         #endregion
 
         /// <summary>
-        /// Parse a Config text file.
+        /// Parse a configuration text file.
         /// </summary>
         /// <param name="f"></param>
         /// <returns></returns>
@@ -109,6 +94,36 @@ namespace AtlasWorkFlows.Utils
 
                 return r;
             }
+        }
+
+        /// <summary>
+        /// Return the path of the OneDrive folder on this machine.
+        /// </summary>
+        /// <returns></returns>
+        private static string getOneDriveFolderPath()
+        {
+            var value1 = Registry.GetValue(
+                @"HKEY_CURRENT_USER\Software\Microsoft\SkyDrive",
+                @"UserFolder", null);
+
+            var path1 = value1 as string;
+            if (path1 != null && Directory.Exists(path1)) return path1;
+
+            var value2 = Registry.GetValue(
+                @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\SkyDrive",
+                @"UserFolder", null);
+
+            var path2 = value2 as string;
+            if (path2 != null && Directory.Exists(path2)) return path2;
+
+            var value3 = Registry.GetValue(
+                @"HKEY_CURRENT_USER\Software\Microsoft\OneDrive",
+                @"UserFolder", null);
+
+            var path3 = value3 as string;
+            if (path3 != null && Directory.Exists(path3)) return path3;
+
+            return null;
         }
     }
 }

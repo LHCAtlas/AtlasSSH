@@ -46,6 +46,15 @@ namespace AtlasWorkFlows.Locations
         internal static Func<Dictionary<string, Dictionary<string, string>>> _getLocations = null;
 
         /// <summary>
+        /// Centralize for easy access during testing.
+        /// </summary>
+        /// <returns></returns>
+        internal static Dictionary<string, Dictionary<string, string>> GetMasterConfig()
+        {
+            return _getLocations == null ? Config.GetLocationConfigs() : _getLocations(); ;
+        }
+
+        /// <summary>
         /// Return a list of all locations
         /// </summary>
         /// <returns></returns>
@@ -55,7 +64,7 @@ namespace AtlasWorkFlows.Locations
             {
                 _allLocations = new List<Location>();
 
-                var infoOnLocations = _getLocations == null ? Config.GetLocationConfigs() : _getLocations();
+                var infoOnLocations = GetMasterConfig();
                 foreach (var loc in infoOnLocations)
                 {
                     Location newLocation = null;

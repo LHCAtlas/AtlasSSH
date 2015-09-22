@@ -2,12 +2,26 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AtlasWorkFlows.Locations;
 using System.Linq;
+using System.Collections.Generic;
+using System.IO;
 
 namespace AtlasWorkFlowsTest.Location
 {
     [TestClass]
     public class LocatorTest
     {
+        [TestInitialize]
+        public void SetupConfig()
+        {
+            Locator._getLocations = () => utils.GetLocal(new DirectoryInfo(@"C:\"));
+        }
+
+        [TestCleanup]
+        public void CleanupConfig()
+        {
+            Locator._getLocations = null;
+        }
+
         [TestMethod]
         public void CERNAtCERN()
         {
@@ -15,7 +29,7 @@ namespace AtlasWorkFlowsTest.Location
             var locator = new Locator();
             var lst = locator.FindBestLocations();
             Assert.IsNotNull(lst);
-            var cern = lst.Where(l => l.Name == "CERN").FirstOrDefault();
+            var cern = lst.Where(l => l.Name == "MyTestLocation").FirstOrDefault();
             Assert.IsNotNull(cern);
         }
 
@@ -26,7 +40,7 @@ namespace AtlasWorkFlowsTest.Location
             var locator = new Locator();
             var lst = locator.FindBestLocations();
             Assert.IsNotNull(lst);
-            var cern = lst.Where(l => l.Name == "CERN").FirstOrDefault();
+            var cern = lst.Where(l => l.Name == "MyTestLocation").FirstOrDefault();
             Assert.IsNull(cern);
         }
 
@@ -35,7 +49,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("bogus.nytimes.com");
             var locator = new Locator();
-            var lst = locator.FindLocation("CERN");
+            var lst = locator.FindLocation("MyTestLocation");
             Assert.IsNotNull(lst);
         }
 
