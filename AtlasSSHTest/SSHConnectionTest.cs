@@ -71,6 +71,7 @@ namespace AtlasSSHTest
             }
         }
 
+#if false
         [TestMethod]
         public void ReadBackWithPrompt()
         {
@@ -105,6 +106,7 @@ namespace AtlasSSHTest
                 Assert.IsTrue(valueSet);
             }
         }
+#endif
 
         [TestMethod]
         public void copyRemoteDirectoryLocal()

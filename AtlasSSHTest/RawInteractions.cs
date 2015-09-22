@@ -11,6 +11,7 @@ namespace AtlasSSHTest
     [TestClass]
     public class RawInteractions
     {
+#if false
         [TestMethod]
         public void ReadBack()
         {
@@ -55,5 +56,6 @@ namespace AtlasSSHTest
 
             Assert.Inconclusive();
         }
+#endif
     }
 }
