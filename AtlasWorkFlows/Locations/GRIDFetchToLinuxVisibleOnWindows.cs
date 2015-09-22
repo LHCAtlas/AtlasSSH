@@ -64,7 +64,7 @@ namespace AtlasWorkFlows.Locations
             // If we have not yet cached the list of files in this dataset, then fetch it.
             if (_winDataset.TotalFilesInDataset(dsname) == -1)
             {
-                _winDataset.SaveListOfDSFiles(dsname, LinuxFetcher.GetListOfFiles(dsname));
+                _winDataset.SaveListOfDSFiles(dsname, LinuxFetcher.GetListOfFiles(dsname, statusUpdate));
             }
             LinuxFetcher.Fetch(dsname, string.Format("{0}/{1}", LinuxRootDSDirectory, dsname.SantizeDSName()), statusUpdate, fileFilter);
 

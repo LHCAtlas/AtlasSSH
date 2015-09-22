@@ -49,7 +49,7 @@ namespace AtlasWorkFlowsTest
         /// </summary>
         /// <param name="p"></param>
         /// <returns></returns>
-        public string[] GetListOfFiles(string dsname)
+        public string[] GetListOfFiles(string dsname, Action<string> status = null)
         {
             var d = new DirectoryInfo("fork-it");
             if (d.Exists)
@@ -63,7 +63,7 @@ namespace AtlasWorkFlowsTest
         /// </summary>
         /// <param name="linuxLocation"></param>
         /// <param name="directoryInfo"></param>
-        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo)
+        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo, Action<string> status = null)
         {
             // Copy the files and overwrite destination files if they already exist.
             foreach (var s in _dirHere.EnumerateFiles("*.root*", SearchOption.AllDirectories))

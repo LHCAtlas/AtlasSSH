@@ -35,19 +35,23 @@ namespace AtlasWorkFlows.Locations
         /// <param name="linuxDirDestination"></param>
         public void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdater = null, Func<string[], string[]> fileFilter = null)
         {
-            InitConnection()
-                .DownloadFromGRID(dsName, linuxDirDestination, statusUpdater, fileFilter);
+            var c = InitConnection(statusUpdater);
+            if (statusUpdater != null)
+                statusUpdater("Starting download of files from GRID");
+            c.DownloadFromGRID(dsName, linuxDirDestination, statusUpdater, fileFilter);
         }
 
         /// <summary>
         /// Init the connection for use by other parts of this object.
         /// </summary>
         /// <returns></returns>
-        private SSHConnection InitConnection()
+        private SSHConnection InitConnection(Action<string> statusUpdater)
         {
             if (_connection != null)
                 return _connection;
 
+            if (statusUpdater != null)
+                statusUpdater("Setting up GRID Environment");
             _connection = new SSHConnection(_linuxHost, _username);
             _connection
                     .setupATLAS()
@@ -62,10 +66,12 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="p"></param>
         /// <returns></returns>
-        public string[] GetListOfFiles(string dsName)
+        public string[] GetListOfFiles(string dsName, Action<string> statusUpdater = null)
         {
-            return InitConnection()
-                .FilelistFromGRID(dsName);
+            var s = InitConnection(statusUpdater);
+            if (statusUpdater != null)
+                statusUpdater("Getting list of files in Dataset");
+            return s.FilelistFromGRID(dsName);
         }
 
         /// <summary>
@@ -82,10 +88,12 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="linuxLocation"></param>
         /// <param name="directoryInfo"></param>
-        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo)
+        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo, Action<string> statusUpdater = null)
         {
-            InitConnection()
-                .CopyRemoteDirectoryLocally(linuxLocation, directoryInfo);
+            var c = InitConnection(statusUpdater);
+            if (statusUpdater != null)
+                statusUpdater("Copying downloaded files back from remote via SCP.");
+            c.CopyRemoteDirectoryLocally(linuxLocation, directoryInfo);
         }
     }
 }
