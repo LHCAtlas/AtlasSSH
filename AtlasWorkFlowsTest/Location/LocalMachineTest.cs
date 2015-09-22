@@ -247,6 +247,40 @@ namespace AtlasWorkFlowsTest.Location
             Assert.AreEqual(5, d2.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Count());
         }
 
+        [TestMethod]
+        public void FetchOneMissingFileFromBackupSource()
+        {
+            // Dataset isn't here and there is no remote... Backup to the rescue!
+            var dsname = "ds1.1.1";
+            var d2 = new DirectoryInfo("FetchOneMissingFileFromBackupSourceLocal");
+            if (d2.Exists)
+            {
+                d2.Delete(true);
+            }
+            d2.Create();
+            d2.Refresh();
+            Locator._getLocations = () => utils.GetLocal(null, d2);
+
+            // Configure a dummy fetcher that will get the datasets (they will get pulled when things are created).
+            // This isn't a real Linux downloader, so we need to put the files in some other place
+            var dtemp = new DirectoryInfo("FetchOneMissingFileFromBackupSourceRemoteLinuxDownload");
+            if (dtemp.Exists)
+            {
+                dtemp.Delete(true);
+            }
+            dtemp.Create();
+            FetchToRemoteLinuxDirInstance._test = new LinuxMirrorDownloaderPretend(dtemp, dsname);
+
+            var locator = new Locator();
+            var l = locator.FindLocation("MyTestLocalLocation");
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.IsFalse(r.IsLocal(null));
+            var files = l.GetDS(r, null, null);
+            Assert.AreEqual(5, files.Length);
+            Assert.IsTrue(files[0].LocalPath.Contains("FetchOneMissingFileFromBackupSourceLocal"));
+            Assert.AreEqual(5, d2.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Count());
+        }
+
         /// <summary>
         /// Generate the local configuration
         /// </summary>

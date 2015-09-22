@@ -1,4 +1,7 @@
-﻿using System;
+﻿using AtlasWorkFlows.Locations;
+using AtlasWorkFlows.Utils;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -121,6 +124,7 @@ namespace AtlasWorkFlowsTest
                 c["LocationType"] = "LinuxWithWindowsReflector";
                 c["LinuxUserName"] = "gwatts";
                 c["LinuxHost"] = "pcatuw4.cern.ch";
+                c["LinuxFetcherType"] = "LinuxFetcher";
                 c["Priority"] = "10";
 
                 r["MyTestLocation"] = c;
@@ -134,6 +138,8 @@ namespace AtlasWorkFlowsTest
                 c["Paths"] = locLocal.FullName;
                 c["LocationType"] = "LocalWindowsFilesystem";
                 c["Priority"] = "100";
+                c["LinuxFetcherType"] = "Test"; // Use test fetcher. The test harness must create it and put it into the proper spot.
+                c["LinuxTempLocation"] = "/tmp/gwattsdata";
 
                 r["MyTestLocalLocation"] = c; 
             }

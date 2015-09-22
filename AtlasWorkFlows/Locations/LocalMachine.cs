@@ -59,6 +59,7 @@ namespace AtlasWorkFlows.Locations
             };
 
             // Even though we claim we can't download a data file locally - we can. It is just that we won't do it automatically.
+            var linuxFinder = FetchToRemoteLinuxDirInstance.FetchRemoteLinuxInstance(props);
             l.GetDS = (dsinfo, status, filter) =>
                 {
                     var d = FindDataset(dirCacheLocations, dsinfo.Name);
@@ -66,7 +67,7 @@ namespace AtlasWorkFlows.Locations
                     {
                         var dsdir = new DirectoryInfo(Path.Combine(dirCacheLocations[0].FullName, dsinfo.Name));
                         dsdir.Create();
-                        return LoadDatasetFromOtherSource(new WindowsDataset(dsdir.Parent), dsinfo, status, filter, l.Name);
+                        return LoadDatasetFromOtherSource(new WindowsDataset(dsdir.Parent), dsinfo, status, filter, l.Name, linuxFinder, props["LinuxTempLocation"]);
                     }
                     var w = new WindowsDataset(d.Parent);
                     var result = w.FindDSFiles(dsinfo.Name, filter);
@@ -74,7 +75,7 @@ namespace AtlasWorkFlows.Locations
                     {
                         return result;
                     }
-                    return LoadDatasetFromOtherSource(w, dsinfo, status, filter, l.Name);
+                    return LoadDatasetFromOtherSource(w, dsinfo, status, filter, l.Name, linuxFinder, string.Format("{0}/{1}", props["LinuxTempLocation"], dsinfo.Name.SantizeDSName()));
                 };
 
             return l;
@@ -87,38 +88,62 @@ namespace AtlasWorkFlows.Locations
         /// <param name="status"></param>
         /// <param name="filter"></param>
         /// <returns></returns>
-        private static Uri[] LoadDatasetFromOtherSource(WindowsDataset dsLocalLocation, DSInfo dsinfo, Action<string> status, Func<string[], string[]> filter, string locName)
+        private static Uri[] LoadDatasetFromOtherSource(WindowsDataset dsLocalLocation,
+            DSInfo dsinfo,
+            Action<string> status,
+            Func<string[], string[]> filter, 
+            string locName, 
+            IFetchToRemoteLinuxDir fetcher,
+            string linuxLocation)
         {
             // First, attempt to find the Uri's from somewhere that we can see and easily copy.
-            var files = GRIDDatasetLocator.FetchDatasetUris(dsinfo.Name, status, filter, locationFilter: locname => locname != locName);
-            var dsinfoRemote = GRIDDatasetLocator.FetchDSInfo(dsinfo.Name, filter, locationFilter: locname => locname != locName);
-            if (files != null)
+            try
             {
-                dsLocalLocation.MarkAsPartialDownload(dsinfo.Name);
-                var flookup = new HashSet<string>(dsLocalLocation.FindDSFiles(dsinfo.Name, returnWhatWeHave: true).Select(u => Path.GetFileName(u.LocalPath)));
-                foreach (var fremote in files)
+                var files = GRIDDatasetLocator.FetchDatasetUris(dsinfo.Name, status, filter, locationFilter: locname => locname != locName);
+                var dsinfoRemote = GRIDDatasetLocator.FetchDSInfo(dsinfo.Name, filter, locationFilter: locname => locname != locName);
+                if (files != null)
                 {
-                    if (!flookup.Contains(Path.GetFileName(fremote.LocalPath)))
+                    dsLocalLocation.MarkAsPartialDownload(dsinfo.Name);
+                    var flookup = new HashSet<string>(dsLocalLocation.FindDSFiles(dsinfo.Name, returnWhatWeHave: true).Select(u => Path.GetFileName(u.LocalPath)));
+                    foreach (var fremote in files)
                     {
-                        var f = new FileInfo(fremote.LocalPath);
-                        if (status != null)
+                        if (!flookup.Contains(Path.GetFileName(fremote.LocalPath)))
                         {
-                            status(string.Format("Copying file {0}.", f.Name));
+                            var f = new FileInfo(fremote.LocalPath);
+                            if (status != null)
+                            {
+                                status(string.Format("Copying file {0}.", f.Name));
+                            }
+                            f.CopyTo(Path.Combine(dsLocalLocation.LocationOfDataset(dsinfo.Name).FullName, f.Name));
                         }
-                        f.CopyTo(Path.Combine(dsLocalLocation.LocationOfDataset(dsinfo.Name).FullName, f.Name));
                     }
+
+                    // And update the meta data.
+                    dsLocalLocation.SaveListOfDSFiles(dsinfo.Name, dsinfoRemote.ListOfFiles());
+                    dsLocalLocation.RemovePartialDownloadMark(dsinfo.Name);
+
+                    // The files are all local. So we are going to have to see if there is a backup to do the download for us.
+                    return dsLocalLocation.FindDSFiles(dsinfo.Name, filter);
                 }
-
-                // And update the meta data.
-                dsLocalLocation.SaveListOfDSFiles(dsinfo.Name, dsinfoRemote.ListOfFiles());
-                dsLocalLocation.RemovePartialDownloadMark(dsinfo.Name);
-
-                // The files are all local. So...
-                return dsLocalLocation.FindDSFiles(dsinfo.Name, filter);
+            }
+            catch (InvalidOperationException ops)
+            {
+                // No worries - we weren't able to run one of the data finders.
+                // We go onto the next step.
             }
 
-            // Ok, nothing could get them. We need to fall back on our secondary copy method.
-            throw new NotImplementedException();
+            // Ok, nothing could get them. We need to fall back on our secondary copy method. So copy everything to a local Linux directory, and then
+            // copy from there down to here.
+            dsLocalLocation.MarkAsPartialDownload(dsinfo.Name);
+            var allfiles = fetcher.GetListOfFiles(dsinfo.Name);
+            fetcher.Fetch(dsinfo.Name, linuxLocation, status, filter);
+
+            // Next, copy the files from there down to our location.
+            dsLocalLocation.SaveListOfDSFiles(dsinfo.Name, allfiles);
+            fetcher.CopyFromRemote(linuxLocation, dsLocalLocation.LocationOfDataset(dsinfo.Name));
+            dsLocalLocation.RemovePartialDownloadMark(dsinfo.Name);
+
+            return dsLocalLocation.FindDSFiles(dsinfo.Name, filter);
         }
 
         /// <summary>

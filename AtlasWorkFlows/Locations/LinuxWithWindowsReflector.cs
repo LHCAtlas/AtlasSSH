@@ -24,7 +24,7 @@ namespace AtlasWorkFlows.Locations
             l.Name = props["Name"];
             l.LocationTests.Add(() => IPLocationTests.FindLocalIpName().EndsWith(props["DNSEndString"]));
 
-            var fetcher = new LinuxFetcher(props["LinuxHost"], props["LinuxUserName"]);
+            var fetcher = FetchToRemoteLinuxDirInstance.FetchRemoteLinuxInstance(props);
             var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(props["WindowsPath"]), fetcher, props["LinuxPath"]);
 
             l.GetDSInfo = name =>

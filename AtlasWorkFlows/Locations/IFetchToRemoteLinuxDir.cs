@@ -26,5 +26,15 @@ namespace AtlasWorkFlows.Locations
         /// <param name="p"></param>
         /// <returns></returns>
         string[] GetListOfFiles(string p);
+
+        /// <summary>
+        /// Copy all files from the remote location down to a directory on linux
+        /// </summary>
+        /// <param name="linuxLocation"></param>
+        /// <param name="directoryInfo"></param>
+        /// <remarks>
+        /// Uses SCP
+        /// </remarks>
+        void CopyFromRemote(string linuxLocation, System.IO.DirectoryInfo directoryInfo);
     }
 }

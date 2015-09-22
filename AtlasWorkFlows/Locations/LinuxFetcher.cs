@@ -1,6 +1,7 @@
 ﻿using AtlasSSH;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -74,6 +75,17 @@ namespace AtlasWorkFlows.Locations
         {
             if (_connection != null)
                 _connection.Dispose();
+        }
+
+        /// <summary>
+        /// Download a directory from a remote location to here.
+        /// </summary>
+        /// <param name="linuxLocation"></param>
+        /// <param name="directoryInfo"></param>
+        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo)
+        {
+            InitConnection()
+                .CopyRemoteDirectoryLocally(linuxLocation, directoryInfo);
         }
     }
 }

@@ -214,7 +214,7 @@ namespace AtlasSSH
         /// Run a command. Scan the input for text and when we see it, send response strings.
         /// </summary>
         /// <param name="command">The command to start things off</param>
-        /// <param name="seeAndRespond">When we see a bit of text (a regex), then respond with another bit of text.</param>
+        /// <param name="seeAndRespond">When we see a bit of text (a Regex), then respond with another bit of text.</param>
         /// <param name="output">Called with each output line we read back</param>
         /// <returns></returns>
         public SSHConnection ExecuteCommandWithInput(string command, Dictionary<string, string> seeAndRespond, Action<string> output = null)
@@ -247,15 +247,35 @@ namespace AtlasSSH
         /// <param name="remotedir"></param>
         /// <param name="localDir"></param>
         /// <returns></returns>
-        public SSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir)
+        public SSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
             _scpError = null;
-            _scp.Value.Download(remotedir, localDir);
-            if (_scpError != null)
+            System.EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
+            if (statusUpdate != null)
             {
-                throw _scpError;
+                _scp.Value.Downloading += updateStatus;
             }
-            return this;
+            try
+            {
+                _scp.Value.Download(remotedir, localDir);
+                if (_scpError != null)
+                {
+                    throw _scpError;
+                }
+                return this;
+            }
+            finally
+            {
+                if (statusUpdate != null)
+                {
+                    _scp.Value.Downloading -= updateStatus;
+                }
+            }
+        }
+
+        void Value_Downloading(object sender, Renci.SshNet.Common.ScpDownloadEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
