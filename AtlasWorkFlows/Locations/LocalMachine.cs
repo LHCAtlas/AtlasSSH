@@ -42,6 +42,7 @@ namespace AtlasWorkFlows.Locations
                         IsLocal = filter => false,
                         CanBeGeneratedAutomatically = false,
                         ListOfFiles = () => new string[0],
+                        LocationProvider = l,
                     };
                 }
                 else
@@ -65,7 +66,7 @@ namespace AtlasWorkFlows.Locations
                     var d = FindDataset(dirCacheLocations, dsinfo.Name);
                     if (d == null)
                     {
-                        var dsdir = new DirectoryInfo(Path.Combine(dirCacheLocations[0].FullName, dsinfo.Name));
+                        var dsdir = new DirectoryInfo(Path.Combine(dirCacheLocations[0].FullName, dsinfo.Name.SantizeDSName()));
                         dsdir.Create();
                         return LoadDatasetFromOtherSource(new WindowsDataset(dsdir.Parent), dsinfo, status, filter, l.Name, linuxFinder, props["LinuxTempLocation"]);
                     }

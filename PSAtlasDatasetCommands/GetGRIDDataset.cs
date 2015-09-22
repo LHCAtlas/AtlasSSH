@@ -28,6 +28,12 @@ namespace PSAtlasDatasetCommands
         public int nFiles { get; set; }
 
         /// <summary>
+        /// The location where we should download the dataset to.
+        /// </summary>
+        [Parameter(HelpMessage="Location where the dataset should be downloaded to")]
+        public string Location { get; set; }
+
+        /// <summary>
         /// Fast listener
         /// </summary>
         class PSListener : TextWriterTraceListener
@@ -65,7 +71,15 @@ namespace PSAtlasDatasetCommands
             try
             {
                 Func<string[], string[]> filter = nFiles == 0 ? (Func<string[],string[]>) null : flist => flist.OrderBy(f => f).Take(nFiles).ToArray();
-                var r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname), fileFilter: filter);
+                Uri[] r = null;
+                if (!string.IsNullOrWhiteSpace(Location))
+                {
+                    r = GRIDDatasetLocator.FetchDatasetUrisAtLocation(Location, DatasetName, fname => DisplayStatus(fname), fileFilter: filter);
+                }
+                else
+                {
+                    r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname), fileFilter: filter);
+                }
                 foreach (var ds in r)
                 {
                     WriteObject(ds);

@@ -29,6 +29,40 @@ namespace AtlasWorkFlows
         }
 
         /// <summary>
+        /// Main routine to find all the URI's that point to a dataset.
+        /// </summary>
+        /// <param name="datasetname">The GRID dataset name to find pointers to.</param>
+        /// <param name="fileFilter">Filter the potential list of files to be returned or downloaded (can really speed up things if you want one file in a large dataset).</param>
+        /// <param name="locationFilter">Filter out the locations that we are allowed to fetch the file from.</param>
+        /// <param name="statusUpdate">Downloads from the grid can take a long time. Status updates will be posted here if not null.</param>
+        /// <returns></returns>
+        public static Uri[] FetchDatasetUrisAtLocation(string locationName, string datasetname, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null)
+        {
+            var locator = new Locator();
+            var location = locator.FindLocation(locationName);
+            if (location == null) {
+                throw new InvalidOperationException(string.Format("Location {0} isn't known.", locationName));
+            }
+            if (!location.LocationIsGood()) {
+                throw new InvalidOperationException(string.Format("Location {0} isn't active and can't be used", locationName));
+            }
+
+            var dsinfo = location.GetDSInfo(datasetname);
+
+            // And delegate all the rest of our work to fetching.
+            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter);
+        }
+
+        /// <summary>
+        /// Returns the list of currently active locations.
+        /// </summary>
+        /// <returns></returns>
+        public static Location[] GetActiveLocations()
+        {
+            return new Locator().FindBestLocations();
+        }
+
+        /// <summary>
         /// Find the DSInfo with the best possible location provider (local, remote, etc.).
         /// </summary>
         /// <param name="datasetname">The GRID dataset name to find pointers to.</param>

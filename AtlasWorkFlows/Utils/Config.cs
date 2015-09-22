@@ -25,7 +25,7 @@ namespace AtlasWorkFlows.Utils
             c["LocationType"] = "LinuxWithWindowsReflector";
             c["LinuxHost"] = "pcatuw4.cern.ch";
             c["LinuxUserName"] = "gwatts";
-            c["LinuxFetcherType"] = "LinuxFetcherType";
+            c["LinuxFetcherType"] = "LinuxFetcher";
             c["Priority"] = "10";
 
             r["CERN"] = c;
@@ -36,6 +36,11 @@ namespace AtlasWorkFlows.Utils
             c["Paths"] = @"D:\GRIDDS";
             c["LocationType"] = "LocalWindowsFilesystem";
             c["Priority"] = "100";
+
+            c["LinuxFetcherType"] = "LinuxFetcher";
+            c["LinuxHost"] = "tev01.phys.washington.edu";
+            c["LinuxUserName"] = "gwatts";
+            c["LinuxTempLocation"] = "/tmp/gwattsdownloads";
 
             r["Local"] = c;
 
