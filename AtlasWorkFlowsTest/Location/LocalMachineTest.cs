@@ -296,7 +296,10 @@ namespace AtlasWorkFlowsTest.Location
             return new Dictionary<string, string>()
             {
                 {"Name", "Local"},
-                {"Paths", paths}
+                {"Paths", paths},
+                {"LinuxFetcherType", "LinuxFetcher"},
+                {"LinuxHost", "bogus.nytimes.com"},
+                {"LinuxUserName", "whereAmI"},
             };
         }
     }

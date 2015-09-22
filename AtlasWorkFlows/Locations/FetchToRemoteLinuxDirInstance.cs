@@ -37,7 +37,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Double check
-            if (fetcher == null)
+            if (fetcher == null && !(name == "Test"))
             {
                 throw new ArgumentException(string.Format("Do not know how to instantiate Fetcher of type '{0}'.", name));
             }
