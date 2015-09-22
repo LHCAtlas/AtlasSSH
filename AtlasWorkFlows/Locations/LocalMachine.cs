@@ -127,7 +127,7 @@ namespace AtlasWorkFlows.Locations
                     return dsLocalLocation.FindDSFiles(dsinfo.Name, filter);
                 }
             }
-            catch (InvalidOperationException ops)
+            catch (InvalidOperationException)
             {
                 // No worries - we weren't able to run one of the data finders.
                 // We go onto the next step.
