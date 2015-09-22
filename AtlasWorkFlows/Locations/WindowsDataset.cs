@@ -123,7 +123,7 @@ namespace AtlasWorkFlows.Locations
         {
             var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetFileList));
             if (!f.Exists)
-                return new string[0];
+                return ListOfFilesWeKnowAbout(dsname);
 
             var files = new List<string>();
             using (var rd = f.OpenText())
@@ -139,6 +139,21 @@ namespace AtlasWorkFlows.Locations
             }
 
             return files.ToArray();
+        }
+
+        /// <summary>
+        /// If someone else downloads the files, they won't always put all the files in there.
+        /// If that is the case, we will just assume they have done a full dataset download.
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        private string[] ListOfFilesWeKnowAbout(string dsname)
+        {
+            var loc = BuildDSRootDirectory(dsname);
+            if (!loc.Exists)
+                return new string[0];
+
+            return loc.EnumerateFiles("*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Select(f => f.Name).ToArray();
         }
 
         /// <summary>
