@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace AtlasWorkFlowsTest
 {
-    class utils
+    static class utils
     {
 
         /// <summary>
@@ -145,6 +145,24 @@ namespace AtlasWorkFlowsTest
             }
 
             return r;
+        }
+
+        /// <summary>
+        /// Read a line of a file.
+        /// </summary>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        public static string ReadLine (this FileInfo f, int line = 1)
+        {
+            using (var wr = f.OpenText())
+            {
+                var lineText = "";
+                for (int i = 1; i <= line; i++)
+                {
+                    lineText = wr.ReadLine();
+                }
+                return lineText;
+            }
         }
     }
 }

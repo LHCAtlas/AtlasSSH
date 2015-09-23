@@ -156,12 +156,69 @@ namespace AtlasWorkFlows.Locations
         /// <param name="dsname"></param>
         public void MarkAsPartialDownload(string dsname)
         {
-            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, PartialDownloadTokenFilename));
-            if (!f.Directory.Exists)
-            {
-                f.Directory.Create();
-            }
+            ;
+            var f = new FileInfo(Path.Combine(AssureDatasetDirectoryCreated(dsname).FullName, PartialDownloadTokenFilename));
             using (var wr = f.CreateText()) { }
+        }
+
+        /// <summary>
+        /// Make sure the dataset directory has been created. If it hasn't, then create it.
+        /// Also, manage the updating of the contents.txt file.
+        /// </summary>
+        /// <param name="dsname"></param>
+        private DirectoryInfo AssureDatasetDirectoryCreated(string dsname)
+        {
+            var d = BuildDSRootDirectory(dsname);
+            if (!d.Exists)
+            {
+                d.Create();
+                UpdateContentsFile(dsname);
+            }
+            return d;
+        }
+
+        /// <summary>
+        /// Write whatever we need for the dataset name to the contents.txt dataset catalog.
+        /// </summary>
+        /// <param name="dsname"></param>
+        private void UpdateContentsFile(string dsname)
+        {
+            var contentsFile = new FileInfo(Path.Combine(LocationOfLocalCache.FullName, "contents.txt"));
+            if (!contentsFile.Exists) {
+                using (var wr = contentsFile.CreateText()){}
+            }
+
+            // Scan through to see if this dataset is already in the file.
+            var outputContents = new FileInfo(Path.Combine(LocationOfLocalCache.FullName, "contents.txt.tmp"));
+            bool foundOldReference = false;
+            using (var wr = outputContents.CreateText()) {
+                using (var rd = contentsFile.OpenText()) {
+                    string line = "";
+                    while ((line = rd.ReadLine()) != null) {
+                        if (line.StartsWith(dsname + " ")) {
+                            foundOldReference = true;
+                            break;
+                        }
+                        wr.WriteLine(line);
+                    }
+                }
+
+                if (!foundOldReference) {
+                    wr.WriteLine(string.Format("{0} {1}", dsname, System.Security.Principal.WindowsIdentity.GetCurrent().Name));
+                }
+            }
+
+            // Either put in the new contents.txt file, or delete this temp one if not needed.
+            if (foundOldReference)
+            {
+                outputContents.Delete();
+            }
+            else
+            {
+                contentsFile.Delete();
+                outputContents.CopyTo(contentsFile.FullName, true);
+                outputContents.Delete();
+            }
         }
 
         /// <summary>

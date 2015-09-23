@@ -87,6 +87,75 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void MakeSureContentsFileIsCreated()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("MakeSureContentsFileIsCreated");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo);
+
+            var f = new FileInfo(Path.Combine(d.FullName, "contents.txt"));
+            Assert.IsTrue(f.Exists);
+            Assert.IsTrue(f.ReadLine().StartsWith(dsinfo.Name));
+        }
+
+        [TestMethod]
+        public void MakeSureContentsFileIsUpdated()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("MakeSureContentsFileIsUpdated");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+            d.Create();
+            var f = new FileInfo(Path.Combine(d.FullName, "contents.txt"));
+            using (var wr = f.CreateText())
+            {
+                wr.WriteLine("otherdataset.data.set gwatts");
+            }
+
+
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo);
+
+            Assert.IsTrue(f.Exists);
+            Assert.AreEqual("otherdataset.data.set gwatts", f.ReadLine(1));
+            Assert.IsTrue(f.ReadLine(2).StartsWith(dsinfo.Name));
+        }
+
+        [TestMethod]
+        public void MakeSureContentsFileIsNotUpdated()
+        {
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("MakeSureContentsFileIsUpdated");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+            d.Create();
+            var f = new FileInfo(Path.Combine(d.FullName, "contents.txt"));
+            using (var wr = f.CreateText())
+            {
+                wr.WriteLine("ds1.1.1 gwatts bogus fight");
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo);
+
+            Assert.IsTrue(f.Exists);
+            Assert.AreEqual("ds1.1.1 gwatts bogus fight", f.ReadLine(1));
+        }
+        
+        [TestMethod]
         public void DownloadLimitedNumberOfFiles()
         {
             var dsinfo = MakeDSInfo("ds1.1.1");
