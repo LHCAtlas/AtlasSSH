@@ -164,5 +164,16 @@ namespace AtlasWorkFlowsTest
                 return lineText;
             }
         }
+
+        /// <summary>
+        /// Create a DirectoryInfo containing the subdir
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="subdir"></param>
+        /// <returns></returns>
+        public static DirectoryInfo SubDir (this DirectoryInfo parent, string subdir)
+        {
+            return new DirectoryInfo(Path.Combine(parent.FullName, subdir));
+        }
     }
 }

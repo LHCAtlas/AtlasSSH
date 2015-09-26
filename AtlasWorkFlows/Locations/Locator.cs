@@ -13,6 +13,20 @@ namespace AtlasWorkFlows.Locations
     class Locator
     {
         /// <summary>
+        /// For testing - disable everything?
+        /// </summary>
+        private static bool _disableAll = false;
+
+        /// <summary>
+        /// Set the disable (for testing only).
+        /// </summary>
+        /// <param name="disable"></param>
+        internal static void DisableAllLocators(bool disable)
+        {
+            _disableAll = disable;
+        }
+
+        /// <summary>
         /// Evaluate the various locations and return a list of valid ones.
         /// </summary>
         /// <returns></returns>
@@ -61,6 +75,11 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         private IEnumerable<Location> GetAllLocations()
         {
+            // If doing some testing...
+            if (_disableAll)
+                return new Location[0];
+
+            // Return the locations
             if (_allLocations == null)
             {
                 _allLocations = new List<Location>();

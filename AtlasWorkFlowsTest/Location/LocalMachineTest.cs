@@ -10,6 +10,13 @@ namespace AtlasWorkFlowsTest.Location
     [TestClass]
     public class LocalMachineTest
     {
+        [TestCleanup]
+        public void Cleanup()
+        {
+            Locator.SetLocationFilter(null);
+            Locator.DisableAllLocators(false);
+        }
+
         [TestMethod]
         public void TestName()
         {
@@ -281,11 +288,34 @@ namespace AtlasWorkFlowsTest.Location
             Assert.AreEqual(5, d2.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Count());
         }
 
-        /// <summary>
-        /// Generate the local configuration
-        /// </summary>
-        /// <returns></returns>
-        private Dictionary<string, string> GenerateLocalConfig(DirectoryInfo local = null)
+        [TestMethod]
+        public void FetchOneFileWithNoBackupOverNetwork()
+        {
+            // This is a real run (so it is slow), and it will fetch data over the network.
+            var d = new DirectoryInfo("FetchOneFileWithNoBackupOverNetwork");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+            d.Create();
+
+            var c = GenerateLocalConfigWithWorkingRemote(d);
+            Locator.DisableAllLocators(true);
+
+            var l = LocalMachine.GetLocation(c);
+            var r = l.GetDSInfo("user.gwatts:user.gwatts.301295.EVNT.1");
+            Assert.AreEqual(1, l.GetDS(r, rep => Console.WriteLine(rep), fslist => fslist.Take(1).ToArray()).Length);
+
+            var dsdir = d.SubDir("user.gwatts.301295.EVNT.1");
+            Assert.IsTrue(dsdir.Exists);
+            Assert.AreEqual(1, dsdir.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Count());
+        }
+
+    /// <summary>
+    /// Generate the local configuration
+    /// </summary>
+    /// <returns></returns>
+    private Dictionary<string, string> GenerateLocalConfig(DirectoryInfo local = null)
         {
             var paths = ".";
             if (local != null)
@@ -300,6 +330,29 @@ namespace AtlasWorkFlowsTest.Location
                 {"LinuxFetcherType", "LinuxFetcher"},
                 {"LinuxHost", "bogus.nytimes.com"},
                 {"LinuxUserName", "whereAmI"},
+            };
+        }
+
+        /// <summary>
+        /// Generate the local configuration with real values
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<string, string> GenerateLocalConfigWithWorkingRemote(DirectoryInfo local = null)
+        {
+            var paths = ".";
+            if (local != null)
+            {
+                paths = local.FullName;
+            }
+
+            return new Dictionary<string, string>()
+            {
+                {"Name", "Local"},
+                {"Paths", paths},
+                {"LinuxFetcherType", "LinuxFetcher"},
+                {"LinuxHost", "tev01.phys.washington.edu"},
+                {"LinuxUserName", "gwatts"},
+                {"LinuxTempLocation", "/tmp/gwatts/tmpdata" },
             };
         }
     }
