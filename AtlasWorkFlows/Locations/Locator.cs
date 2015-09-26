@@ -20,6 +20,7 @@ namespace AtlasWorkFlows.Locations
         {
             return GetAllLocations()
                 .Where(l => l.LocationIsGood())
+                .Where(l => _locationFilter == null ? true : _locationFilter(l.Name))
                 .ToArray();
         }
 
@@ -86,6 +87,21 @@ namespace AtlasWorkFlows.Locations
 
             }
             return _allLocations;
+        }
+
+        /// <summary>
+        /// Set to a filter for all locations.
+        /// </summary>
+        private static Func<string, bool> _locationFilter = null;
+
+        /// <summary>
+        /// Set a filter for future location fetches.
+        /// NOTE: this is a global variable!
+        /// </summary>
+        /// <param name="p"></param>
+        public static void SetLocationFilter(Func<string, bool> filter)
+        {
+            _locationFilter = filter;
         }
     }
 }

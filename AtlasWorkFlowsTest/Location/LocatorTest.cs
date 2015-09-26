@@ -20,6 +20,7 @@ namespace AtlasWorkFlowsTest.Location
         public void CleanupConfig()
         {
             Locator._getLocations = null;
+            Locator.SetLocationFilter(null);
         }
 
         [TestMethod]
@@ -60,6 +61,17 @@ namespace AtlasWorkFlowsTest.Location
             var locator = new Locator();
             var lst = locator.FindLocation("FeakoutLocation");
             Assert.IsNull(lst);
+        }
+
+        [TestMethod]
+        public void ScreenLocations()
+        {
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
+            Locator.SetLocationFilter(loc => false);
+            var locator = new Locator();
+            var lst = locator.FindBestLocations();
+            Assert.IsNotNull(lst);
+            Assert.AreEqual(0, lst.Length);
         }
     }
 }
