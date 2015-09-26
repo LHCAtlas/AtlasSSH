@@ -1,9 +1,10 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
+﻿using AtlasSSH;
 using AtlasWorkFlows.Locations;
-using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace AtlasWorkFlowsTest.Location
 {
@@ -309,13 +310,31 @@ namespace AtlasWorkFlowsTest.Location
             var dsdir = d.SubDir("user.gwatts.301295.EVNT.1");
             Assert.IsTrue(dsdir.Exists);
             Assert.AreEqual(1, dsdir.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Count());
+
+            // Next, make sure that there are no files left over up on the remote machine.
+            var username = c["LinuxUserName"];
+            var machine = c["LinuxHost"];
+
+            using (var s = new SSHConnection(machine, username))
+            {
+                bool stillThere = false;
+                s.ExecuteCommand(string.Format("ls {0}", c["LinuxTempLocation"]),
+                    outLine =>
+                    {
+                        Console.WriteLine("output of ls: " + outLine);
+                        stillThere |= !outLine.Contains("cannot access");
+                    }
+                    );
+                Assert.IsFalse(stillThere);
+            }
+
         }
 
-    /// <summary>
-    /// Generate the local configuration
-    /// </summary>
-    /// <returns></returns>
-    private Dictionary<string, string> GenerateLocalConfig(DirectoryInfo local = null)
+        /// <summary>
+        /// Generate the local configuration
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<string, string> GenerateLocalConfig(DirectoryInfo local = null)
         {
             var paths = ".";
             if (local != null)

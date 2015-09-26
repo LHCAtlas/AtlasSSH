@@ -28,13 +28,13 @@ namespace AtlasWorkFlows.Locations
         string[] GetListOfFiles(string p, Action<string> statusUpdate = null);
 
         /// <summary>
-        /// Copy all files from the remote location down to a directory on linux
+        /// Copy all files from the remote location down to a directory on Linux
         /// </summary>
         /// <param name="linuxLocation"></param>
         /// <param name="directoryInfo"></param>
         /// <remarks>
         /// Uses SCP
         /// </remarks>
-        void CopyFromRemote(string linuxLocation, System.IO.DirectoryInfo directoryInfo, Action<string> statusUpdate = null);
+        void CopyFromRemote(string linuxLocation, System.IO.DirectoryInfo directoryInfo, Action<string> statusUpdate = null, bool removeDirectoryWhenDone = false);
     }
 }

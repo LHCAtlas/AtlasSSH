@@ -63,7 +63,7 @@ namespace AtlasWorkFlowsTest
         /// </summary>
         /// <param name="linuxLocation"></param>
         /// <param name="directoryInfo"></param>
-        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo, Action<string> status = null)
+        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo, Action<string> status = null, bool removeDirectoryWhenDone = false)
         {
             // Copy the files and overwrite destination files if they already exist.
             foreach (var s in _dirHere.EnumerateFiles("*.root*", SearchOption.AllDirectories))

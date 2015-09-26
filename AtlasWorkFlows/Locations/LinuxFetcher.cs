@@ -88,12 +88,18 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="linuxLocation"></param>
         /// <param name="directoryInfo"></param>
-        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo, Action<string> statusUpdater = null)
+        public void CopyFromRemote(string linuxLocation, DirectoryInfo directoryInfo, Action<string> statusUpdater = null, bool whenremoveDirectoryWhenDone = false)
         {
             var c = InitConnection(statusUpdater);
             if (statusUpdater != null)
                 statusUpdater("Copying downloaded files back from remote via SCP.");
             c.CopyRemoteDirectoryLocally(linuxLocation, directoryInfo);
+
+            // Remove that directory?
+            if (whenremoveDirectoryWhenDone)
+            {
+                c.ExecuteCommand(string.Format("rm -rf {0}", linuxLocation), statusUpdater);
+            }
         }
     }
 }

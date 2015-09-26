@@ -133,7 +133,7 @@ namespace AtlasWorkFlows.Locations
                 // We go onto the next step.
             }
 
-            // Ok, nothing could get them. We need to fall back on our secondary copy method. So copy everything to a local Linux directory, and then
+            // OK, nothing could get them. We need to fall back on our secondary copy method. So copy everything to a local Linux directory, and then
             // copy from there down to here.
             dsLocalLocation.MarkAsPartialDownload(dsinfo.Name);
             var allfiles = fetcher.GetListOfFiles(dsinfo.Name, status);
@@ -141,7 +141,7 @@ namespace AtlasWorkFlows.Locations
 
             // Next, copy the files from there down to our location.
             dsLocalLocation.SaveListOfDSFiles(dsinfo.Name, allfiles);
-            fetcher.CopyFromRemote(linuxLocation, dsLocalLocation.LocationOfDataset(dsinfo.Name), status);
+            fetcher.CopyFromRemote(linuxLocation, dsLocalLocation.LocationOfDataset(dsinfo.Name), status, removeDirectoryWhenDone: true);
             dsLocalLocation.RemovePartialDownloadMark(dsinfo.Name);
 
             return dsLocalLocation.FindDSFiles(dsinfo.Name, filter);
