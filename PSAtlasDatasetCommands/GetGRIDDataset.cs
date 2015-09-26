@@ -34,6 +34,21 @@ namespace PSAtlasDatasetCommands
         public string Location { get; set; }
 
         /// <summary>
+        /// If true, then when the destination is local, that will not be used.
+        /// Ignored unless used with --Location.
+        /// </summary>
+        [Parameter(HelpMessage = "Do use any other intermediate locations (only valid with --Location)")]
+        public SwitchParameter DoNotUseRelay { get; set; }
+
+        /// <summary>
+        /// Setup defaults.
+        /// </summary>
+        public GetGRIDDataset()
+        {
+            DoNotUseRelay = false;
+        }
+
+        /// <summary>
         /// Fast listener
         /// </summary>
         class PSListener : TextWriterTraceListener
@@ -74,7 +89,10 @@ namespace PSAtlasDatasetCommands
                 Uri[] r = null;
                 if (!string.IsNullOrWhiteSpace(Location))
                 {
-                    r = GRIDDatasetLocator.FetchDatasetUrisAtLocation(Location, DatasetName, fname => DisplayStatus(fname), fileFilter: filter);
+                    using (var holder = GRIDDatasetLocator.SetLocationFilter(loc => false))
+                    {
+                        r = GRIDDatasetLocator.FetchDatasetUrisAtLocation(Location, DatasetName, fname => DisplayStatus(fname), fileFilter: filter);
+                    }
                 }
                 else
                 {

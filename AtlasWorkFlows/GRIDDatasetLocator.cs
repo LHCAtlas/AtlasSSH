@@ -62,6 +62,25 @@ namespace AtlasWorkFlows
             return new Locator().FindBestLocations();
         }
 
+        class TrackLocationFilterSetting : IDisposable
+        {
+            public void Dispose()
+            {
+                Locator.SetLocationFilter(null);
+            }
+        }
+
+        /// <summary>
+        /// Set the location to be filtered.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public static IDisposable SetLocationFilter(Func<object, bool> p)
+        {
+            Locator.SetLocationFilter(p);
+            return new TrackLocationFilterSetting();
+        }
+
         /// <summary>
         /// Find the DSInfo with the best possible location provider (local, remote, etc.).
         /// </summary>
