@@ -66,7 +66,12 @@ namespace AtlasWorkFlows.Locations
                     var d = FindDataset(dirCacheLocations, dsinfo.Name);
                     if (d == null)
                     {
-                        var dsdir = new DirectoryInfo(Path.Combine(dirCacheLocations[0].FullName, dsinfo.Name.SantizeDSName()));
+                        var validLocalCache = FindLocalCache(dirCacheLocations);
+                        if (validLocalCache == null)
+                        {
+                            throw new InvalidOperationException(string.Format("No local cache directory has been created; we can't copy any files locally until it has. See the {0}.Paths property in the configuration", l.Name));
+                        }
+                        var dsdir = new DirectoryInfo(Path.Combine(validLocalCache.FullName, dsinfo.Name.SantizeDSName()));
                         dsdir.Create();
                         return LoadDatasetFromOtherSource(new WindowsDataset(dsdir.Parent), dsinfo, status, filter, l.Name, linuxFinder, props["LinuxTempLocation"]);
                     }
@@ -80,6 +85,19 @@ namespace AtlasWorkFlows.Locations
                 };
 
             return l;
+        }
+
+        /// <summary>
+        /// Find a local directory that has been created and is, thus, accessible and good where we can
+        /// cache a dataset.
+        /// </summary>
+        /// <param name="dirCacheLocations">List of locations to look at</param>
+        /// <returns></returns>
+        private static DirectoryInfo FindLocalCache(DirectoryInfo[] dirCacheLocations)
+        {
+            return dirCacheLocations
+                .Where(d => d.Exists)
+                .FirstOrDefault();
         }
 
         /// <summary>

@@ -202,6 +202,28 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void FailBecauseLocalRepoNotCreated()
+        {
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
+            var dsname = "ds1.1.1";
+            var d1 = utils.BuildSampleDirectoryBeforeBuild("LoadNewFilesToLocalWhenMissingRemote", dsname);
+            var d2 = new DirectoryInfo("FailBecauseLocalRepoNotCreated");
+            if (d2.Exists)
+            {
+                d2.Delete(true);
+            }
+            d2.Refresh();
+            Locator._getLocations = () => utils.GetLocal(d1, d2);
+
+            var locator = new Locator();
+            var l = locator.FindLocation("MyTestLocalLocation");
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.IsFalse(r.IsLocal(null));
+            var files = l.GetDS(r, null, null);
+        }
+
+        [TestMethod]
         public void LoadTwoFilesToLocalWhenMissing()
         {
             // Setup the infrastructure. For Local to fetch files, it will callback into the global
