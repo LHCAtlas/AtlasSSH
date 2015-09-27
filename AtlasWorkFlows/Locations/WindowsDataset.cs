@@ -68,7 +68,14 @@ namespace AtlasWorkFlows.Locations
             var namesOfLocalFiles = fullList.Select(f => Path.GetFileName(f)).ToArray();
             namesOfLocalFiles = fileFilter(namesOfLocalFiles);
 
-            var namesOfRemoteFiles = fileFilter(ListOfDSFiles(dsname).Select(fn => fn.SantizeDSName()).ToArray());
+            var filesInCompleteDataset = ListOfDSFiles(dsname);
+            if (filesInCompleteDataset.Length == 0)
+            {
+                // If the local dataset thinks there are no files in the dataset,
+                // then assume something went wrong (e.g. crash during dataset download).
+                return null;
+            }
+            var namesOfRemoteFiles = fileFilter(filesInCompleteDataset.Select(fn => fn.SantizeDSName()).ToArray());
 
             var namedHashSet = new HashSet<string>();
             namedHashSet.AddRange(namesOfLocalFiles);

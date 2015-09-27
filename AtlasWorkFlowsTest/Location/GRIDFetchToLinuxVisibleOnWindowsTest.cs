@@ -87,6 +87,31 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void DownloadToLinuxDirectoryThatIsAWindowsDirectoryAndAreadyCreated()
+        {
+            // Seen in the wild. A crash (or other interruption) means the dataset directory has
+            // been created, but is empty (for whatever reason). In that particular case, we should
+            // treat it as not there.
+
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("DownloadToLinuxDirectoryThatIsAWindowsDirectory");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+            d.Create();
+            var dsdir = d.SubDir(dsinfo.Name);
+            dsdir.Create();
+
+            var ld = new LinuxMirrorDownloaderPretend(d, dsinfo.Name);
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+            var r = gf.GetDS(dsinfo);
+            Assert.IsNotNull(r);
+            Assert.AreEqual(5, r.Length);
+            Assert.AreEqual("/bogus/files/store/ds1.1.1", ld.LinuxDest);
+        }
+
+        [TestMethod]
         public void MakeSureContentsFileIsCreated()
         {
             var dsinfo = MakeDSInfo("ds1.1.1");

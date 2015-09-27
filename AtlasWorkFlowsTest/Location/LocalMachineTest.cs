@@ -202,6 +202,35 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void LoadNewFilesToLocalWhenEmptyDirectory()
+        {
+            // Seen in the wild. Local directory is actually there for the dataset, but
+            // empty due to an earlier crash. Make sure the copy still occurs.
+
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.cern.ch");
+            var dsname = "ds1.1.1";
+            var d1 = utils.BuildSampleDirectoryBeforeBuild("LoadNewFilesToLocalWhenMissingRemote", dsname);
+            var d2 = new DirectoryInfo("LoadNewFilesToLocalWhenMissingLocal");
+            if (d2.Exists)
+            {
+                d2.Delete(true);
+            }
+            d2.Create();
+            d2.Refresh();
+            d2.SubDir("ds1.1.1").Create();
+            Locator._getLocations = () => utils.GetLocal(d1, d2);
+
+            var locator = new Locator();
+            var l = locator.FindLocation("MyTestLocalLocation");
+            var r = l.GetDSInfo("ds1.1.1");
+            Assert.IsFalse(r.IsLocal(null));
+            var files = l.GetDS(r, null, null);
+            Assert.AreEqual(5, files.Length);
+            Assert.IsTrue(files[0].LocalPath.Contains("LoadNewFilesToLocalWhenMissingLocal"));
+            Assert.AreEqual("ds1.1.1", d2.EnumerateDirectories().First().Name);
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void FailBecauseLocalRepoNotCreated()
         {

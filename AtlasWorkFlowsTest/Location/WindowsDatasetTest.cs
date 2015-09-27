@@ -7,7 +7,7 @@ namespace AtlasWorkFlowsTest.Location
 {
     /// <summary>
     /// Some extra tests for WindowsDataset
-    /// This isn't tested as well because it is mostly refactored code from LinuxWithWindowsReflector.
+    /// This isn't tested as well because it is mostly re-factored code from LinuxWithWindowsReflector.
     /// As a result a lot of its testing happens here.
     /// </summary>
     [TestClass]
