@@ -42,3 +42,34 @@ Because of encryption libraries (I think) no GRID tools work on Windows. This li
 kludge in the sense that it uses ssh into a Linux box and runs the commands and looks at the output
 that comes back. The remote box must be setup in certain ways for this to work. And if the tools change
 their output format... well, there will have to be patches. :-)
+
+Installation
+============
+
+Windows 10:
+
+There is a onetime setup you must do in order to declare the myget feed where these commands are published to
+one-get:
+
+  Register-PSRepository -name "atlas-myget" -source https://www.myget.org/F/gwatts-powershell/api/v2
+
+That done, you should now be able to locate the module for installation:
+
+   find-module PSAtlasDatasetCommands
+
+And if you are happy with the response, install it:
+
+   find-module PSAtlasDatasetCommands | Install-Module -scope CurrentUser
+
+You can also run that from an admin console, and leave off the Scope. After it is installed, to get the most
+recent version, use:
+
+   Update-Module PSAtlasDatasetCommands
+
+
+Development
+===========
+
+Make sure the version numbers in the nuspec and psd1 file's track.
+Run nuget pack from the PSAtlasDatasetCommands directory after building in release mode.
+Upload to myget (or wherever).
