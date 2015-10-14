@@ -1,11 +1,9 @@
 ﻿using CredentialManagement;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace AtlasSSH
 {
@@ -79,7 +77,8 @@ namespace AtlasSSH
 
             connection
                 .ExecuteCommand(string.Format("echo {0} | voms-proxy-init -voms {1}", passwordInfo.Password, voms),
-                    l => { 
+                    l =>
+                    {
                         goodProxy = goodProxy || l.Contains("Your proxy is valid");
                         whatHappened.Add(l);
                     },
@@ -115,20 +114,20 @@ namespace AtlasSSH
         /// <returns></returns>
         public static SSHConnection DownloadFromGRID(this SSHConnection connection, string datasetName, string localDirectory,
             Action<string> fileStatus = null,
-            Func<string[],string[]> fileNameFilter = null)
+            Func<string[], string[]> fileNameFilter = null)
         {
             // Does the dataset exist?
             var response = new List<string>();
             connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60);
 
             var dsnames = response
-                .Where(l => l.Contains("DATASET"))
+                .Where(l => l.Contains("DATASET") | l.Contains("CONTAINER"))
                 .Select(l => l.Split(' '))
                 .Where(sl => sl.Length > 1)
                 .Select(sl => sl[1])
                 .ToArray();
 
-            if (!dsnames.Where(n => n == datasetName).Any())
+            if (!dsnames.Where(n => n.SantizeDSName() == datasetName).Any())
             {
                 throw new ArgumentException(string.Format("Unable to find any datasets with the name '{0}'.", datasetName));
             }

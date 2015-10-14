@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>PSAtlasDatasetCommands</id>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <title>ATLAS Dataset Powershell Commands</title>
     <authors>Gordon Watts</authors>
     <owners>Gordon Watts</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A PowerShell module that adds commands that will fetch data from the GRID. Read docs to find out how to configure properly: requires properly configured Linux endpoint to work.</description>
-    <releaseNotes>First release</releaseNotes>
+    <releaseNotes>Work with containers and datasets</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>ATLAS GRID CERN PowerShell</tags>
   </metadata>
