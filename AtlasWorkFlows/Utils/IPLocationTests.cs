@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -46,8 +47,12 @@ namespace AtlasWorkFlows.Utils
                 .FirstOrDefault();
 
             if (address == null)
+            {
+                Trace.WriteLine("Unable to find any DNS name for this computer.", "FindLocalIpName");
                 return "";
+            }
 
+            Trace.WriteLine(string.Format("DNS name for this computer is '{0}'", address.HostName), "FindLocalIpName");
             return address.HostName;
 
 #if false

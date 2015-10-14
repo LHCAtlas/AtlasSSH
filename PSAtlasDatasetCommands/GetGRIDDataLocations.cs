@@ -1,6 +1,8 @@
 ﻿using AtlasWorkFlows;
+using PSAtlasDatasetCommands.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Management.Automation;
 using System.Text;
@@ -20,10 +22,18 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void ProcessRecord()
         {
-            var list = GRIDDatasetLocator.GetActiveLocations();
-            foreach (var l in list)
+            var listener = new PSListener(this);
+            Trace.Listeners.Add(listener);
+            try
             {
-                WriteObject(l.Name);
+                var list = GRIDDatasetLocator.GetActiveLocations();
+                foreach (var l in list)
+                {
+                    WriteObject(l.Name);
+                }
+            } finally
+            {
+                Trace.Listeners.Remove(listener);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using AtlasWorkFlows;
+using PSAtlasDatasetCommands.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,27 +47,6 @@ namespace PSAtlasDatasetCommands
         public GetGRIDDataset()
         {
             DoNotUseRelay = false;
-        }
-
-        /// <summary>
-        /// Fast listener
-        /// </summary>
-        class PSListener : TextWriterTraceListener
-        {
-            private PSCmdlet _host;
-            public PSListener(PSCmdlet c)
-            {
-                _host = c;
-            }
-
-            /// <summary>
-            /// Write out a line - this is the most basic of the methods, everything else feeds through it.
-            /// </summary>
-            /// <param name="message"></param>
-            public override void WriteLine(string message)
-            {
-                _host.WriteVerbose(message);
-            }
         }
 
         /// <summary>
