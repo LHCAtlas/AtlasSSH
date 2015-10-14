@@ -22,6 +22,7 @@ namespace AtlasWorkFlows.Utils
                 new FileInfo("./" + defaultName),
                 new FileInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), defaultName)),
                 new FileInfo(Path.Combine(getOneDriveFolderPath(), defaultName)),
+                new FileInfo(Path.Combine(getOneDriveFolderPath(), ".AtlasSSH", defaultName)),
             };
 
             var goodFile = files.Where(f => f.Exists).FirstOrDefault();
