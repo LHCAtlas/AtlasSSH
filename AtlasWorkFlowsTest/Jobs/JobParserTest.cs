@@ -65,5 +65,23 @@ namespace AtlasWorkFlowsTest.Jobs
             var c = JobParser.ParseSubmit.Parse(s);
             Assert.AreEqual("ls dudemyfood", c.SubmitCommand.CommandLine);
         }
+
+        [TestMethod]
+        public void GoodPackage()
+        {
+            var s = "package(pk,1234)";
+            var c = JobParser.ParsePackage.Parse(s);
+            Assert.AreEqual("pk", c.Name);
+            Assert.AreEqual("1234", c.SCTag);
+        }
+
+        [TestMethod]
+        public void GoodPackageWithWS()
+        {
+            var s = "package ( pk , 1234 ) ";
+            var c = JobParser.ParsePackage.Parse(s);
+            Assert.AreEqual("pk", c.Name);
+            Assert.AreEqual("1234", c.SCTag);
+        }
     }
 }

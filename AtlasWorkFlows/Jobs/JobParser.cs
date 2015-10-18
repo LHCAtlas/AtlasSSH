@@ -51,5 +51,34 @@ namespace AtlasWorkFlows.Jobs
         /// </summary>
         public static Parser<Submit> ParseSubmit =
             ParseSingleAnyArg("submit", n => new Submit() { SubmitCommand = new Command() { CommandLine = n } });
+
+        /// <summary>
+        /// Parse a package definition
+        /// </summary>
+        public static Parser<Package> ParsePackage =
+            from rid in Parse.String("package")
+            from wh1 in Parse.WhiteSpace.Many()
+            from openp in Parse.Char('(')
+            from wh2 in Parse.WhiteSpace.Many()
+            from args in Parse.Identifier(Parse.LetterOrDigit, Parse.LetterOrDigit).DelimitedBy(Parse.WhiteSpace.Many().Then(pold => Parse.Char(',')).Then(pold => Parse.WhiteSpace.Many()))
+            from wh3 in Parse.WhiteSpace.Many()
+            from closep in Parse.Char(')')
+            select PackageBuilder(args);
+
+        /// <summary>
+        /// Build a package, fail if we can't.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static Package PackageBuilder(IEnumerable<string> args)
+        {
+            var a = args.ToArray();
+            if (a.Length != 2)
+            {
+                throw new ArgumentException("package primitive needs two arguments: a name and a source control tag");
+            }
+            return new Package() { Name = a[0], SCTag = a[1] };
+        }
     }
 }
