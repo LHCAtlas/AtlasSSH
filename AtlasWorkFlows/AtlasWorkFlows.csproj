@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="DSInfo.cs" />
     <Compile Include="GRIDDatasetLocator.cs" />
+    <Compile Include="Jobs\JobDataStructures.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Locations\FetchToRemoteLinuxDirInstance.cs" />
     <Compile Include="Locations\LinuxFetcher.cs" />
