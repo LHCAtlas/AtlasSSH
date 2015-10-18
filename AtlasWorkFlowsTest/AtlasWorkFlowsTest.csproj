@@ -35,6 +35,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Sprache, Version=2.0.0.47, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Sprache.2.0.0.47\lib\portable-net4+netcore45+win8+wp8+sl5+MonoAndroid1+MonoTouch1\Sprache.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
@@ -51,6 +55,8 @@
   </Choose>
   <ItemGroup>
     <Compile Include="GRIDDatasetLocatorTest.cs" />
+    <Compile Include="Jobs\JobParserTest.cs" />
+    <Compile Include="Jobs\JobPrintTest.cs" />
     <Compile Include="LinuxMirrorDownloaderPretend.cs" />
     <Compile Include="Location\LinuxWithWindowsReflectorTest.cs" />
     <Compile Include="Location\GRIDFetchToLinuxVisibleOnWindowsTest.cs" />
@@ -71,6 +77,9 @@
       <Project>{3dd1ad5f-ce3f-41d3-bf0d-470440ab943f}</Project>
       <Name>AtlasWorkFlows</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
