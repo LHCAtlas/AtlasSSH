@@ -19,10 +19,37 @@ namespace AtlasWorkFlows.Jobs
             from rs in Parse.CharExcept(')').Many().Text()
             select rs.Trim();
 
+        /// <summary>
+        /// Generate a parser for a single word and type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="identifier"></param>
+        /// <param name="buildResult"></param>
+        /// <returns></returns>
+        private static Parser<T> ParseSingleAnyArg<T>(string identifier, Func<string, T> buildResult)
+        {
+            return from rid in Parse.String(identifier)
+                   from wh in Parse.WhiteSpace.Many()
+                   from arg in Parse.Contained(ParseNonArgumentString, Parse.Char('('), Parse.Char(')'))
+                   select buildResult(arg);
+        }
+
+        /// <summary>
+        /// Parse a release command
+        /// </summary>
         public static Parser<Release> ParseRelease =
-            from rid in Parse.String("release")
-            from wh in Parse.WhiteSpace.Many()
-            from arg in Parse.Contained(ParseNonArgumentString, Parse.Char('('), Parse.Char(')'))
-            select new Release() { Name = arg };
+            ParseSingleAnyArg("release", n => new Release() { Name = n });
+            
+        /// <summary>
+        /// Parse a command line
+        /// </summary>
+        public static Parser<Command> ParseCommand =
+            ParseSingleAnyArg("command", n => new Command() { CommandLine = n });
+
+        /// <summary>
+        /// Parse a submit line
+        /// </summary>
+        public static Parser<Submit> ParseSubmit =
+            ParseSingleAnyArg("submit", n => new Submit() { SubmitCommand = new Command() { CommandLine = n } });
     }
 }

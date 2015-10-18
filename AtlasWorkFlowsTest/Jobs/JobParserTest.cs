@@ -33,5 +33,37 @@ namespace AtlasWorkFlowsTest.Jobs
             var r = JobParser.ParseRelease.Parse(s);
             Assert.AreEqual("Base, 2.3.30", r.Name);
         }
+
+        [TestMethod]
+        public void GoodCommand()
+        {
+            var s = "command(ls dudemyfood)";
+            var c = JobParser.ParseCommand.Parse(s);
+            Assert.AreEqual("ls dudemyfood", c.CommandLine);
+        }
+
+        [TestMethod]
+        public void GoodCommandWithWS()
+        {
+            var s = "command ( ls dudemyfood ) ";
+            var c = JobParser.ParseCommand.Parse(s);
+            Assert.AreEqual("ls dudemyfood", c.CommandLine);
+        }
+
+        [TestMethod]
+        public void GoodSubmit()
+        {
+            var s = "submit(ls dudemyfood)";
+            var c = JobParser.ParseSubmit.Parse(s);
+            Assert.AreEqual("ls dudemyfood", c.SubmitCommand.CommandLine);
+        }
+
+        [TestMethod]
+        public void GoodSubmitWithWS()
+        {
+            var s = "submit ( ls dudemyfood ) ";
+            var c = JobParser.ParseSubmit.Parse(s);
+            Assert.AreEqual("ls dudemyfood", c.SubmitCommand.CommandLine);
+        }
     }
 }

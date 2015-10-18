@@ -20,5 +20,23 @@ namespace AtlasWorkFlowsTest.Jobs
             var rp = JobParser.ParseRelease.Parse(r.Print());
             Assert.AreEqual(r.Name, rp.Name);
         }
+
+        [TestMethod]
+        public void CommandOutput()
+        {
+            var r = new Command() { CommandLine = "ls" };
+            Assert.AreEqual("command(ls)", r.Print());
+            var rp = JobParser.ParseCommand.Parse(r.Print());
+            Assert.AreEqual(r.CommandLine, rp.CommandLine);
+        }
+
+        [TestMethod]
+        public void SubmitOutput()
+        {
+            var r = new Submit() { SubmitCommand = new Command { CommandLine = "ls" } };
+            Assert.AreEqual("submit(ls)", r.Print());
+            var rp = JobParser.ParseSubmit.Parse(r.Print());
+            Assert.AreEqual(r.SubmitCommand.CommandLine, rp.SubmitCommand.CommandLine);
+        }
     }
 }
