@@ -48,5 +48,20 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.AreEqual(r.Name, rp.Name);
             Assert.AreEqual(r.SCTag, rp.SCTag);
         }
+
+        [TestMethod]
+        public void JobOutput()
+        {
+            var j = new Job()
+            {
+                Commands = new Command[] { new Command() { CommandLine = "ls" } },
+                Name = "MyJob",
+                Version = 1234,
+                Release = new Release() { Name = "notmyrelease" },
+                SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "submit" } },
+                Packages = new Package[] { new Package() { Name = "hithere", SCTag = "tag" } }
+            };
+            Assert.AreEqual("job(MyJob,1234){release(notmyrelease)package(hithere,tag)submit(submit)}", j.Print());
+        }
     }
 }

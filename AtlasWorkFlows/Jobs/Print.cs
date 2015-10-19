@@ -54,5 +54,23 @@ namespace AtlasWorkFlows.Jobs
             bld.AppendFormat("package({0},{1})", r.Name, r.SCTag);
             return bld;
         }
+
+        public static string Print(this Job r)
+        {
+            return r.Print(new StringBuilder()).ToString();
+        }
+
+        private static StringBuilder Print(this Job r, StringBuilder bld)
+        {
+            bld.AppendFormat("job({0},{1}){{", r.Name, r.Version);
+            r.Release.Print(bld);
+            foreach (var p in r.Packages)
+            {
+                p.Print(bld);
+            }
+            r.SubmitCommand.Print(bld);
+            bld.Append("}");
+            return bld;
+        }
     }
 }
