@@ -57,6 +57,7 @@
     <Compile Include="GRIDDatasetLocatorTest.cs" />
     <Compile Include="Jobs\JobParserTest.cs" />
     <Compile Include="Jobs\JobPrintTest.cs" />
+    <Compile Include="Jobs\JobUtilsTest.cs" />
     <Compile Include="LinuxMirrorDownloaderPretend.cs" />
     <Compile Include="Location\LinuxWithWindowsReflectorTest.cs" />
     <Compile Include="Location\GRIDFetchToLinuxVisibleOnWindowsTest.cs" />

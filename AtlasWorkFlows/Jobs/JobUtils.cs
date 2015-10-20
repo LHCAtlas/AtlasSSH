@@ -18,7 +18,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="old"></param>
         /// <param name="newItem"></param>
         /// <returns></returns>
-        public static T[] Append<T> (this T[] old, T newItem)
+        public static T[] Append<T>(this T[] old, T newItem)
         {
             var addon = new T[] { newItem };
             if (old == null)
@@ -26,6 +26,16 @@ namespace AtlasWorkFlows.Jobs
                 return addon;
             }
             return old.Concat(addon).ToArray();
+        }
+
+        /// <summary>
+        /// Return the hash code for this job definition.
+        /// </summary>
+        /// <param name="J"></param>
+        /// <returns></returns>
+        public static int Hash (this Job J)
+        {
+            return J.Print().GetHashCode();
         }
     }
 }

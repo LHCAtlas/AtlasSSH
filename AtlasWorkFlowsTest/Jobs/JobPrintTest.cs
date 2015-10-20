@@ -63,5 +63,13 @@ namespace AtlasWorkFlowsTest.Jobs
             };
             Assert.AreEqual("job(MyJob,1234){release(notmyrelease)package(hithere,tag)submit(submit)}", j.Print());
         }
+
+        [TestMethod]
+        public void PrintEmptyJob()
+        {
+            var j = new Job() { Name = "hihere", Version = 10 };
+            var s = j.Print();
+            Assert.AreEqual("job(hihere,10){}", s);
+        }
     }
 }

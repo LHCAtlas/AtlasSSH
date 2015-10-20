@@ -63,12 +63,15 @@ namespace AtlasWorkFlows.Jobs
         private static StringBuilder Print(this Job r, StringBuilder bld)
         {
             bld.AppendFormat("job({0},{1}){{", r.Name, r.Version);
-            r.Release.Print(bld);
-            foreach (var p in r.Packages)
+            if (r.Release != null) r.Release.Print(bld);
+            if (r.Packages != null)
             {
-                p.Print(bld);
+                foreach (var p in r.Packages)
+                {
+                    p.Print(bld);
+                }
             }
-            r.SubmitCommand.Print(bld);
+            if (r.SubmitCommand != null) r.SubmitCommand.Print(bld);
             bld.Append("}");
             return bld;
         }
