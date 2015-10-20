@@ -167,8 +167,9 @@ namespace AtlasSSH
         /// Dump the input until we see a particular string in the returning text.
         /// </summary>
         /// <param name="s"></param>
+        /// <param name="refreshTimeout">If we see something back from the host, reset the timeout counter</param>
         /// <param name="p"></param>
-        private void DumpTillFind(ShellStream s, string matchText, Action<string> ongo = null, bool dontdumplineofmatch = true, int secondsTimeout = 60*60)
+        private void DumpTillFind(ShellStream s, string matchText, Action<string> ongo = null, bool dontdumplineofmatch = true, int secondsTimeout = 60*60, bool refreshTimeout = false)
         {
             var lb = new LineBuffer(ongo);
             if (dontdumplineofmatch)
@@ -184,7 +185,14 @@ namespace AtlasSSH
                 gotmatch = gotmatch || lb.Match(matchText); 
                 if (gotmatch)
                     break;
-                lb.Add(s.Read());
+
+                var data = s.Read();
+                if (data != null && data.Length > 0)
+                {
+                    timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
+                }
+
+                lb.Add(data);
             }
             if (!gotmatch)
             {
@@ -200,13 +208,13 @@ namespace AtlasSSH
         /// <param name="command"></param>
         /// <param name="output"></param>
         /// <returns></returns>
-        public SSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60)
+        public SSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false)
         {
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             _shell.Value.WriteLine(command);
             DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth-30, command.Length)), secondsTimeout: 10); // The command is (normally) repeated back to us...
             _shell.Value.ReadLine(); // Read back the end of line after the command is sent out.
-            DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout);
+            DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout);
             return this;
         }
 

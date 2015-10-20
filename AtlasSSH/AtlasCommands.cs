@@ -171,7 +171,7 @@ namespace AtlasSSH
                         fileStatus(l.Substring(startOfFileName, closeBracket - startOfFileName));
                     }
                 }
-            });
+            }, refreshTimeout:true);
 
             return connection;
         }
