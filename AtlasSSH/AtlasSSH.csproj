@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="AtlasCommands.cs" />
     <Compile Include="DataSetUtils.cs" />
+    <Compile Include="LineBuffer.cs" />
     <Compile Include="SSHConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SSHStreamUtils.cs" />

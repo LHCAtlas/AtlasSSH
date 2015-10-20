@@ -24,7 +24,6 @@ namespace AtlasSSH
     /// </remarks>
     public class SSHConnection : IDisposable
     {
-        const string CrLf = "\r\n";
         const int TerminalWidth = 240;
 
         public SSHConnection(string host, string username)
@@ -89,79 +88,6 @@ namespace AtlasSSH
         /// lost as to what command is being worked on.
         /// </summary>
         private string _prompt;
-
-        private class LineBuffer
-        {
-            public LineBuffer(Action<string> actionOnLine)
-            {
-                _actinoOnLine = actionOnLine;
-            }
-
-            string _text = "";
-            private Action<string> _actinoOnLine;
-
-            public void Add(string line)
-            {
-                _text += line;
-                Flush();
-            }
-
-            private void Flush()
-            {
-                while (true)
-                {
-                    var lend = _text.IndexOf(CrLf);
-                    if (lend < 0)
-                        break;
-
-                    var line = _text.Substring(0, lend);
-                    ActOnLine(line);
-                    _text = _text.Substring(lend + 2);
-                }
-            }
-
-            public void DumpRest()
-            {
-                Flush();
-                ActOnLine(_text);
-            }
-
-            List<string> stringsToSuppress = new List<string>();
-
-            /// <summary>
-            /// Any line containing these strings will not be printed out
-            /// </summary>
-            /// <param name="whenLineContains"></param>
-            public void Suppress(string whenLineContains)
-            {
-                stringsToSuppress.Add(whenLineContains);
-            }
-
-            /// <summary>
-            /// See if the text is in the current buffer
-            /// </summary>
-            /// <param name="text"></param>
-            /// <returns></returns>
-            public bool Match (string text)
-            {
-                return _text.Contains(text);
-            }
-
-            /// <summary>
-            /// Dump out a line, safely.
-            /// </summary>
-            /// <param name="line"></param>
-            private void ActOnLine(string line)
-            {
-                Trace.WriteLine("ReturnedLine: " + line, "SSHConnection");
-                if (_actinoOnLine == null)
-                    return;
-                if (!stringsToSuppress.Any(s => line.Contains(s)))
-                {
-                    _actinoOnLine(line);
-                }
-            }
-        }
 
         /// <summary>
         /// Dump the input until we see a particular string in the returning text.
