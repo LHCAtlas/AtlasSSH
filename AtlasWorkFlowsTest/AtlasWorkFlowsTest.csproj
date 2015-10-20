@@ -55,6 +55,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="GRIDDatasetLocatorTest.cs" />
+    <Compile Include="Jobs\DatasetTest.cs" />
     <Compile Include="Jobs\JobParserTest.cs" />
     <Compile Include="Jobs\JobPrintTest.cs" />
     <Compile Include="Jobs\JobUtilsTest.cs" />

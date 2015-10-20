@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="DSInfo.cs" />
     <Compile Include="GRIDDatasetLocator.cs" />
+    <Compile Include="Jobs\Datasets.cs" />
     <Compile Include="Jobs\JobDataStructures.cs" />
     <Compile Include="Jobs\JobParser.cs" />
     <Compile Include="Jobs\JobUtils.cs" />
