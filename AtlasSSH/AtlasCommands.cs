@@ -127,7 +127,7 @@ namespace AtlasSSH
                 .Select(sl => sl[1])
                 .ToArray();
 
-            if (!dsnames.Where(n => n.SantizeDSName() == datasetName).Any())
+            if (!dsnames.Where(n => n.SantizeDSName() == datasetName.SantizeDSName()).Any())
             {
                 throw new ArgumentException(string.Format("Unable to find any datasets with the name '{0}'.", datasetName));
             }
