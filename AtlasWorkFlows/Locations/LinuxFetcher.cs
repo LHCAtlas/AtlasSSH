@@ -16,7 +16,7 @@ namespace AtlasWorkFlows.Locations
         private string _username;
         private string _linuxHost;
 
-        private SSHConnection _connection = null;
+        private ISSHConnection _connection = null;
 
         /// <summary>
         /// Initialize the Linux fetcher
@@ -45,7 +45,7 @@ namespace AtlasWorkFlows.Locations
         /// Init the connection for use by other parts of this object.
         /// </summary>
         /// <returns></returns>
-        private SSHConnection InitConnection(Action<string> statusUpdater)
+        private ISSHConnection InitConnection(Action<string> statusUpdater)
         {
             if (_connection != null)
                 return _connection;
@@ -79,8 +79,8 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         public void Dispose()
         {
-            if (_connection != null)
-                _connection.Dispose();
+            if (_connection != null && (_connection is IDisposable))
+                ((IDisposable)_connection).Dispose();
         }
 
         /// <summary>

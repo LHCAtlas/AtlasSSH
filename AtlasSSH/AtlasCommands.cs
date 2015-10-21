@@ -17,7 +17,7 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="connection">The connection that will understand the setupATLAS command</param>
         /// <returns>A reconfigured SSH shell connection (same as what went in)</returns>
-        public static SSHConnection setupATLAS(this SSHConnection connection)
+        public static ISSHConnection setupATLAS(this ISSHConnection connection)
         {
             bool foundalias = false;
             connection
@@ -38,7 +38,7 @@ namespace AtlasSSH
         /// <param name="connection">Connection on-which we will set everything up</param>
         /// <param name="rucioUsername">The user alias used on the grid</param>
         /// <returns>A shell on-which rucio has been setup (the same connection that went in)</returns>
-        public static SSHConnection setupRucio(this SSHConnection connection, string rucioUsername)
+        public static ISSHConnection setupRucio(this ISSHConnection connection, string rucioUsername)
         {
             int hashCount = 0;
             connection
@@ -61,7 +61,7 @@ namespace AtlasSSH
         /// <param name="GRIDUsername">The username to use to fetch the password for the voms proxy file</param>
         /// <param name="voms">The name of the voms to connect to</param>
         /// <returns>Connection on which the grid is setup and ready to go</returns>
-        public static SSHConnection VomsProxyInit(this SSHConnection connection, string voms, string GRIDUsername)
+        public static ISSHConnection VomsProxyInit(this ISSHConnection connection, string voms, string GRIDUsername)
         {
             // Get the GRID VOMS password
             var sclist = new CredentialSet(string.Format("{0}@GRID", GRIDUsername));
@@ -112,7 +112,7 @@ namespace AtlasSSH
         /// <param name="fileStatus">Gets updates as new files are downloaded. This will contain just the filename.</param>
         /// <param name="fileNameFilter">Filter function to alter the files that are to be downloaded</param>
         /// <returns></returns>
-        public static SSHConnection DownloadFromGRID(this SSHConnection connection, string datasetName, string localDirectory,
+        public static ISSHConnection DownloadFromGRID(this ISSHConnection connection, string datasetName, string localDirectory,
             Action<string> fileStatus = null,
             Func<string[], string[]> fileNameFilter = null)
         {
@@ -182,7 +182,7 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="datasetName"></param>
         /// <returns></returns>
-        public static string[] FilelistFromGRID(this SSHConnection connection, string datasetName)
+        public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName)
         {
             var fileNameList = new List<string>();
             var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +\S* +\| +\S* +\| +\S* +\| +\S* +\|");
