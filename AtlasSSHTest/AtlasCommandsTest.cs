@@ -92,6 +92,17 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        public void setupRucio()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                );
+
+            s.setupRucio("bogus");
+        }
+
+        [TestMethod]
         public void vomsProxyInit()
         {
             // Init a voms proxy correctly. There is an internal check, so this should

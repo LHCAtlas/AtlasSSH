@@ -65,7 +65,20 @@ namespace AtlasSSHTest
         internal static Dictionary<string, string> AddsetupRucioResponses(this Dictionary<string, string> dict, string accountName)
         {
             dict["export RUCIO_ACCOUNT=" + accountName] = "";
-            return dict;
+            return dict
+                .AddEntry("localSetupRucioClients", string.Format(@"************************************************************************
+Requested:  rucio ...
+ Setting up emi 3.14.0-1_v4c.sl6 ...
+ Setting up rucio 1.0.1 ...
+Info: Setting compatibility to slc6
+Info: Set RUCIO_AUTH_TYPE to x509_proxy
+Info: Set RUCIO_ACCOUNT to {0}
+>>>>>>>>>>>>>>>>>>>>>>>>> Information for user <<<<<<<<<<<<<<<<<<<<<<<<<
+ emi:
+   No valid proxy present.  Type ""voms - proxy - init - voms atlas""
+* ***********************************************************************
+", accountName))
+                .AddEntry("hash rucio", "");
         }
 
         internal static Dictionary<string, string> AddsetupATLASResponses(this Dictionary<string,string> dict)
