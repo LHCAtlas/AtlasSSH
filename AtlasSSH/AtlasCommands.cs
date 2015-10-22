@@ -8,6 +8,21 @@ using System.Text.RegularExpressions;
 namespace AtlasSSH
 {
     /// <summary>
+    /// Thrown when there is a config error on the Linux side of things
+    /// </summary>
+    [Serializable]
+    public class LinuxConfigException : Exception
+    {
+        public LinuxConfigException() { }
+        public LinuxConfigException(string message) : base(message) { }
+        public LinuxConfigException(string message, Exception inner) : base(message, inner) { }
+        protected LinuxConfigException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        { }
+    }
+
+    /// <summary>
     /// Some commands
     /// </summary>
     public static class AtlasCommands
@@ -26,7 +41,7 @@ namespace AtlasSSH
 
             if (!foundalias)
             {
-                throw new InvalidOperationException("The setupATLAS command did not have the expected effect - rcSetup was not defined as an alias");
+                throw new LinuxConfigException("The setupATLAS command did not have the expected effect - rcSetup was not defined as an alias");
             }
 
             return connection;
@@ -48,7 +63,7 @@ namespace AtlasSSH
 
             if (hashCount != 0)
             {
-                throw new InvalidOperationException("Unable to setup Rucio... did you forget to setup ATLAS first?");
+                throw new LinuxConfigException("Unable to setup Rucio... did you forget to setup ATLAS first?");
             }
             return connection;
         }

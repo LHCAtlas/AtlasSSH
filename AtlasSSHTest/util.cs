@@ -1,7 +1,9 @@
 ﻿using CredentialManagement;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -47,6 +49,23 @@ namespace AtlasSSHTest
             newC.Description = "Test credential for the AtlasSSH project. Delete at will!";
             newC.PersistanceType = PersistanceType.LocalComputer;
             newC.Save();
+        }
+
+        internal static Dictionary<string, string> AddEntry (this Dictionary<string, string> dict, string key, string val)
+        {
+            dict[key] = val;
+            return dict;
+        }
+
+        /// <summary>
+        /// Do setup for the rucio setup command
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <returns></returns>
+        internal static Dictionary<string, string> AddsetupRucioResponses(this Dictionary<string, string> dict, string accountName)
+        {
+            dict["export RUCIO_ACCOUNT=" + accountName] = "";
+            return dict;
         }
 
         internal static Dictionary<string, string> AddsetupATLASResponses(this Dictionary<string,string> dict)
@@ -122,6 +141,52 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
             dict["alias"] = aliasResponse;
 
             return dict;
+        }
+
+
+        [Serializable]
+        public class TestAssertException : Exception
+        {
+            public TestAssertException() { }
+            public TestAssertException(string message) : base(message) { }
+            public TestAssertException(string message, Exception inner) : base(message, inner) { }
+            protected TestAssertException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context)
+            { }
+        }
+
+        /// <summary>
+        /// Make sure an error occurs
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expr"></param>
+        /// <param name="expressionType"></param>
+        /// <param name="expectedMessage"></param>
+        public static void CatchException<T>(this Func<T> expr, Type expressionType, string expectedMessage)
+        {
+            Exception whatIGot = null;
+            try
+            {
+                expr();
+            } catch (Exception e)
+            {
+                whatIGot = e;
+
+                // If it is the wrong type of exception - then we want to let it go by as if
+                // this wasn't out problem.
+                if (expressionType != whatIGot.GetType())
+                    throw new TestAssertException(string.Format("Was expecting exception of type '{0}', got one of type '{1}'.",expressionType.Name, whatIGot.GetType().Name) , e);
+
+                // This is trikier. Lets assume this is the proper type, so we want to throw a real error if they aren't equal.
+                if (!string.IsNullOrEmpty(expectedMessage))
+                {
+                    if (!whatIGot.Message.Contains(expectedMessage))
+                        throw new TestAssertException(string.Format("Exception message ({0}) did not contain expected text ({1}).", whatIGot.Message, expectedMessage), e);
+                }
+            }
+
+            Assert.IsNotNull(whatIGot, "Did not catch any exception!");
         }
     }
 }

@@ -9,6 +9,7 @@ namespace AtlasSSHTest
     [TestClass]
     public class AtlasCommandsTest
     {
+#if false
         [TestMethod]
         public void setupATLAS()
         {
@@ -18,37 +19,6 @@ namespace AtlasSSHTest
             {
                 s.setupATLAS();
             }
-        }
-
-        [TestMethod]       
-        public void setupATLASInjectedGOOD()
-        {
-            var s = new dummySSHConnection(new Dictionary<string, string>().AddsetupATLASResponses());
-            s.setupATLAS();
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void setupATLASInjectedNosetupATLASThere()
-        {
-            var setupATLASBad = @"-bash: setupATLAS: command not found";
-            var aliasResponse = @"alias asetup='source $AtlasSetup/scripts/asetup.sh'
-alias diagnostics='source ${ATLAS_LOCAL_ROOT_BASE}/swConfig/Post/diagnostics/setup-Linux.sh'
-alias helpMe='${ATLAS_LOCAL_ROOT_BASE}/utilities/generateHelpMe.sh'
-alias l.='ls -d .* --color=auto'
-alias ll='ls -l --color=auto'
-alias ls='ls --color=auto'
-alias printMenu='$ATLAS_LOCAL_ROOT_BASE/swConfig/printMenu.sh ""all""'
-alias setupATLAS='source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh'
-alias showVersions='${ATLAS_LOCAL_ROOT_BASE}/utilities/showVersions.sh'
-alias vi='vim'
-alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
-";
-            var s = new dummySSHConnection(new Dictionary<string, string>() { 
-            { "setupATLAS", setupATLASBad },
-            { "alias", aliasResponse}
-            });
-            s.setupATLAS();
         }
 
         [TestMethod]
@@ -75,6 +45,50 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
                 s
                     .setupRucio(info.Item2);
             }
+        }
+#endif
+
+        [TestMethod]       
+        public void setupATLAS()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>().AddsetupATLASResponses());
+            s.setupATLAS();
+        }
+
+        [TestMethod]
+        public void setupATLASNosetupATLASThere()
+        {
+            var setupATLASBad = @"-bash: setupATLAS: command not found";
+            var aliasResponse = @"alias asetup='source $AtlasSetup/scripts/asetup.sh'
+alias diagnostics='source ${ATLAS_LOCAL_ROOT_BASE}/swConfig/Post/diagnostics/setup-Linux.sh'
+alias helpMe='${ATLAS_LOCAL_ROOT_BASE}/utilities/generateHelpMe.sh'
+alias l.='ls -d .* --color=auto'
+alias ll='ls -l --color=auto'
+alias ls='ls --color=auto'
+alias printMenu='$ATLAS_LOCAL_ROOT_BASE/swConfig/printMenu.sh ""all""'
+alias setupATLAS='source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh'
+alias showVersions='${ATLAS_LOCAL_ROOT_BASE}/utilities/showVersions.sh'
+alias vi='vim'
+alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
+";
+            var s = new dummySSHConnection(new Dictionary<string, string>() { 
+            { "setupATLAS", setupATLASBad },
+            { "alias", aliasResponse}
+            });
+            util.CatchException(() => s.setupATLAS(), typeof(LinuxConfigException), "setupATLAS command did not have the expected effect");
+        }
+
+        [TestMethod]
+        public void setupRucioWithoutATLASSetup()
+        {
+            // Fails when we don't get right setup
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupRucioResponses("bogus")
+                .AddEntry("localSetupRucioClients", "-bash: localSetupRucioClients: command not found")
+                .AddEntry("hash rucio", "-bash: hash: rucio: not found")
+                );
+
+            util.CatchException(() => s.setupRucio("bogus"), typeof(LinuxConfigException), "Unable to setup Rucio");
         }
 
         [TestMethod]
