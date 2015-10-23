@@ -46,6 +46,21 @@ namespace AtlasSSHTest
                     .setupRucio(info.Item2);
             }
         }
+
+        [TestMethod]
+        public void vomsProxyInit()
+        {
+            // Init a voms proxy correctly. There is an internal check, so this should
+            // be fine.
+            var info = util.GetUsernameAndPassword();
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                s
+                    .setupATLAS()
+                    .setupRucio(info.Item2)
+                    .VomsProxyInit("atlas", info.Item2);
+            }
+        }
 #endif
 
         [TestMethod]       
@@ -107,20 +122,15 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         {
             // Init a voms proxy correctly. There is an internal check, so this should
             // be fine.
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
-            {
-                s
-                    .setupATLAS()
-                    .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2);
-            }
-        }
-
-        [TestMethod]
-        public void vomsProxyInitWithInjectedText()
-        {
-            // Do it right, but as we would expect.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddsetupVomsProxyInit("bogus")
+                );
+            s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .VomsProxyInit("atlas", "bogus");
         }
 
         [TestMethod]

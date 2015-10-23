@@ -156,6 +156,37 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
             return dict;
         }
 
+        /// <summary>
+        /// Setup everything for a voms proxy init commands and response.
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public static Dictionary<string,string> AddsetupVomsProxyInit(this Dictionary<string,string> dict, string username)
+        {
+            // Setup a password!
+            var sclist = new CredentialSet(string.Format("{0}@GRID", username));
+            var passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
+            if (passwordInfo == null)
+            {
+                passwordInfo = new Credential(username, "badpass", string.Format("{0}@GRID", username));
+                sclist.Add(passwordInfo);
+                passwordInfo.Save();
+            }
+
+            return dict
+                .AddEntry(string.Format("echo {0} | voms-proxy-init -voms atlas", passwordInfo.Password), @"Enter GRID pass phrase for this identity:
+Contacting voms2.cern.ch:15001 [/DC=ch/DC=cern/OU=computers/CN=voms2.cern.ch] ""atlas""...
+Remote VOMS server contacted succesfully.
+
+
+Created proxy in / tmp / x509up_u1742.
+
+Your proxy is valid until Fri Oct 23 08:56:05 PDT 2015
+");
+
+        }
+
 
         [Serializable]
         public class TestAssertException : Exception
