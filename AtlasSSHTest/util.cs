@@ -216,6 +216,18 @@ Total size : 2693475134
             }
         }
 
+        public static Dictionary<string,string> AddRcSetup(this Dictionary<string,string> dict, string dirLocation, string releaseName)
+        {
+            return dict
+                .AddEntry("mkdir " + dirLocation, "")
+                .AddEntry("cd " + dirLocation, "")
+                .AddEntry("rcSetup " + releaseName, string.Format(@"-bash-4.1$ 
+Found ASG release with config=x86_64-slc6-gcc48-opt at
+        /cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/{0}
+Going to build a RootCore bin area= {1}/RootCoreBin
+Good!! The already set ROOTSYS=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/x86_64/root/6.02.12-x86_64-slc6-gcc48-opt will be used", releaseName, dirLocation));
+        }
+
         [Serializable]
         public class TestAssertException : Exception
         {

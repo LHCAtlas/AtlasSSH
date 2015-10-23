@@ -318,5 +318,76 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
             }
         }
 
+        [TestMethod]
+        public void setupGoodRcRelease()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRcSetup("/tmp/gwattsbogusrel", "Base,2.3.30")
+                );
+
+            s
+                .setupATLAS()
+                .SetupRcRelease("/tmp/gwattsbogusrel", "Base,2.3.30");
+        }
+
+        [TestMethod]
+        public void setupBadRcRelease()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRcSetup("/tmp/gwattsbogusrel", "Base,2.3.31")
+                .AddEntry("rcSetup Base,2.3.31", @"Warning!! Base,stable release 2.3.55 NOT available
+Available releases are:
+asgType=stable (at /cvmfs/atlas.cern.ch/repo/sw/ASG):
+ Base:  1.0.0 1.0.1 1.1.0 1.2.0 1.3.0 1.4.0 1.5.0 1.5.1 1.5.2 1.5.3 1.5.4 1.5.5
+        1.5.6 1.5.7 1.5.8 1.5.9 1.5.10 1.5.11 1.5.13 1.5.14
+        2.0.0 2.0.1 2.0.2 2.0.3 2.0.4 2.0.5 2.0.6 2.0.7 2.0.8 2.0.9 2.0.10
+        2.0.11 2.0.12 2.0.13 2.0.14 2.0.15 2.0.16 2.0.17 2.0.18 2.0.19 2.0.20
+        2.0.21 2.0.22 2.0.23 2.0.24 2.0.25 2.0.26 2.0.27
+        2.1.0 2.1.11 2.1.19 2.1.21 2.1.22 2.1.23 2.1.24 2.1.25 2.1.26 2.1.27
+        2.1.28 2.1.29 2.1.30 2.1.31 2.1.32 2.1.32-MAC 2.1.33 2.1.34 2.1.34-MAC
+        2.1.35 2.1.36 2.2.0 2.2.1 2.2.2 2.2.3 2.2.4 2.2.5 2.3.0 2.3.1 2.3.2
+        2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 2.3.9 2.3.10 2.3.11 2.3.11-MAC
+        2.3.12 2.3.13 2.3.13-MAC 2.3.14 2.3.15 2.3.15-MAC 2.3.16 2.3.16-MAC
+        2.3.17 2.3.17-MAC 2.3.18 2.3.18-MAC 2.3.19 2.3.19-MAC 2.3.20 2.3.20-MAC
+        2.3.21 2.3.21-MAC 2.3.22 2.3.22-MAC 2.3.23 2.3.23-MAC 2.3.24 2.3.24-MAC
+        2.3.25 2.3.25-MAC 2.3.26 2.3.28 2.3.28-MAC 2.3.29 2.3.29-MAC 2.3.30
+        2.3.30-MAC 2.3.31 2.3.31-MAC 2.3.32 2.3.32-MAC
+
+Or run 'rcSetup -r' for a full available release
+")
+                );
+
+            util.CatchException(() => s.setupATLAS().SetupRcRelease("/tmp/gwattsbogusrel","Base,2.3.31"), typeof(LinuxMissingConfigurationException), "2.3.31");
+        }
+
+        [TestMethod]
+        public void setupBadDirRcRelease()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRcSetup("/tmp/gwattsbogusrel", "Base,2.3.30")
+                .AddEntry("mkdir /tmp/gwattsbogusrel", "mkdir: cannot create directory `/tmp/gwattsbogusrel': Permission denied")
+                );
+
+            util.CatchException(() => s.setupATLAS().SetupRcRelease("/tmp/gwattsbogusrel", "Base,2.3.30"), typeof(LinuxMissingConfigurationException), "Unable to create release directory");
+        }
+
+        [TestMethod]
+        public void setupAlreadyCreatedDirRcRelease()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRcSetup("/tmp/gwattsbogusrel", "Base,2.3.30")
+                .AddEntry("mkdir /tmp/gwattsbogusrel", "mkdir: cannot create directory `/tmp/gwattsbogusrel': File exists")
+                );
+
+            util.CatchException(() => s.setupATLAS().SetupRcRelease("/tmp/gwattsbogusrel", "Base,2.3.30"), typeof(LinuxMissingConfigurationException), "already exists");
+        }
     }
 }

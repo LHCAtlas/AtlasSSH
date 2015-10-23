@@ -8,7 +8,8 @@ using System.Text.RegularExpressions;
 namespace AtlasSSH
 {
     /// <summary>
-    /// Thrown when there is a config error on the Linux side of things
+    /// Thrown when there is a config error on the Linux side of things; and that commands that
+    /// should always work on the Linux host, are not.
     /// </summary>
     [Serializable]
     public class LinuxConfigException : Exception
@@ -17,6 +18,21 @@ namespace AtlasSSH
         public LinuxConfigException(string message) : base(message) { }
         public LinuxConfigException(string message, Exception inner) : base(message, inner) { }
         protected LinuxConfigException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        { }
+    }
+
+    /// <summary>
+    /// Thrown when something on Linux was tried, but the config prevented it (e.g. missing release).
+    /// </summary>
+    [Serializable]
+    public class LinuxMissingConfigurationException : Exception
+    {
+        public LinuxMissingConfigurationException() { }
+        public LinuxMissingConfigurationException(string message) : base(message) { }
+        public LinuxMissingConfigurationException(string message, Exception inner) : base(message, inner) { }
+        protected LinuxMissingConfigurationException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context)
         { }
@@ -228,6 +244,41 @@ namespace AtlasSSH
             }
 
             return fileNameList.ToArray();
+        }
+
+        /// <summary>
+        /// Setup a release. If it can't be found, error will be thrown
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="releaseName">Full release name (e.g. 'Base,2.3.30')</param>
+        /// <param name="linuxLocation">Directory where the linux location can be found</param>
+        /// <returns></returns>
+        public static ISSHConnection SetupRcRelease(this ISSHConnection connection, string linuxLocation, string releaseName)
+        {
+            // First we have to create the directory.
+            bool dirCreated = true;
+            bool dirAlreadyExists = false;
+            connection.ExecuteCommand(string.Format("mkdir {0}", linuxLocation), l =>
+            {
+                dirCreated = !dirCreated ? false : string.IsNullOrWhiteSpace(l);
+                dirAlreadyExists = dirAlreadyExists ? true : l.Contains("File exists");
+            });
+            if (dirAlreadyExists)
+                throw new LinuxMissingConfigurationException(string.Format("Release directory '{0}' already exists - we need a fresh start", linuxLocation));
+            if (!dirCreated)
+                throw new LinuxMissingConfigurationException(string.Format("Unable to create release directory '{0}'.", linuxLocation));
+
+            // Next, put our selves there
+            connection.ExecuteCommand(string.Format("cd {0}", linuxLocation));
+
+            // And then do the setup
+            bool found = false;
+            connection.ExecuteCommand(string.Format("rcSetup {0}", releaseName), l => found = found ? true : l.Contains("Found ASG release with"));
+            if (!found)
+                throw new LinuxMissingConfigurationException(string.Format("Unable to find release '{0}'", releaseName));
+
+            // Return the connection to make it a functional interface.
+            return connection;
         }
     }
 }
