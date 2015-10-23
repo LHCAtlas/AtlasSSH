@@ -6,10 +6,17 @@ using System.Linq;
 
 namespace AtlasSSHTest
 {
+    /// <summary>
+    /// Test all the extension methods that are linked to getting commands done.
+    /// </summary>
     [TestClass]
     public class AtlasCommandsTest
     {
 #if false
+        ///
+        /// These are all off b.c. there are high speed, local command/response guys below.
+        ///
+
         [TestMethod]
         public void setupATLAS()
         {
@@ -61,6 +68,26 @@ namespace AtlasSSHTest
                     .VomsProxyInit("atlas", info.Item2);
             }
         }
+
+        [TestMethod]
+        public void getDSFileList()
+        {
+            var info = util.GetUsernameAndPassword();
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                var r = s
+                    .setupATLAS()
+                    .setupRucio(info.Item2)
+                    .VomsProxyInit("atlas", info.Item2)
+                    .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1");
+                foreach (var fname in r)
+                {
+                    Console.WriteLine(fname);
+                }
+                Assert.AreEqual(10, r.Length);
+            }
+        }
+
 #endif
 
         [TestMethod]       
@@ -203,20 +230,23 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         [TestMethod]
         public void getDSFileList()
         {
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddsetupVomsProxyInit("bogus")
+                .AddRucioListFiles("user.gwatts:user.gwatts.301295.EVNT.1")
+                );
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .VomsProxyInit("atlas", "bogus")
+                .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1");
+
+            foreach (var fname in r)
             {
-                var r = s
-                    .setupATLAS()
-                    .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
-                    .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1");
-                foreach (var fname in r)
-                {
-                    Console.WriteLine(fname);
-                }
-                Assert.AreEqual(10, r.Length);
+                Console.WriteLine(fname);
             }
+            Assert.AreEqual(10, r.Length);
         }
 
         [TestMethod]

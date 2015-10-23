@@ -184,9 +184,37 @@ Created proxy in / tmp / x509up_u1742.
 
 Your proxy is valid until Fri Oct 23 08:56:05 PDT 2015
 ");
-
         }
 
+        public static Dictionary<string, string> AddRucioListFiles(this Dictionary<string, string> dict, string dsname)
+        {
+            if (dsname == "user.gwatts:user.gwatts.301295.EVNT.1")
+            {
+                return dict
+                    .AddEntry("rucio list-files user.gwatts:user.gwatts.301295.EVNT.1", @"+-------------------------------------------------------------------------------------------------+--------------------------------------+-------------+------------+----------+
+| SCOPE:NAME                                                                                      | GUID                                 | ADLER32     |   FILESIZE |   EVENTS |
+|-------------------------------------------------------------------------------------------------+--------------------------------------+-------------+------------+----------|
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000001.pool.root.1 | F5EB7282-ED9E-FF46-89A6-C116B0C32102 | ad:b67bc904 |  269294767 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000002.pool.root.1 | 01A94939-2DED-4049-BF2C-AC3F4712DCAC | ad:e64dfd09 |  269166581 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000003.pool.root.1 | 7AC93A6B-8466-F94E-B3CD-EEAFD9E13DDD | ad:845511a8 |  267773464 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000004.pool.root.1 | 39FF2CDD-1BB7-4E45-BB39-9B6ABC64B883 | ad:fb6019bc |  266137900 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000005.pool.root.1 | 416E0F2A-DC85-0B4E-8511-4F937048F90F | ad:2cc4200f |  272572969 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000006.pool.root.1 | 96476F7E-08D9-2847-BD08-CB35746FA79F | ad:4ba75760 |  270815952 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000007.pool.root.1 | 9E2C97D9-304C-6B4F-ABBD-C111F293C4EE | ad:bec7278c |  269030763 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000008.pool.root.1 | 77E6EBE6-9420-7A42-BB60-E46DD2DB4528 | ad:5410f73c |  268835854 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000009.pool.root.1 | 7E0B114B-D2EB-FF4D-BD01-BD477C26EA91 | ad:a023d16c |  270858128 |          |
+| user.gwatts:MC15.301295.Pythia8EvtGen_AU2MSTW2008LO_HV_ggH_mH125_mVPI25.EVNT.000010.pool.root.1 | 64159E34-AB6D-DB4A-B41A-2A132FFA9803 | ad:92843e7f |  268988756 |          |
++-------------------------------------------------------------------------------------------------+--------------------------------------+-------------+------------+----------+
+Total files : 10
+Total size : 2693475134
+");
+            }
+            else
+            {
+                Assert.IsTrue(false, "Unknown dataset: " + dsname);
+                return null;
+            }
+        }
 
         [Serializable]
         public class TestAssertException : Exception
