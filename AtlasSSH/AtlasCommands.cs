@@ -255,6 +255,16 @@ namespace AtlasSSH
         /// <returns></returns>
         public static ISSHConnection SetupRcRelease(this ISSHConnection connection, string linuxLocation, string releaseName)
         {
+            // Check the arguments for something dumb
+            if (string.IsNullOrWhiteSpace(releaseName))
+            {
+                throw new ArgumentException("A release name must be provided");
+            }
+            if (string.IsNullOrWhiteSpace(linuxLocation) || !linuxLocation.StartsWith("/"))
+            {
+                throw new ArgumentException("The release directory must be an absolute Linux path (start with a '/')");
+            }
+
             // First we have to create the directory.
             bool dirCreated = true;
             bool dirAlreadyExists = false;

@@ -333,6 +333,30 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        public void setupRcInNullDirectory()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRcSetup("", "Base,2.3.30")
+                );
+
+            util.CatchException(() => s.setupATLAS().SetupRcRelease("", "Base,2.3.30"), typeof(ArgumentException), "must be an absolute Linux path");
+        }
+
+        [TestMethod]
+        public void setupRcInRelativeDirectory()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRcSetup("", "Base,2.3.30")
+                );
+
+            util.CatchException(() => s.setupATLAS().SetupRcRelease("bogus/dude", "Base,2.3.30"), typeof(ArgumentException), "must be an absolute Linux path");
+        }
+
+        [TestMethod]
         public void setupBadRcRelease()
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()
