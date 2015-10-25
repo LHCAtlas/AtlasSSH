@@ -413,5 +413,53 @@ Or run 'rcSetup -r' for a full available release
 
             util.CatchException(() => s.setupATLAS().SetupRcRelease("/tmp/gwattsbogusrel", "Base,2.3.30"), typeof(LinuxMissingConfigurationException), "already exists");
         }
+
+        [TestMethod]
+        public void kinitGood()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupKinit("bogus@CERN.CH", "mypassword")
+                );
+
+            s
+                .Kinit("bogus@CERN.CH", "mypassword");
+        }
+
+        [TestMethod]
+        public void KinitBadDomain()
+        {
+            //-bash-4.1$ kinit gwatts@CERN.BOGUS
+            //kinit: Cannot resolve servers for KDC in realm "CERN.BOGUS" while getting initial credentials
+
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupKinit("bogus@CERN.CH", "mypassword")
+                .AddEntry("echo mypassword | kinit bogus@CERN.CH", @"kinit: Cannot resolve servers for KDC in realm ""CERN.BOGUS"" while getting initial credentials")
+                );
+
+            util.CatchException(() => s.Kinit("bogus@CERN.CH", "mypassword"), typeof(LinuxCommandErrorException), "Cannot resolve servers");
+        }
+
+        [TestMethod]
+        public void KinitBadPassword()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupKinit("bogus@CERN.CH", "mypassword")
+                .AddEntry("echo mypassword | kinit bogus@CERN.CH", @"Password for gwatts@CERN.CH:
+kinit: Preauthentication failed while getting initial credentials")
+                );
+
+            util.CatchException(() => s.Kinit("bogus@CERN.CH", "mypassword"), typeof(LinuxCommandErrorException), "failed while getting initial");
+        }
+
+        [TestMethod]
+        public void KinitCommandNotKnown()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupKinit("bogus@CERN.CH", "mypassword")
+                .AddEntry("echo mypassword | kinit bogus@CERN.CH", @"-bash: kinit: command not found")
+                );
+
+            util.CatchException(() => s.Kinit("bogus@CERN.CH", "mypassword"), typeof(LinuxCommandErrorException), "command not found");
+        }
     }
 }

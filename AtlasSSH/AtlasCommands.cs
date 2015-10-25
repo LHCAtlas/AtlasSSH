@@ -38,6 +38,19 @@ namespace AtlasSSH
         { }
     }
 
+
+    [Serializable]
+    public class LinuxCommandErrorException : Exception
+    {
+        public LinuxCommandErrorException() { }
+        public LinuxCommandErrorException(string message) : base(message) { }
+        public LinuxCommandErrorException(string message, Exception inner) : base(message, inner) { }
+        protected LinuxCommandErrorException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        { }
+    }
+
     /// <summary>
     /// Some commands
     /// </summary>
@@ -288,6 +301,29 @@ namespace AtlasSSH
                 throw new LinuxMissingConfigurationException(string.Format("Unable to find release '{0}'", releaseName));
 
             // Return the connection to make it a functional interface.
+            return connection;
+        }
+
+        /// <summary>
+        /// Execute a kinit
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public static ISSHConnection Kinit (this ISSHConnection connection, string username, string password)
+        {
+            var allStrings = new List<string>();
+            connection.ExecuteCommand(string.Format("echo {0} | kinit {1}", password, username), l => allStrings.Add(l));
+            var errorStrings = allStrings.Where(l => l.StartsWith("kinit:")).ToArray();
+            if (errorStrings.Length > 0)
+            {
+                throw new LinuxCommandErrorException(string.Format("Failed to execute kinit command: {0}", errorStrings[0]));
+            }
+            if (!allStrings.Where(l => l.StartsWith("Password for")).Any())
+            {
+                throw new LinuxCommandErrorException(string.Format("Failed to execute kinit command: {0}", allStrings[0]));
+            }
             return connection;
         }
     }

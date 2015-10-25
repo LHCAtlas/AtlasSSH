@@ -228,6 +228,12 @@ Going to build a RootCore bin area= {1}/RootCoreBin
 Good!! The already set ROOTSYS=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/x86_64/root/6.02.12-x86_64-slc6-gcc48-opt will be used", releaseName, dirLocation));
         }
 
+        public static Dictionary<string, string> AddsetupKinit (this Dictionary<string, string> dict, string username, string password)
+        {
+            return dict
+                .AddEntry(string.Format("echo {1} | kinit {0}", username, password), @"Password for gwatts@CERN.CH:");
+        }
+
         [Serializable]
         public class TestAssertException : Exception
         {
