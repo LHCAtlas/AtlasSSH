@@ -461,5 +461,35 @@ kinit: Preauthentication failed while getting initial credentials")
 
             util.CatchException(() => s.Kinit("bogus@CERN.CH", "mypassword"), typeof(LinuxCommandErrorException), "command not found");
         }
+
+        [TestMethod]
+        public void CheckoutNoTagsDirectoryAllowed()
+        {
+            Assert.Inconclusive();
+        }
+
+        [TestMethod]
+        public void CheckoutNoTrunkAllowed()
+        {
+            Assert.Inconclusive();
+        }
+
+        [TestMethod]
+        public void CheckoutByRevision()
+        {
+            Assert.Inconclusive();
+        }
+
+        [TestMethod]
+        public void CheckoutByReleasePackage()
+        {
+            Assert.Inconclusive();
+        }
+
+        [TestMethod]
+        public void CheckoutNonexistantPackage()
+        {
+            Assert.Inconclusive();
+        }
     }
 }

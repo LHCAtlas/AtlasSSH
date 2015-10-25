@@ -326,5 +326,18 @@ namespace AtlasSSH
             }
             return connection;
         }
+
+        /// <summary>
+        /// Check out a package.
+        /// 
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="scPackagePath">The svn path to the package. Basically what you would hand to the rc checkout command. Nohting like "tags" or "trunk" is permitted.</param>
+        /// <param name="scRevision">The revision number. A SVN revision number. If blank, then the version associated with the build is checked out.</param>
+        /// <returns></returns>
+        public static ISSHConnection CheckoutPackage(this ISSHConnection connection, string scPackagePath, string scRevision)
+        {
+            return connection;
+        }
     }
 }
