@@ -17,6 +17,19 @@ namespace AtlasSSHTest
 
         const string CrLf = "\r\n";
 
+
+        [Serializable]
+        public class UnknownTestCommandException : Exception
+        {
+            public UnknownTestCommandException() { }
+            public UnknownTestCommandException(string message) : base(message) { }
+            public UnknownTestCommandException(string message, Exception inner) : base(message, inner) { }
+            protected UnknownTestCommandException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context)
+            { }
+        }
+
         /// <summary>
         /// If we see a given command we should return with a response.
         /// </summary>
@@ -39,7 +52,7 @@ namespace AtlasSSHTest
             if (!_responses.TryGetValue(command, out result))
             {
                 Console.WriteLine("Error: asked for a command '{0}' and had no response!", command);
-                throw new ArgumentException("Command " + command + " not known - can't response");
+                throw new UnknownTestCommandException("Command " + command + " not known - can't response");
             }
             using (var lstream = new StringReader(result))
             {

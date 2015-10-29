@@ -465,31 +465,63 @@ kinit: Preauthentication failed while getting initial credentials")
         [TestMethod]
         public void CheckoutNoTagsDirectoryAllowed()
         {
-            Assert.Inconclusive();
+            // Just checkout a package as it is listed in the release.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                );
+
+            util.CatchException(() => s.CheckoutPackage("atlasoff/Event/xAOD/xAODTrigger/tags", ""), typeof(ArgumentException), "tags");
         }
 
         [TestMethod]
         public void CheckoutNoTrunkAllowed()
         {
-            Assert.Inconclusive();
+            // Just checkout a package as it is listed in the release.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                );
+
+            util.CatchException(() => s.CheckoutPackage("atlasoff/Event/xAOD/xAODTrigger/trunk", ""), typeof(ArgumentException), "trunk");
         }
 
         [TestMethod]
         public void CheckoutByRevision()
         {
-            Assert.Inconclusive();
+            // Just checkout a package as it is listed in the release.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddCheckoutFromRevision("atlasoff/Event/xAOD/xAODTrigger", "704382")
+                );
+
+            s.CheckoutPackage("atlasoff/Event/xAOD/xAODTrigger", "704382");
+        }
+
+        [TestMethod]
+        public void CheckoutByRevisionWithReleasePackage()
+        {
+            // Just checkout a package as it is listed in the release.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                );
+
+            util.CatchException(() => s.CheckoutPackage("xAODTrigger", "704382"), typeof(ArgumentException), "revision is specified then the package path must be fully specified");
         }
 
         [TestMethod]
         public void CheckoutByReleasePackage()
         {
-            Assert.Inconclusive();
+            // Just checkout a package as it is listed in the release.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddCheckoutFromRelease("xAODTrigger")
+                );
+
+            s.CheckoutPackage("xAODTrigger", "");
         }
 
         [TestMethod]
         public void CheckoutNonexistantPackage()
         {
-            Assert.Inconclusive();
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddEntry("rc checkout_pkg xAODForward", @"RootCore: Error unknown package xAODForward")
+                );
+
+            util.CatchException(() => s.CheckoutPackage("xAODForward", ""), typeof(LinuxCommandErrorException), "Unable to check out svn package xAODForward");
         }
     }
 }
