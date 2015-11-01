@@ -523,5 +523,52 @@ kinit: Preauthentication failed while getting initial credentials")
 
             util.CatchException(() => s.CheckoutPackage("xAODForward", ""), typeof(LinuxCommandErrorException), "Unable to check out svn package xAODForward");
         }
+
+        [TestMethod]
+        public void ExecuteBadLinuxCommand()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddEntry("ls bogusduduefreak", @"ls: cannot access bogusduduefreak: No such file or directory")
+                .AddEntry("echo $?", "2")
+                );
+
+            util.CatchException(() => s.ExecuteLinuxCommand("ls bogusduduefreak"), typeof(LinuxCommandErrorException), "The remote command");
+        }
+
+        [TestMethod]
+        public void ExecuteGoodLinuxCommand()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddGoodLinuxCommand()
+                .AddEntry("ls", @"1                        cmt                        rachel
+105279.root              cmthome                    runBuildTest.sh
+191517_DESD.list         dbrunner.txt               runBuildTest.sh~
+191517_DESD.list~        doe2010.p12                runSingleBuildTest.sh
+AnalysisExamples         doit.sh                    runSingleBuildTest.sh~
+AnalysisExamples.tar.gz  doitall.sh                 runwill.sh
+D2011-ttbar-sf.txt       doitall.sh~                setupLocalRelease.sh
+Desktop                  dojunk.sh                  setupLocalRelease.sh~
+Documents                done.txt                   setupScripts
+Downloads                dq2-datasets.py            supportInfoNoASetup.txt
+Evgen.log                dq2-datasets.py~           tally-cvmfs-v1.txt
+HV                       dump_20140527_1610.txt.gz  tally-old.txt
+Music                    dump_20140527_1611.txt.gz  tally.txt
+Pictures                 dump_20140606_0120.txt.gz  tally.txt-2-19-10.bak
+PoolFileCatalog.xml      egammaTimeCorrConfig.py    tally.txt-2-26-10.txt
+PoolFileCatalog.xml.BAK  fndbrelease.txt            tally2.txt
+Public                   junk                       temp
+Templates                krb5.conf                  test.c
+Videos                   krb5.conf~                 testPROOF
+atest.root               libcurl.so.3               testSize
+athena_gen.out           log.txt                    testarea
+athena_sim.log           longsvn.txt                usercert.pem
+bin                      notebooks                  userkey.pem
+bogus                    oradiag_gwatts             wget-log
+bogus_dude               proof                      workarea
+build_nv_ntuple.txt      python                     xAOForward.tar.gz")
+                );
+
+            s.ExecuteLinuxCommand("ls");
+        }
     }
 }

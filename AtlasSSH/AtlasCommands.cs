@@ -383,5 +383,26 @@ namespace AtlasSSH
 
             return connection;
         }
+
+        /// <summary>
+        /// Execute a Linux command. Throw if the command does not return 0.
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection, string command)
+        {
+            string rtnValue = "";
+            connection
+                .ExecuteCommand(command)
+                .ExecuteCommand("echo $?", l => rtnValue = l);
+
+            if (rtnValue != "0")
+            {
+                throw new LinuxCommandErrorException(string.Format("The remote command '{0}' return status error code '{1}'", command, rtnValue));
+            }
+            return connection;
+        }
+
     }
 }

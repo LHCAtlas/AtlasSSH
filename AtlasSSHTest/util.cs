@@ -480,6 +480,18 @@ Checked out revision 704382.")
                 ;
         }
 
+        /// <summary>
+        /// When a linux command runs and returns something good - the status is good. Add that
+        /// command and response to test harness.
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <returns></returns>
+        public static Dictionary<string, string> AddGoodLinuxCommand(this Dictionary<string, string> dict)
+        {
+            return dict
+                .AddEntry("echo $?", "0");
+        }
+
         [Serializable]
         public class TestAssertException : Exception
         {
