@@ -384,8 +384,9 @@ namespace AtlasSSH
             if (!string.IsNullOrWhiteSpace(scRevision))
             {
                 var packageName = scPackagePath.Split('/').Last();
+                var checkoutName = fullPackagePath.Split('/').Last();
                 bool lineSeen = false;
-                connection.ExecuteCommand(string.Format("mv {1}@{0} {1}", scRevision, packageName), l => lineSeen = true);
+                connection.ExecuteCommand(string.Format("mv {0} {1}", checkoutName, packageName), l => lineSeen = true);
                 if (lineSeen)
                 {
                     throw new LinuxCommandErrorException("Unable to rename the downloaded trunk directory for package '" + scPackagePath + "'.");
