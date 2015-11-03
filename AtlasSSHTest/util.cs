@@ -492,6 +492,415 @@ Checked out revision 704382.")
                 .AddEntry("echo $?", "0");
         }
 
+        public static Dictionary<string, string> AddBuildCommandResponses(this Dictionary<string, string> dict)
+        {
+            return dict
+                .AddEntry("rc find_packages", @"using release set with set_release                                                                                              
+looking for packages in /phys/users/gwatts/bogus                                                                                
+
+packages found:
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ApplyJetCalibration
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AsgExampleTools    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AsgTools           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_Boost          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_Doxygen        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_Eigen          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_FastJet        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_RooUnfold      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_Test           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_root           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AssociationUtils   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AthContainers      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AthContainersInterfaces
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AthLinks               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/CPAnalysisExamples     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/CalibrationDataInterface
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/CaloGeoHelpers          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/CxxUtils                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/DiTauMassTools          
+/phys/users/gwatts/bogus/trunk@246773/DiVertAnalysis                         
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ElectronEfficiencyCorrection
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ElectronPhotonFourMomentumCorrection
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ElectronPhotonSelectorTools         
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ElectronPhotonShowerShapeFudgeTool  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventLoop                           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventLoopAlgs                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventLoopGrid                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventPrimitives                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventShapeInterface                 
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/FourMomUtils                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/FsrUtils                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/GeoPrimitives                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/GoodRunsLists                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/InDetTrackSelectionTool             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/IsolationCorrections                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/IsolationSelection                  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetCPInterfaces                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetCalibTools                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetEDM                              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetInterface                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetMomentTools                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetRec                              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetResolution                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetSelectorTools                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetSubStructureMomentTools          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetSubStructureUtils                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetUncertainties                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetUtils                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MCTruthClassifier                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/METInterface                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/METUtilities                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MultiDraw                           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MuonEfficiencyCorrections           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MuonIdHelpers                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MuonMomentumCorrections             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MuonSelectorTools                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PATCore                             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PATInterfaces                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PathResolver                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PhotonEfficiencyCorrection          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PileupReweighting                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/QuickAna                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ReweightUtils                       
+/phys/users/gwatts/bogus/RootCore                                                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/RootCoreUtils                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/SampleHandler                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/SemileptonicCorr                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TauAnalysisTools                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TauCorrUncert                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TestTools                           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrackVertexAssociationTool          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigAnalysisInterfaces              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigBunchCrossingTool               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfBase                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfHLTData                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfInterfaces                  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfL1Data                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfxAOD                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigDecisionInterface               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigDecisionTool                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigEgammaMatchingTool              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigMuonEfficiency                  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigMuonMatching                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigNavStructure                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigSteeringEvent                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigTauMatching                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TruthUtils                          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ZMassConstraint                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/egammaLayerRecalibTool              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/egammaMVACalib                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODAssociations                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODBPhys                           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODBTagging                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODBTaggingEfficiency              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODBase                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODCaloEvent                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODCore                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODCutFlow                         
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODEgamma                          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODEventFormat                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODEventInfo                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODEventShape                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODHIEvent                         
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODJet                             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODLuminosity                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODMetaData                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODMetaDataCnv                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODMissingET                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODMuon                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODPFlow                           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODParticleEvent                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODPrimitives                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODRootAccess                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODRootAccessInterfaces            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTau                             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTracking                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigBphys                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigCalo                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigEgamma                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigL1Calo                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigMinBias                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigMissingET                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigMuon                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigRinger                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigger                         
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTriggerCnv                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTruth                           
+
+sorted packages:
+/phys/users/gwatts/bogus/RootCore
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_Doxygen
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_Test   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_root   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ApplyJetCalibration
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODRootAccessInterfaces
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_Boost               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TestTools               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/CxxUtils                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AthContainersInterfaces 
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AthLinks                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AthContainers           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODCore                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODEventFormat         
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODRootAccess          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AsgTools                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AsgExampleTools         
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_Eigen               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_FastJet             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/Asg_RooUnfold           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODBase                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/CaloGeoHelpers          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventPrimitives         
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/GeoPrimitives           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODCaloEvent           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTracking            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigger             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODBTagging            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODPFlow               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODJet                 
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODMissingET           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/FourMomUtils            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODEventInfo           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TruthUtils              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTruth               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODPrimitives          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODEgamma              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MuonIdHelpers           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODMuon                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTau                 
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/AssociationUtils        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/RootCoreUtils           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/SampleHandler           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventLoop               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PATCore                 
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PATInterfaces           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PathResolver            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MuonEfficiencyCorrections
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MuonSelectorTools        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MuonMomentumCorrections  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ElectronPhotonSelectorTools
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/egammaLayerRecalibTool     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/egammaMVACalib             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ElectronPhotonFourMomentumCorrection
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TauAnalysisTools                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ElectronEfficiencyCorrection        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/CalibrationDataInterface            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetInterface                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODEventShape                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetCalibTools                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetSelectorTools                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetResolution                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetCPInterfaces                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetUncertainties                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/METInterface                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/InDetTrackSelectionTool             
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/METUtilities                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODBTaggingEfficiency              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/CPAnalysisExamples                  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/DiTauMassTools                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigNavStructure                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfBase                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfL1Data                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfHLTData                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfInterfaces                  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigConfxAOD                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigDecisionInterface               
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigSteeringEvent                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigDecisionTool                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigCalo                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigEgamma                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/GoodRunsLists                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigMuon                        
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigMuonMatching                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigEgammaMatchingTool              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventLoopGrid                       
+/phys/users/gwatts/bogus/trunk@246773/DiVertAnalysis                                     
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ElectronPhotonShowerShapeFudgeTool  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MultiDraw                           
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventLoopAlgs                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/EventShapeInterface                 
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/IsolationSelection                  
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/FsrUtils                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetEDM                              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetRec                              
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/IsolationCorrections                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetUtils                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetMomentTools                      
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetSubStructureUtils                
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/JetSubStructureMomentTools          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/MCTruthClassifier                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PhotonEfficiencyCorrection          
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODParticleEvent                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ReweightUtils                       
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/PileupReweighting                   
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/QuickAna                            
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/SemileptonicCorr                    
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TauCorrUncert
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrackVertexAssociationTool
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigAnalysisInterfaces
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigBunchCrossingTool
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigMuonEfficiency
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/TrigTauMatching
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/ZMassConstraint
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODAssociations
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODBPhys
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODCutFlow
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODHIEvent
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODLuminosity
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODMetaData
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODMetaDataCnv
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigBphys
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigL1Calo
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigMinBias
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigMissingET
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTrigRinger
+/cvmfs/atlas.cern.ch/repo/sw/ASG/AnalysisBase/2.3.30/xAODTriggerCnv
+
+writing changes
+done")
+            .AddEntry("echo $?", "0")
+            .AddEntry("rc compile", @"bash-4.1$ rc compile
+compiling RootCore  
+finished compiling RootCore
+compiling DiVertAnalysis   
+Making directory /phys/users/gwatts/bogus/RootCoreBin/obj/x86_64-slc6-gcc48-opt/DiVertAnalysis/obj
+Making dependency for LinkDef.h                                                                   
+Making dependency for Common.cxx                                                                  
+Making dependency for CalRatioEmul.cxx                                                            
+Making dependency for DiVertUtils.cxx                                                             
+Making dependency for CalRatioNoTrig.cxx                                                          
+Making dependency for DiLeptonFinder.cxx                                                          
+Making dependency for LinkDef.h                                                                   
+Making dependency for CalRatioTrig.cxx                                                            
+Making dependency for DiVertAnalysisLocalFileRunner.cxx                                           
+Making dependency for DiVertAnalysis.cxx                                                          
+Making dependency for TrigUtils.cxx                                                               
+Making dependency for MuRoIClusTrig.cxx                                                           
+Making dependency for TruthUtils.cxx                                                              
+Making dependency for PrepObjects.cxx                                                             
+Making dependency for DiVertAnalysisRunner.cxx                                                    
+Making dependency for MSVertexFinder.cxx                                                          
+Compiling DiVertUtils.o                                                                           
+Compiling PrepObjects.o                                                                           
+Compiling CalRatioEmul.o                                                                          
+Compiling CalRatioNoTrig.o                                                                        
+Compiling DiVertAnalysis.o                                                                        
+Compiling CalRatioTrig.o                                                                          
+Compiling MSVertexFinder.o                                                                        
+Compiling DiLeptonFinder.o                                                                        
+Compiling TrigUtils.o                                                                             
+Compiling TruthUtils.o                                                                            
+Compiling Common.o                                                                                
+Compiling MuRoIClusTrig.o                                                                         
+Compiling DiVertAnalysisCINT.o                                                                    
+Making directory /phys/users/gwatts/bogus/RootCoreBin/obj/x86_64-slc6-gcc48-opt/DiVertAnalysis/bin
+Compiling DiVertAnalysisLocalFileRunner.o                                                         
+Compiling DiVertAnalysisRunner.o                                                                  
+In file included from input_line_11:1:                                                            
+In file included from /phys/users/gwatts/bogus/DiVertAnalysis/Root/LinkDef.h:1:                   
+In file included from /phys/users/gwatts/bogus/DiVertAnalysis/DiVertAnalysis/DiVertAnalysis.h:7:  
+In file included from /phys/users/gwatts/bogus/DiVertAnalysis/DiVertAnalysis/DiVertUtils.h:3:     
+In file included from /phys/users/gwatts/bogus/DiVertAnalysis/DiVertAnalysis/Common.h:42:         
+In file included from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionTool.h:18:
+In file included from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionToolStandalone.h:40:
+In file included from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionToolCore.h:19:      
+In file included from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/ChainGroupFunctions.h:19:       
+In file included from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/ChainGroup.h:25:                
+In file included from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/CacheGlobalMemory.h:22:         
+In file included from /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/x86_64/Gcc/gcc484_x86_64_slc6/slc6/x86_64-slc6-gcc48-opt/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.4/../../../../include/c++/4.8.4/ext/hash_map:60:                                        
+/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/x86_64/Gcc/gcc484_x86_64_slc6/slc6/x86_64-slc6-gcc48-opt/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.4/../../../../include/c++/4.8.4/backward/backward_warning.h:32:2: warning:                                    
+      This file includes at least one deprecated or antiquated header which may be removed without further notice at a future   
+      date. Please use a non-deprecated interface with equivalent functionality instead. For a listing of replacement headers   
+      and interfaces, consult the file backward_warning.h. To disable this warning use -Wno-deprecated. [-W#warnings]           
+#warning \                                                                                                                      
+ ^                                                                                                                              
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/PrepObjects.cxx:555:8: warning: unused parameter 'isLLPMC' [-Wunused-parameter]    
+   void addEventBranches(TTree* tree, struct eventBranches* branches, bool isLate, bool isLLPMC) {                              
+        ^                                                                                                                       
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/DiVertUtils.cxx:5:8: warning: unused parameter 'isMC' [-Wunused-parameter]         
+   void fillEventInfo(struct eventBranches* branches, int eventCount, double eventWeight, const xAOD::EventInfo* eventInfo, std::map<std::string, bool> trigPassed, bool isMC, bool isLate) {                                                                   
+        ^                                                                                                                       
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/DiVertUtils.cxx:284:8: warning: unused parameter 'CRNT' [-Wunused-parameter]       
+   void setCRJetMatch(struct jetBranches* branches, CalRatioTrig* CR, CalRatioNoTrig* CRNT){                                    
+        ^                                                                                                                       
+In file included from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureContainer.h:26:0,                    
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/ChainGroup.h:27,                            
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/ChainGroupFunctions.h:19,                   
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionToolCore.h:19,                  
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionToolStandalone.h:40,            
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionTool.h:18,                      
+                 from /phys/users/gwatts/bogus/DiVertAnalysis/DiVertAnalysis/Common.h:42,                                       
+                 from /phys/users/gwatts/bogus/DiVertAnalysis/Root/Common.cxx:1:                                                
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h: In instantiation of 'std::shared_ptr<const _Tp> Trig::FeatureAccessImpl::filter_if(mpl_::bool_<true>, std::shared_ptr<const _Tp>&, const TrigPassBits*) [with STORED = DataVector<xAOD::Jet_v1>]':                                                                                                    
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h:140:69:   required from 'std::vector<Trig::Feature<T> > Trig::FeatureAccessImpl::typedGet(const std::vector<Trig::TypelessFeature>&, HLT::TrigNavStructure*, EventPtr_t) [with REQUESTED = DataVector<xAOD::Jet_v1>; STORED = DataVector<xAOD::Jet_v1>; CONTAINER = DataVector<xAOD::Jet_v1>; EventPtr_t = asg::SgTEvent*]'                                                                                                            
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureContainer.h:74:109:   required from 'std::vector<Trig::Feature<T> > Trig::FeatureContainer::containerFeature(const string&, unsigned int, const string&) const [with CONTAINER = DataVector<xAOD::Jet_v1>; std::string = std::basic_string<char>]'                                                                         
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/Common.cxx:188:79:   required from here                                            
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h:86:35: warning: unused parameter 'is_same' [-Wunused-parameter]                                                                                                        
+     std::shared_ptr<const STORED> filter_if(boost::mpl::bool_<true> is_same, std::shared_ptr<const STORED>& original,const TrigPassBits* bits){                                                                                                                
+                                   ^                                                                                            
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h: In instantiation of 'std::shared_ptr<const _Tp> Trig::FeatureAccessImpl::filter_if(mpl_::bool_<true>, std::shared_ptr<const _Tp>&, const TrigPassBits*) [with STORED = DataVector<xAOD::TrackParticle_v1>]':                                                                                          
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h:140:69:   required from 'std::vector<Trig::Feature<T> > Trig::FeatureAccessImpl::typedGet(const std::vector<Trig::TypelessFeature>&, HLT::TrigNavStructure*, EventPtr_t) [with REQUESTED = DataVector<xAOD::TrackParticle_v1>; STORED = DataVector<xAOD::TrackParticle_v1>; CONTAINER = DataVector<xAOD::TrackParticle_v1>; EventPtr_t = asg::SgTEvent*]'                                                                              
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureContainer.h:74:109:   required from 'std::vector<Trig::Feature<T> > Trig::FeatureContainer::containerFeature(const string&, unsigned int, const string&) const [with CONTAINER = DataVector<xAOD::TrackParticle_v1>; std::string = std::basic_string<char>]'                                                               
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/Common.cxx:189:129:   required from here                                           
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h:86:35: warning: unused parameter 'is_same' [-Wunused-parameter]                                                                                                        
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/DiVertAnalysis.cxx: In member function 'virtual EL::StatusCode DiVertAnalysis::execute()':                                                                                                                         
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/DiVertAnalysis.cxx:318:14: warning: unused variable 'jet_et' [-Wunused-variable]   
+       double jet_et = (**aJet).p4().Et()*0.001;                                                                                
+              ^                                                                                                                 
+In file included from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureContainer.h:26:0,                    
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/ChainGroup.h:27,                            
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/ChainGroupFunctions.h:19,                   
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionToolCore.h:19,                  
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionToolStandalone.h:40,            
+                 from /phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/TrigDecisionTool.h:18,                      
+                 from /phys/users/gwatts/bogus/DiVertAnalysis/DiVertAnalysis/Common.h:42,                                       
+                 from /phys/users/gwatts/bogus/DiVertAnalysis/DiVertAnalysis/TrigUtils.h:4,                                     
+                 from /phys/users/gwatts/bogus/DiVertAnalysis/Root/TrigUtils.cxx:1:                                             
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h: In instantiation of 'std::shared_ptr<const _Tp> Trig::FeatureAccessImpl::filter_if(mpl_::bool_<true>, std::shared_ptr<const _Tp>&, const TrigPassBits*) [with STORED = DataVector<xAOD::Jet_v1>]':                                                                                                    
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h:140:69:   required from 'std::vector<Trig::Feature<T> > Trig::FeatureAccessImpl::typedGet(const std::vector<Trig::TypelessFeature>&, HLT::TrigNavStructure*, EventPtr_t) [with REQUESTED = DataVector<xAOD::Jet_v1>; STORED = DataVector<xAOD::Jet_v1>; CONTAINER = DataVector<xAOD::Jet_v1>; EventPtr_t = asg::SgTEvent*]'                                                                                                            
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureContainer.h:74:109:   required from 'std::vector<Trig::Feature<T> > Trig::FeatureContainer::containerFeature(const string&, unsigned int, const string&) const [with CONTAINER = DataVector<xAOD::Jet_v1>; std::string = std::basic_string<char>]'                                                                         
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/TrigUtils.cxx:42:83:   required from here                                          
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h:86:35: warning: unused parameter 'is_same' [-Wunused-parameter]                                                                                                        
+     std::shared_ptr<const STORED> filter_if(boost::mpl::bool_<true> is_same, std::shared_ptr<const STORED>& original,const TrigPassBits* bits){                                                                                                                
+                                   ^                                                                                            
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h: In instantiation of 'std::shared_ptr<const _Tp> Trig::FeatureAccessImpl::filter_if(mpl_::bool_<true>, std::shared_ptr<const _Tp>&, const TrigPassBits*) [with STORED = DataVector<xAOD::TrackParticle_v1>]':                                                                                          
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h:140:69:   required from 'std::vector<Trig::Feature<T> > Trig::FeatureAccessImpl::typedGet(const std::vector<Trig::TypelessFeature>&, HLT::TrigNavStructure*, EventPtr_t) [with REQUESTED = DataVector<xAOD::TrackParticle_v1>; STORED = DataVector<xAOD::TrackParticle_v1>; CONTAINER = DataVector<xAOD::TrackParticle_v1>; EventPtr_t = asg::SgTEvent*]'                                                                              
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureContainer.h:74:109:   required from 'std::vector<Trig::Feature<T> > Trig::FeatureContainer::containerFeature(const string&, unsigned int, const string&) const [with CONTAINER = DataVector<xAOD::TrackParticle_v1>; std::string = std::basic_string<char>]'                                                               
+/phys/users/gwatts/bogus/DiVertAnalysis/Root/TrigUtils.cxx:43:126:   required from here                                         
+/phys/users/gwatts/bogus/RootCoreBin/include/TrigDecisionTool/FeatureCollectStandalone.h:86:35: warning: unused parameter 'is_same' [-Wunused-parameter]                                                                                                        
+cc1plus: warning: unrecognized command line option "" - Wno - tautological - undefined - compare"" [enabled by default]                   
+cc1plus: warning: unrecognized command line option ""-Wno-tautological-undefined-compare""[enabled by default]
+cc1plus: warning: unrecognized command line option ""-Wno-tautological-undefined-compare""[enabled by default]
+At global scope:
+cc1plus: warning: unrecognized command line option ""-Wno-tautological-undefined-compare""[enabled by default]
+In file included from DiVertAnalysisCINT.cxx.h:1:                                                                               
+In file included from / phys / users / gwatts / bogus / DiVertAnalysis / DiVertAnalysis / DiVertAnalysis.h:7:                                
+In file included from / phys / users / gwatts / bogus / DiVertAnalysis / DiVertAnalysis / DiVertUtils.h:3:                                   
+In file included from / phys / users / gwatts / bogus / DiVertAnalysis / DiVertAnalysis / Common.h:42:                                       
+In file included from / phys / users / gwatts / bogus / RootCoreBin / include / TrigDecisionTool / TrigDecisionTool.h:18:                      
+In file included from / phys / users / gwatts / bogus / RootCoreBin / include / TrigDecisionTool / TrigDecisionToolStandalone.h:40:            
+In file included from / phys / users / gwatts / bogus / RootCoreBin / include / TrigDecisionTool / TrigDecisionToolCore.h:19:
+In file included from / phys / users / gwatts / bogus / RootCoreBin / include / TrigDecisionTool / ChainGroupFunctions.h:19:
+In file included from / phys / users / gwatts / bogus / RootCoreBin / include / TrigDecisionTool / ChainGroup.h:25:
+In file included from / phys / users / gwatts / bogus / RootCoreBin / include / TrigDecisionTool / CacheGlobalMemory.h:22:
+In file included from / cvmfs / atlas.cern.ch / repo / ATLASLocalRootBase / x86_64 / Gcc / gcc484_x86_64_slc6 / slc6 / x86_64 - slc6 - gcc48 - opt / bin /../ lib / gcc / x86_64 - unknown - linux - gnu / 4.8.4 /../../../../ include / c++ / 4.8.4 / ext / hash_map:60:
+/ cvmfs / atlas.cern.ch / repo / ATLASLocalRootBase / x86_64 / Gcc / gcc484_x86_64_slc6 / slc6 / x86_64 - slc6 - gcc48 - opt / bin /../ lib / gcc / x86_64 - unknown - linux - gnu / 4.8.4 /../../../../ include / c++ / 4.8.4 / backward / backward_warning.h:32:2: warning:
+      This file includes at least one deprecated or antiquated header which may be removed without further notice at a future
+      date.Please use a non - deprecated interface with equivalent functionality instead.For a listing of replacement headers
+      and interfaces, consult the file backward_warning.h.To disable this warning use -Wno-deprecated. [-W#warnings]
+#warning \
+ ^
+cc1plus: warning: unrecognized command line option ""-Wno-tautological-undefined-compare""[enabled by default]
+Linking libDiVertAnalysis.so
+Linking DiVertAnalysisRunner
+Linking DiVertAnalysisLocalFileRunner
+finished compiling DiVertAnalysis
+root[0]
+Processing / cvmfs / atlas.cern.ch / repo / sw / ASG / AnalysisBase / 2.3.32 / RootCore / scripts / load_packages.C...
+xAOD::Init                INFO    Environment initialised for data access
+");
+        }
+
         [Serializable]
         public class TestAssertException : Exception
         {

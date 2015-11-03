@@ -39,6 +39,32 @@ namespace AtlasSSHTest
             _responses = commandAndResponse;
         }
 
+        private class CommandChangeInfo
+        {
+            public string _afterCommand;
+            public string _command;
+            public string _response;
+        }
+
+        /// <summary>
+        /// Keep track fo commands to change.
+        /// </summary>
+        private Queue<CommandChangeInfo> _changeQueue = new Queue<CommandChangeInfo>();
+
+        /// <summary>
+        /// After we see a command, then do the replace. We will allow the given command to "execute" first.
+        /// These are Queued.
+        /// </summary>
+        /// <param name="afterSeeCommand"></param>
+        /// <param name="command"></param>
+        /// <param name="commandResponse"></param>
+        /// <returns></returns>
+        public dummySSHConnection AddQueuedChange(string afterSeeCommand, string command, string commandResponse)
+        {
+            _changeQueue.Enqueue(new CommandChangeInfo() { _afterCommand = afterSeeCommand, _command = command, _response = commandResponse });
+            return this;
+        }
+
         /// <summary>
         /// Execute a command and return whatever we are supposed to.
         /// </summary>
@@ -63,6 +89,18 @@ namespace AtlasSSHTest
                     }
                 }
             }
+
+            // If the next queued item matches, then we should "execute" the update
+            if (_changeQueue.Count > 0)
+            {
+                if (_changeQueue.Peek()._afterCommand == command)
+                {
+                    var x = _changeQueue.Dequeue();
+                    _responses[x._command] = x._response;
+                }
+            }
+
+            // Return ourselves so we can continue to be all functionally!
             return this;
         }
 

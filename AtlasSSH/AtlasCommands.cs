@@ -390,11 +390,12 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="command"></param>
         /// <returns></returns>
-        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection, string command)
+        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection, string command, Action<string> processLine = null)
         {
             string rtnValue = "";
+            processLine = processLine == null ? l => { } : processLine; 
             connection
-                .ExecuteCommand(command)
+                .ExecuteCommand(command, processLine)
                 .ExecuteCommand("echo $?", l => rtnValue = l);
 
             if (rtnValue != "0")
@@ -404,5 +405,38 @@ namespace AtlasSSH
             return connection;
         }
 
+        /// <summary>
+        /// Build the work area
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns></returns>
+        public static ISSHConnection BuildWorkArea(this ISSHConnection connection)
+        {
+            string findPkgError = null;
+            var buildLines = new List<string>();
+            try
+            {
+                return connection
+                    .ExecuteLinuxCommand("rc find_packages", l => findPkgError = l)
+                    .ExecuteLinuxCommand("rc compile", l => buildLines.Add(l));
+            } catch (LinuxCommandErrorException lerr)
+            {
+                if (buildLines.Count > 0)
+                {
+                    var errors = buildLines.Where(ln => ln.Contains("error:"));
+                    var err = new StringBuilder();
+                    err.AppendLine("Unable to compile package:");
+                    foreach (var errline in errors)
+                    {
+                        err.AppendLine("    -> " + errline);
+                    }
+                    throw new LinuxCommandErrorException(err.ToString(), lerr);
+                }
+                else
+                {
+                    throw new LinuxCommandErrorException(string.Format("Failed to run 'rc find_packages': {0}", findPkgError), lerr);
+                }
+            }
+        }
     }
 }
