@@ -494,6 +494,29 @@ kinit: Preauthentication failed while getting initial credentials")
         }
 
         [TestMethod]
+        public void CheckoutNoTrailingSlash()
+        {
+            // Just checkout a package as it is listed in the release.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddCheckoutFromRevision("atlasoff/Event/xAOD/xAODTrigger", "704382")
+                );
+
+            util.CatchException(() => s.CheckoutPackage("atlasoff/Event/xAOD/xAODTrigger/", "704382"), typeof(ArgumentException), "ends with a slash");
+        }
+
+        [TestMethod]
+        public void CheckoutSubDirOfTrunk()
+        {
+            // Check out a package that is in a sub-dir of trunk.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddCheckoutFromRevisionTrunk("atlasoff/Event/xAOD/xAODTrigger/trunk/subpkg", "704382")
+                );
+
+            s.CheckoutPackage("atlasoff/Event/xAOD/xAODTrigger/trunk/subpkg", "704382");
+
+        }
+
+        [TestMethod]
         public void CheckoutByRevisionWithReleasePackage()
         {
             // Just checkout a package as it is listed in the release.
@@ -882,13 +905,32 @@ RootCore: Error failed to compile package DiVertAnalysis")
 
             util.CatchException(() => s.BuildWorkArea(), typeof(LinuxCommandErrorException), "'trigTauTracks_IDTrig' was not declared in this scope");
         }
-#if false
-        bash-4.1$ rc compile
 
-bash-4.1$ echo $?
-1
-bash-4.1$
-#endif
+        [TestMethod]
+        public void OnlineFullCheckoutAndBuild()
+        {
+            // Do it for real to make sure all the dummy test stuff we have above actually works.
+            var info = util.GetUsernameAndPassword();
+            var kinitInfo = util.GetPasswordForKint(info.Item1);
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                s.ExecuteLinuxCommand("rm -rf /tmp/gwatts/buildtest"); // All releases must start from scratch!
 
+                s.setupATLAS()
+                    .Kinit(kinitInfo.Item1, kinitInfo.Item2)
+                    .SetupRcRelease("/tmp/gwatts/buildtest", "Base,2.3.32")
+                    .CheckoutPackage("atlasphys-exo/Physics/Exotic/UEH/DisplacedJets/Run2/AnalysisCode/trunk/DiVertAnalysis", "247550")
+                    .BuildWorkArea();
+
+                // Next get back a list of the executables, and make sure one we are looking for is actually there.
+
+                var answers = new List<string>();
+                s.ExecuteLinuxCommand("find ./RootCoreBin/bin -name DiVertAnalysisRunner -print", l => answers.Add(l));
+
+                Assert.AreEqual(1, answers.Count);
+                Assert.IsTrue(answers[0].Contains("DiVertAnalysisRunner"));
+            }
+
+        }
     }
 }

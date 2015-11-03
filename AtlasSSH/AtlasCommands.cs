@@ -348,6 +348,10 @@ namespace AtlasSSH
                 // This throws because it moves with time.
                 throw new ArgumentException(string.Format("The package path ({0}) can't end with a trunk directory to indicate the HEAD version - the tag will change over time and can't be tracked.", scPackagePath));
             }
+            if (scPackagePath.EndsWith("/"))
+            {
+                throw new ArgumentException(string.Format("The package path {0} ends with a slash - this is not allowed", scPackagePath));
+            }
             if (!string.IsNullOrWhiteSpace(scRevision) && !scPackagePath.Contains("/"))
             {
                 throw new ArgumentException(string.Format("If a revision is specified then the package path must be fully specified (was '{0}' - {1})", scPackagePath, scRevision));
@@ -359,11 +363,18 @@ namespace AtlasSSH
             var fullPackagePath = scPackagePath;
             if (!string.IsNullOrWhiteSpace(scRevision))
             {
-                fullPackagePath += "/trunk@" + scRevision;
+                if (fullPackagePath.Contains("/trunk/"))
+                {
+                    fullPackagePath += "@" + scRevision;
+                }
+                else
+                {
+                    fullPackagePath += "/trunk@" + scRevision;
+                }
             }
 
             var sawRevisionMessage = false;            
-            connection.ExecuteCommand(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"));
+            connection.ExecuteCommand(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 30);
             if (!sawRevisionMessage)
             {
                 throw new LinuxCommandErrorException(string.Format("Unable to check out svn package {0}.", scPackagePath));
@@ -374,7 +385,7 @@ namespace AtlasSSH
             {
                 var packageName = scPackagePath.Split('/').Last();
                 bool lineSeen = false;
-                connection.ExecuteCommand(string.Format("mv trunk@{0} {1}", scRevision, packageName), l => lineSeen = true);
+                connection.ExecuteCommand(string.Format("mv {1}@{0} {1}", scRevision, packageName), l => lineSeen = true);
                 if (lineSeen)
                 {
                     throw new LinuxCommandErrorException("Unable to rename the downloaded trunk directory for package '" + scPackagePath + "'.");

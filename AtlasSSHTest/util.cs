@@ -26,6 +26,17 @@ namespace AtlasSSHTest
             return Tuple.Create(thePasswordInfo.Username, thePasswordInfo.Password);
         }
 
+        public static Tuple<string, string> GetPasswordForKint(string username)
+        {
+            var cs = new CredentialSet(string.Format("gwatts@kinit", username));
+            var thePasswordInfo = cs.Load().FirstOrDefault();
+            if (thePasswordInfo == null)
+            {
+                throw new InvalidOperationException(string.Format("Please create a generic windows password with the 'internet or network address' as '{0}@kinit', and as a username the target node name, and a password that contains the username", username));
+            }
+            return Tuple.Create(thePasswordInfo.Username, thePasswordInfo.Password);
+        }
+
         /// <summary>
         /// Create a temp generic windows credential. We do leave these behind on the machine.
         /// But they are just for testing, and hopefully the username used will make it clear
@@ -477,6 +488,135 @@ A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/ChangeLog
  U   /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382
 Checked out revision 704382.")
                 .AddEntry(string.Format("mv trunk@{0} {1}", revision, packagePath.Split('/').Last()), "")
+                ;
+        }
+
+        public static Dictionary<string, string> AddCheckoutFromRevisionTrunk(this Dictionary<string, string> dict, string packagePath, string revision)
+        {
+            return dict
+                .AddEntry(string.Format("rc checkout_pkg {0}@{1}", packagePath, revision), @"checking out trunk@704382
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/test
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/test/ut_xaodtrigger_trigcomposite_test.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/test/ut_xaodtrigger_trigpassbits_test.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TriggerMenuContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/selection.xml
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/JetRoIContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigConfKeys.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigCompositeAuxContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/MuonRoIAuxContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigDecisionAuxInfo.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigPassBits.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigNavigationAuxInfo.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/JetEtRoIAuxInfo.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/EnergySumRoIAuxInfo.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/EmTauRoIContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TriggerMenu_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/EmTauRoIContainer_v2.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TriggerMenuContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/JetRoI_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/JetRoI_v2.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigComposite_v1.icc
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/JetRoIContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/JetRoIContainer_v2.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/ByteStreamAuxContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/EmTauRoIAuxContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigConfKeys_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/EmTauRoIAuxContainer_v2.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/BunchConfContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigCompositeAuxContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/MuonRoIAuxContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigDecisionAuxInfo_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/BunchConfKey_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigNavigationAuxInfo_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/JetEtRoIAuxInfo_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigDecision_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigPassBits_v1.icc
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigNavigation_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/JetEtRoI_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/EmTauRoI_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/EmTauRoI_v2.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/BunchConfAuxContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/EnergySumRoI_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/MuonRoI_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigComposite_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/MuonRoIContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigCompositeContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigPassBitsAuxContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/BunchConf_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/ByteStreamAuxContainer_v1.icc
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TriggerMenuAuxContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/JetRoIAuxContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/JetRoIAuxContainer_v2.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigPassBits_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/TrigPassBitsContainer_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/versions/EnergySumRoIAuxInfo_v1.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigDecision.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigNavigation.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/EmTauRoI.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/JetEtRoI.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/EmTauRoIContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TriggerMenu.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/MuonRoIContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigCompositeContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/JetRoI.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigPassBitsAuxContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/BunchConf.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/EmTauRoIAuxContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/BunchConfContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TriggerMenuAuxContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/JetRoIAuxContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/BunchConfKey.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigPassBitsContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/xAODTriggerDict.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/BunchConfAuxContainer.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/TrigComposite.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/EnergySumRoI.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/xAODTrigger/MuonRoI.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigCompositeAuxContainer_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/MuonRoIAuxContainer_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/dict
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/dict/ContainerProxies.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigDecisionAuxInfo_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/BunchConfKey_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/compileVersionless.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigNavigationAuxInfo_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/JetEtRoIAuxInfo_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigDecision_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigNavigation_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/EmTauRoI_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/JetEtRoI_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/BunchConfAuxContainer_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/EmTauRoI_v2.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/EnergySumRoI_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/MuonRoI_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/xAODTriggerCLIDs.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigComposite_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigPassBitsAuxContainer_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/BunchConf_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TriggerMenuAuxContainer_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/JetRoIAuxContainer_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/JetRoIAuxContainer_v2.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigPassBits_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/EnergySumRoIAuxInfo_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TriggerMenu_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/JetRoI_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/JetRoI_v2.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/ByteStreamAuxContainer_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/EmTauRoIAuxContainer_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/EmTauRoIAuxContainer_v2.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/Root/TrigConfKeys_v1.cxx
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/cmt
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/cmt/requirements
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/cmt/Makefile.RootCore
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/doc
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/doc/mainpage.h
+A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/ChangeLog
+ U   /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382
+Checked out revision 704382.")
+                .AddEntry(string.Format("mv {1}@{0} {1}", revision, packagePath.Split('/').Last()), "")
                 ;
         }
 
