@@ -4,13 +4,45 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sprache;
+using System.IO;
+using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlows.Jobs
 {
     /// <summary>
+    /// Something went wrong with parsing the job language.
+    /// </summary>
+    [Serializable]
+    public class JobParseException : Exception
+    {
+        public JobParseException() { }
+        public JobParseException(string message) : base(message) { }
+        public JobParseException(string message, Exception inner) : base(message, inner) { }
+        protected JobParseException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        { }
+    }
+
+    /// <summary>
+    /// We couldn't find the job.
+    /// </summary>
+    [Serializable]
+    public class JobNotFoundException : Exception
+    {
+        public JobNotFoundException() { }
+        public JobNotFoundException(string message) : base(message) { }
+        public JobNotFoundException(string message, Exception inner) : base(message, inner) { }
+        protected JobNotFoundException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        { }
+    }
+
+    /// <summary>
     /// Code to parse a job definition(s) in a text file
     /// </summary>
-    static class JobParser
+    static public class JobParser
     {
         /// <summary>
         /// Parse everything until closing parenthesis (but not those).
@@ -114,16 +146,23 @@ namespace AtlasWorkFlows.Jobs
         /// <summary>
         /// Parse a complete job
         /// </summary>
-        public static Parser<Job> ParseJob
+        public static Parser<AtlasJob> ParseJob
             = from rid in Parse.String("job").Token()
               from args in ParseArgumentList.Token()
               from interior in (
-                    ParseRelease.ParseAs<Action<Job>, Release>(r => (Job j) => j.Release = r)
-                    .Or(ParseCommand.ParseAs<Action<Job>, Command>(c => (Job j) => j.Commands = j.Commands.Append(c)))
-                    .Or(ParsePackage.ParseAs<Action<Job>, Package>(p => (Job j) => j.Packages = j.Packages.Append(p)))
-                    .Or(ParseSubmit.ParseAs<Action<Job>,Submit>(s => (Job j) => j.SubmitCommand = s))
+                    ParseRelease.ParseAs<Action<AtlasJob>, Release>(r => (AtlasJob j) => j.Release = r)
+                    .Or(ParseCommand.ParseAs<Action<AtlasJob>, Command>(c => (AtlasJob j) => j.Commands = j.Commands.Append(c)))
+                    .Or(ParsePackage.ParseAs<Action<AtlasJob>, Package>(p => (AtlasJob j) => j.Packages = j.Packages.Append(p)))
+                    .Or(ParseSubmit.ParseAs<Action<AtlasJob>,Submit>(s => (AtlasJob j) => j.SubmitCommand = s))
                   ).Token().Many().ParseInterior(Parse.Char('{'), Parse.Char('}'))
               select AsJob(args, interior);
+
+        /// <summary>
+        /// Parse as many jobs as we can.
+        /// </summary>
+        public static Parser<AtlasJob[]> ParseJobs
+            = from j in ParseJob.Token().Many()
+              select j.ToArray();
 
         /// <summary>
         /// Build a job from a list of items to add. Make sure that nothing is null that shouldn't be even if it wasn't specified.
@@ -131,7 +170,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="args"></param>
         /// <param name="interior"></param>
         /// <returns></returns>
-        private static Job AsJob(IEnumerable<string> args, IEnumerable<Action<Job>> interior)
+        private static AtlasJob AsJob(IEnumerable<string> args, IEnumerable<Action<AtlasJob>> interior)
         {
             var a = args.ToArray();
             if (a.Length != 2)
@@ -139,7 +178,7 @@ namespace AtlasWorkFlows.Jobs
                 throw new ArgumentException("Unable to parse job - needs two arguments: name, version");
             }
 
-            var j = new Job() { Name = a[0], Version = int.Parse(a[1]) };
+            var j = new AtlasJob() { Name = a[0], Version = int.Parse(a[1]) };
             foreach (var act in interior)
             {
                 act(j);
@@ -152,6 +191,83 @@ namespace AtlasWorkFlows.Jobs
             if (j.SubmitCommand == null) j.SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "" } };
 
             return j;
+        }
+
+        /// <summary>
+        /// Parse all jobs that can be found in a file.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public static AtlasJob[] ParseJobsInFile (this FileInfo file)
+        {
+            if (!file.Exists)
+            {
+                throw new FileNotFoundException("Unable to open file to parse for job", file.FullName);
+            }
+            
+            try
+            {
+                return ParseJobs.Parse(file.ReadToEnd().Aggregate(new StringBuilder(), (old, newline) => old.AppendLine(newline)).ToString());
+            } catch (Exception e)
+            {
+                // Make sure they know where the error occured!!
+                throw new JobParseException(string.Format("Error parsing file '{0}': ", file.FullName), e);
+            }
+        }
+
+        /// <summary>
+        /// Find a job in the list of all known jobs. We look for the jobs.jobspec first, and then
+        /// the named jobs. The most specific one is used last, and can override others (e.g. if you
+        /// have the same job/version - but just do not do that!).
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static AtlasJob FindJob (string name, int version)
+        {
+            // Go from the most 'specific' to the most general in
+            // our search in case the user has defined the same thing
+            // twice. We really shoudl bomb if that happens, as that
+            // is going to lead to confusion (but not in this system
+            // due to the hash used).
+            var allFiles =
+                Config.GoodConfigFilesOfName(string.Format("{0}.jobspec", name))
+                .Concat(Config.GoodConfigFilesOfName("jobs.jobspec"));
+
+            var theJob = allFiles
+                .SelectMany(f => f.ParseJobsInFile())
+                .Where(j => j.Name == name && j.Version == version)
+                .FirstOrDefault();
+
+            if (theJob == null)
+            {
+                throw new JobNotFoundException(string.Format("Unable to find job '{0}' version '{1}' - create a {0}.jobspec file?", name, version));
+            }
+
+            return theJob;
+        }
+
+        /// <summary>
+        /// Find a list of jobs according to some arbitrary selection
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public static AtlasJob[] FindJobs (Func<AtlasJob, bool> selector)
+        {
+            // Go from the most 'specific' to the most general in
+            // our search in case the user has defined the same thing
+            // twice. We really shoudl bomb if that happens, as that
+            // is going to lead to confusion (but not in this system
+            // due to the hash used).
+            var allFiles =
+                Config.GoodConfigFilesOfName("*.jobspec");
+
+            var theJobs = allFiles
+                .SelectMany(f => f.ParseJobsInFile())
+                .Where(selector)
+                .ToArray();
+
+            return theJobs;
         }
     }
 }

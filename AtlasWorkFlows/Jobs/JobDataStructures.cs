@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 /// </summary>
 namespace AtlasWorkFlows.Jobs
 {
-    class Package
+    public class Package
     {
         public string Name { get; set; }
 
@@ -20,12 +20,12 @@ namespace AtlasWorkFlows.Jobs
         public string SCTag { get; set; }
     }
 
-    class Command
+    public class Command
     {
         public string CommandLine { get; set; }
     }
 
-    class Submit
+    public class Submit
     {
         public Command SubmitCommand { get; set; }
     }
@@ -42,7 +42,7 @@ namespace AtlasWorkFlows.Jobs
     /// <summary>
     /// The job data structures used to hold the definition of a job in memory.
     /// </summary>
-    class Job
+    public class AtlasJob
     {
         public string Name { get; set; }
         public int Version { get; set; }

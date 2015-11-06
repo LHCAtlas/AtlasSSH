@@ -18,7 +18,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="job"></param>
         /// <param name="orignalDSName"></param>
         /// <returns></returns>
-        public static string ResultingDatasetName (this Job job, string orignalDSName, string scopeDSName)
+        public static string ResultingDatasetName (this AtlasJob job, string orignalDSName, string scopeDSName)
         {
             // Remove the scope if it is there.
             var result = orignalDSName.RemoveBefore(":");

@@ -33,7 +33,7 @@ namespace AtlasWorkFlows.Jobs
         /// </summary>
         /// <param name="J"></param>
         /// <returns></returns>
-        public static int Hash (this Job J)
+        public static int Hash (this AtlasJob J)
         {
             return J.Print().GetHashCode();
         }

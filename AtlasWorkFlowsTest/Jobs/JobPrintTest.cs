@@ -52,7 +52,7 @@ namespace AtlasWorkFlowsTest.Jobs
         [TestMethod]
         public void JobOutput()
         {
-            var j = new Job()
+            var j = new AtlasJob()
             {
                 Commands = new Command[] { new Command() { CommandLine = "ls" } },
                 Name = "MyJob",
@@ -67,7 +67,7 @@ namespace AtlasWorkFlowsTest.Jobs
         [TestMethod]
         public void PrintEmptyJob()
         {
-            var j = new Job() { Name = "hihere", Version = 10 };
+            var j = new AtlasJob() { Name = "hihere", Version = 10 };
             var s = j.Print();
             Assert.AreEqual("job(hihere,10){}", s);
         }

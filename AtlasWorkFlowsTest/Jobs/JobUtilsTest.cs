@@ -14,7 +14,7 @@ namespace AtlasWorkFlowsTest.Jobs
         [TestMethod]
         public void HashIsDifferent()
         {
-            var j = new Job() { Name = "Hi there", Version = 12 };
+            var j = new AtlasJob() { Name = "Hi there", Version = 12 };
             var h1 = j.Hash();
             j.Name = "not there";
             var h2 = j.Hash();
@@ -24,7 +24,7 @@ namespace AtlasWorkFlowsTest.Jobs
         [TestMethod]
         public void HashDifferentForComplexJob()
         {
-            var j = new Job()
+            var j = new AtlasJob()
             {
                 Commands = new Command[] { new Command() { CommandLine = "ls" } },
                 Name = "MyJob",

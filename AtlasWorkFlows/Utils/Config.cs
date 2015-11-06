@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AtlasWorkFlows.Utils
 {
@@ -15,23 +13,55 @@ namespace AtlasWorkFlows.Utils
     /// </summary>
     class Config
     {
+        /// <summary>
+        /// Get the list of configurations
+        /// </summary>
+        /// <returns></returns>
         public static Dictionary<string, Dictionary<string, string>> GetLocationConfigs()
         {
-            const string defaultName = "AtlasSSHConfig.txt";
-            var files = new FileInfo[] {
-                new FileInfo("./" + defaultName),
-                new FileInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), defaultName)),
-                new FileInfo(Path.Combine(getOneDriveFolderPath(), defaultName)),
-                new FileInfo(Path.Combine(getOneDriveFolderPath(), ".AtlasSSH", defaultName)),
-            };
+            var goodFile = GoodConfigFilesOfName("AtlasSSHConfig.txt").FirstOrDefault();
 
-            var goodFile = files.Where(f => f.Exists).FirstOrDefault();
             if (goodFile == null)
             {
-                throw new FileNotFoundException(string.Format("Unable to find the file {0} in the current directory, the Documents folder, or the root OneDrive folder! Without configuration we can't continue!", defaultName));
+                throw new FileNotFoundException(string.Format("Unable to find the file 'AtlasSSHConfig.txt' in the current directory, the Documents folder, or the root OneDrive folder! Without configuration we can't continue!"));
             }
 
             return ParseConfigFile(goodFile);
+        }
+
+        /// <summary>
+        /// Given a default filename, return all filenames that match in our
+        /// list of knonw locations.
+        /// </summary>
+        /// <param name="filename">The filename to search for</param>
+        /// <returns></returns>
+        public static FileInfo[] GoodConfigFilesOfName(string filename)
+        {
+            var files = GetFilesSafely("./", filename)
+                .Concat(GetFilesSafely(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)), filename))
+                .Concat(GetFilesSafely(Path.Combine(getOneDriveFolderPath()), filename))
+                .Concat(GetFilesSafely(Path.Combine(getOneDriveFolderPath(), ".AtlasSSH"), filename));
+
+            var goodFiles = files
+                .Where(f => f.Exists)
+                .ToArray();
+
+            return goodFiles;
+        }
+
+        /// <summary>
+        /// Returns a list of files in a directory that match a pattern. Safe even if directory
+        /// does not exist.
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        private static FileInfo[] GetFilesSafely(string directory, string filename)
+        {
+            var di = new DirectoryInfo(directory);
+            if (!di.Exists)
+                return new FileInfo[0];
+            return di.GetFiles(filename);
         }
 
         #region Parsers

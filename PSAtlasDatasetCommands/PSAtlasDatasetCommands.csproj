@@ -48,8 +48,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AtlasJobSpec.cs" />
+    <Compile Include="FindGRIDJob.cs" />
     <Compile Include="GetGRIDDataLocations.cs" />
     <Compile Include="GetGRIDDataset.cs" />
+    <Compile Include="GetGRIDJobSpec.cs" />
+    <Compile Include="InvokeGRIDJob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\PSListener.cs" />
   </ItemGroup>

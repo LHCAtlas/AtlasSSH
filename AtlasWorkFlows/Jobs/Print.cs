@@ -9,7 +9,7 @@ namespace AtlasWorkFlows.Jobs
     /// <summary>
     /// Extension methods to print out the job data structure as we read it back in.
     /// </summary>
-    static class PrintUtils
+    public static class PrintUtils
     {
         public static string Print (this Release r)
         {
@@ -55,12 +55,12 @@ namespace AtlasWorkFlows.Jobs
             return bld;
         }
 
-        public static string Print(this Job r)
+        public static string Print(this AtlasJob r)
         {
             return r.Print(new StringBuilder()).ToString();
         }
 
-        private static StringBuilder Print(this Job r, StringBuilder bld)
+        private static StringBuilder Print(this AtlasJob r, StringBuilder bld)
         {
             bld.AppendFormat("job({0},{1}){{", r.Name, r.Version);
             if (r.Release != null) r.Release.Print(bld);
