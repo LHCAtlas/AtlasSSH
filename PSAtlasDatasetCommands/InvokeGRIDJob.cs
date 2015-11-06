@@ -1,4 +1,6 @@
-﻿using AtlasWorkFlows.Jobs;
+﻿using AtlasSSH;
+using AtlasWorkFlows.Jobs;
+using AtlasWorkFlows.Panda;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +43,43 @@ namespace PSAtlasDatasetCommands
             // Get the job
             var job = JobParser.FindJob(JobName, JobVersion);
 
-            base.BeginProcessing();
+            // Get the expected resulting dataset name
+            var scope = "user.gwatts";
+            var ds = job.ResultingDatasetName(DatasetName, scope);
+
+            // See if there is already a job defined that will produce this
+            var pandaJob = (ds + "/").FindPandaJobWithTaskName();
+
+            if (pandaJob == null)
+            {
+                // Check to see if the original dataset exists. We will use the location known as Local for doing the
+                // setup, I suppose.
+                var connection = new SSHConnection("host", "me");
+                var files = connection
+                    .setupATLAS()
+                    .setupRucio("dude")
+                    .VomsProxyInit("atlas", "dude")
+                    .FilelistFromGRID(DatasetName);
+                if (files.Length == 0)
+                {
+                    throw new ArgumentException("Unable to find dataset '{0}' on the grid!");
+                }
+
+                // Submit the job
+                connection
+                    .submitJob(job, DatasetName, ds);
+
+                // Try to find the job again. If this fails, then things are really bad!
+                pandaJob = (ds + "/").FindPandaJobWithTaskName();
+                if (pandaJob == null)
+                {
+                    throw new InvalidOperationException(string.Format("Unknown error - submitted job ({0},{1}) on dataset {2}, but no panda task found!", JobName, JobVersion, DatasetName));
+                }
+            }
+
+            // Return a helper obj that contains the info about this job that can be used by other commands.
+            var r = new AtlasPandaTaskID() { ID = pandaJob.jeditaskid, Name = pandaJob.taskname };
+            WriteObject(r);
         }
     }
 }

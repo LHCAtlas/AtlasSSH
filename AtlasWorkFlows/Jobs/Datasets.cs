@@ -10,7 +10,7 @@ namespace AtlasWorkFlows.Jobs
     /// <summary>
     /// Deal with dataset functions
     /// </summary>
-    static class Datasets
+    public static class Datasets
     {
         /// <summary>
         /// Returns a dataset name that this job should produce given the original dataset name.
