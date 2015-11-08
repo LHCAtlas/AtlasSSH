@@ -51,6 +51,12 @@ namespace AtlasWorkFlowsTest
         /// <returns></returns>
         public string[] GetListOfFiles(string dsname, Action<string> status = null)
         {
+            // Make sure that the dsname is part of the ones we want to look at.
+            if (!_dsNames.Select(ds => ds.SantizeDSName()).Contains(dsname.SantizeDSName()))
+            {
+                throw new ArgumentException(string.Format("Dataset {0} does not exist", dsname));
+            }
+
             var d = new DirectoryInfo("fork-it");
             if (d.Exists)
                 d.Delete(true);

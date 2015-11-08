@@ -57,15 +57,24 @@ namespace AtlasWorkFlows.Locations
                 return flist;
             }
 
+            // If we don't already have the dataset list, fetch it. This will have the byproduct
+            // of also exiting early (via exception) if the dataset doesn't actually exist on the GRID.
+
+            var files = _winDataset.TotalFilesInDataset(dsname) == -1
+                ? LinuxFetcher.GetListOfFiles(dsname, statusUpdate)
+                : null;
+
             // Ok, we are going to have to go the full route, unfortunately. Till we are done, mark this as partial.
             // That way, if there is a crash, it will be understood later on when we come back.
             _winDataset.MarkAsPartialDownload(dsname);
 
-            // If we have not yet cached the list of files in this dataset, then fetch it.
-            if (_winDataset.TotalFilesInDataset(dsname) == -1)
+            // And cache the list of files if they are new.
+            if (files != null)
             {
-                _winDataset.SaveListOfDSFiles(dsname, LinuxFetcher.GetListOfFiles(dsname, statusUpdate));
+                _winDataset.SaveListOfDSFiles(dsname, files);
             }
+
+            // Fetch the files from the GRID now.
             LinuxFetcher.Fetch(dsname, string.Format("{0}/{1}", LinuxRootDSDirectory, dsname.SantizeDSName()), statusUpdate, fileFilter);
 
             // And then the files should all be down! If we got them all, then don't mark it as partial.

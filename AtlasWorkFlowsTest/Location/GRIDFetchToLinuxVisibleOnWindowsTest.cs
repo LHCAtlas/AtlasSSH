@@ -87,6 +87,34 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void AttemptToDownloadBadDS()
+        {
+            // Seen in wild: try to download a bad dataset, and it creates a directory
+            // anyway. Ops!
+
+            var dsinfo = MakeDSInfo("ds1.1.1");
+            var d = new DirectoryInfo("AttemptToDownloadBadDS");
+            if (d.Exists)
+            {
+                d.Delete(true);
+            }
+
+            var ld = new LinuxMirrorDownloaderPretend(d, "forkitover");
+            var gf = new GRIDFetchToLinuxVisibleOnWindows(d, ld, "/bogus/files/store");
+
+            try {
+                var r = gf.GetDS(dsinfo);
+            } catch (ArgumentException)
+            {
+                // Expecting it to throw here - no dataset should exist by that name!
+            }
+
+            // Did a local directory get created?
+            d.Refresh();
+            Assert.IsFalse(d.Exists);
+        }
+
+        [TestMethod]
         public void DownloadToLinuxDirectoryThatIsAWindowsDirectoryAndAreadyCreated()
         {
             // Seen in the wild. A crash (or other interruption) means the dataset directory has
