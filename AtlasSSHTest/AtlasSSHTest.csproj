@@ -43,6 +43,10 @@
       <HintPath>..\packages\SSH.NET.2013.4.7\lib\net40\Renci.SshNet.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Sprache, Version=2.0.0.47, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Sprache.2.0.0.47\lib\portable-net4+netcore45+win8+wp8+sl5+MonoAndroid1+MonoTouch1\Sprache.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
@@ -58,6 +62,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="dummySSHConnection.cs" />
     <Compile Include="LineBufferTest.cs" />
     <Compile Include="SSHConnectionTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

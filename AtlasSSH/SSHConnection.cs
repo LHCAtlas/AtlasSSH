@@ -22,7 +22,7 @@ namespace AtlasSSH
     /// 
     /// If anything is done to change the command prompt, this class will fail to work properly.
     /// </remarks>
-    public class SSHConnection : IDisposable
+    public class SSHConnection : IDisposable, ISSHConnection
     {
         const int TerminalWidth = 240;
 
@@ -160,7 +160,7 @@ namespace AtlasSSH
         /// <param name="output"></param>
         /// <param name="failNow">If this ever returns true, fail as fast as possible.</param>
         /// <returns></returns>
-        public SSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null)
+        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null)
         {
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             _shell.Value.WriteLine(command);
@@ -210,7 +210,7 @@ namespace AtlasSSH
         /// <param name="remotedir"></param>
         /// <param name="localDir"></param>
         /// <returns></returns>
-        public SSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
+        public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
             _scpError = null;
             System.EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);

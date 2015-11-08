@@ -1,14 +1,15 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AtlasSSH")]
-[assembly: AssemblyDescription("Controls using SSH and SCP to interact with a Linux remote for ATLAS tasks")]
+[assembly: AssemblyTitle("FetchBigPandaData")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("AtlasSSH")]
+[assembly: AssemblyProduct("FetchBigPandaData")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("80638360-59d2-40ad-992c-22f4aad2fa3c")]
+[assembly: Guid("05bcc5a2-fd07-45af-b068-2903acc841c0")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -31,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.0.0.0")]
-[assembly: AssemblyFileVersion("2.0.0.0")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AtlasSSH
 {
-    public static class SSHConnectionUtils
+    public static class ISSHConnectionUtils
     {
         /// <summary>
         /// Use apply to make repeated application of things to a connection easy to read.
@@ -16,7 +16,7 @@ namespace AtlasSSH
         /// <param name="what"></param>
         /// <param name="doit"></param>
         /// <returns></returns>
-        public static SSHConnection Apply<T>(this SSHConnection connection, IEnumerable<T> what, Action<SSHConnection, T> doit)
+        public static ISSHConnection Apply<T>(this ISSHConnection connection, IEnumerable<T> what, Action<ISSHConnection, T> doit)
         {
             foreach (var w in what)
             {
@@ -31,7 +31,7 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="doit"></param>
         /// <returns></returns>
-        public static SSHConnection Apply(this SSHConnection connection, Action doit)
+        public static ISSHConnection Apply(this ISSHConnection connection, Action doit)
         {
             doit();
             return connection;
