@@ -57,38 +57,7 @@ namespace AtlasSSHTest
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2);
-            }
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void vomsProxyWithBadUsername()
-        {
-            // Make sure that we fail when the username is bad
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
-            {
-                s
-                    .setupATLAS()
-                    .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", "freak-out");
-            }
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void vomsProxyWithBadPassword()
-        {
-            // Make sure that we fail when the username is bad
-            var info = util.GetUsernameAndPassword();
-            util.SetPassword("GRID", "VOMSTestUser", "bogus-password");
-            using (var s = new SSHConnection(info.Item1, info.Item2))
-            {
-                s
-                    .setupATLAS()
-                    .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", "VOMSTestUser");
+                    .VomsProxyInit("atlas");
             }
         }
 
@@ -102,7 +71,7 @@ namespace AtlasSSHTest
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.11111", "/tmp/usergwattstempdata");
             }
         }
@@ -117,7 +86,7 @@ namespace AtlasSSHTest
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/fruitcake/usergwattstempdata");
             }
         }
@@ -131,7 +100,7 @@ namespace AtlasSSHTest
                 var r = s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1");
                 foreach (var fname in r)
                 {
@@ -151,7 +120,7 @@ namespace AtlasSSHTest
                 var r = s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1111");
             }
         }
@@ -165,7 +134,7 @@ namespace AtlasSSHTest
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/tmp/usergwattstempdata");
 
                 // Now, check!
@@ -190,7 +159,7 @@ namespace AtlasSSHTest
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/tmp/usergwattstempdataShort", fileNameFilter: files =>
                     {
                         Assert.AreEqual(10, files.Length);

@@ -61,14 +61,14 @@ namespace AtlasSSH
         /// <param name="GRIDUsername">The username to use to fetch the password for the voms proxy file</param>
         /// <param name="voms">The name of the voms to connect to</param>
         /// <returns>Connection on which the grid is setup and ready to go</returns>
-        public static SSHConnection VomsProxyInit(this SSHConnection connection, string voms, string GRIDUsername)
+        public static SSHConnection VomsProxyInit(this SSHConnection connection, string voms)
         {
             // Get the GRID VOMS password
-            var sclist = new CredentialSet(string.Format("{0}@GRID", GRIDUsername));
-            var passwordInfo = sclist.Load().Where(c => c.Username == GRIDUsername).FirstOrDefault();
+            var sclist = new CredentialSet("GRID");
+            var passwordInfo = sclist.Load().FirstOrDefault();
             if (passwordInfo == null)
             {
-                throw new ArgumentException(string.Format("There is no generic windows credential targeting the network address '{0}@GRID' for username '{0}'. This password should be your cert pass phrase. Please create one on this machine.", GRIDUsername));
+                throw new ArgumentException("There is no generic windows credential targeting the network address 'GRID' for username. This password should be your cert pass phrase and your on-the-grid username. Please create one on this machine.");
             }
 
             // Run the command

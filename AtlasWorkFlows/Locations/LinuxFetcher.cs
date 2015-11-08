@@ -56,7 +56,7 @@ namespace AtlasWorkFlows.Locations
             _connection
                     .setupATLAS()
                     .setupRucio(_username)
-                    .VomsProxyInit("atlas", _username);
+                    .VomsProxyInit("atlas");
 
             return _connection;
         }
