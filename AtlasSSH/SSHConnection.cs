@@ -24,8 +24,20 @@ namespace AtlasSSH
     /// </remarks>
     public class SSHConnection : IDisposable, ISSHConnection
     {
-        const string CrLf = "\r\n";
         const int TerminalWidth = 240;
+
+
+        [Serializable]
+        public class SSHCommandInterruptedException : Exception
+        {
+            public SSHCommandInterruptedException() { }
+            public SSHCommandInterruptedException(string message) : base(message) { }
+            public SSHCommandInterruptedException(string message, Exception inner) : base(message, inner) { }
+            protected SSHCommandInterruptedException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context)
+            { }
+        }
 
         public SSHConnection(string host, string username)
         {
@@ -90,85 +102,20 @@ namespace AtlasSSH
         /// </summary>
         private string _prompt;
 
-        private class LineBuffer
-        {
-            public LineBuffer(Action<string> actionOnLine)
-            {
-                _actinoOnLine = actionOnLine;
-            }
-
-            string _text = "";
-            private Action<string> _actinoOnLine;
-
-            public void Add(string line)
-            {
-                _text += line;
-                Flush();
-            }
-
-            private void Flush()
-            {
-                while (true)
-                {
-                    var lend = _text.IndexOf(CrLf);
-                    if (lend < 0)
-                        break;
-
-                    var line = _text.Substring(0, lend);
-                    ActOnLine(line);
-                    _text = _text.Substring(lend + 2);
-                }
-            }
-
-            public void DumpRest()
-            {
-                Flush();
-                ActOnLine(_text);
-            }
-
-            List<string> stringsToSuppress = new List<string>();
-
-            /// <summary>
-            /// Any line containing these strings will not be printed out
-            /// </summary>
-            /// <param name="whenLineContains"></param>
-            public void Suppress(string whenLineContains)
-            {
-                stringsToSuppress.Add(whenLineContains);
-            }
-
-            /// <summary>
-            /// See if the text is in the current buffer
-            /// </summary>
-            /// <param name="text"></param>
-            /// <returns></returns>
-            public bool Match (string text)
-            {
-                return _text.Contains(text);
-            }
-
-            /// <summary>
-            /// Dump out a line, safely.
-            /// </summary>
-            /// <param name="line"></param>
-            private void ActOnLine(string line)
-            {
-                Trace.WriteLine("ReturnedLine: " + line, "SSHConnection");
-                if (_actinoOnLine == null)
-                    return;
-                if (!stringsToSuppress.Any(s => line.Contains(s)))
-                {
-                    _actinoOnLine(line);
-                }
-            }
-        }
-
         /// <summary>
         /// Dump the input until we see a particular string in the returning text.
         /// </summary>
         /// <param name="s"></param>
+        /// <param name="refreshTimeout">If we see something back from the host, reset the timeout counter</param>
         /// <param name="p"></param>
-        private void DumpTillFind(ShellStream s, string matchText, Action<string> ongo = null, bool dontdumplineofmatch = true, int secondsTimeout = 60*60)
+        /// <param name="failNow">Function that returns true if we should throw out right away</param>
+        private void DumpTillFind(ShellStream s, string matchText, 
+            Action<string> ongo = null, 
+            bool dontdumplineofmatch = true, 
+            int secondsTimeout = 60*60, 
+            bool refreshTimeout = false,
+            Func<bool> failNow = null
+            )
         {
             var lb = new LineBuffer(ongo);
             if (dontdumplineofmatch)
@@ -184,7 +131,19 @@ namespace AtlasSSH
                 gotmatch = gotmatch || lb.Match(matchText); 
                 if (gotmatch)
                     break;
-                lb.Add(s.Read());
+
+                var data = s.Read();
+                if (data != null && data.Length > 0)
+                {
+                    timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
+                }
+
+                lb.Add(data);
+
+                if (failNow != null && failNow())
+                {
+                    throw new SSHCommandInterruptedException();
+                }
             }
             if (!gotmatch)
             {
@@ -199,17 +158,20 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="command"></param>
         /// <param name="output"></param>
+        /// <param name="failNow">If this ever returns true, fail as fast as possible.</param>
         /// <returns></returns>
-        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60)
+        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null)
         {
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             _shell.Value.WriteLine(command);
-            DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth-30, command.Length)), secondsTimeout: 10); // The command is (normally) repeated back to us...
+            DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth-30, command.Length)), secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
             _shell.Value.ReadLine(); // Read back the end of line after the command is sent out.
-            DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout);
+            DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow);
             return this;
         }
 
+#if false
+        // Dead code, but it might be useful sometime.
         /// <summary>
         /// Run a command. Scan the input for text and when we see it, send response strings.
         /// </summary>
@@ -239,6 +201,7 @@ namespace AtlasSSH
             DumpTillFind(_shell.Value, _prompt, output);
             return this;
         }
+#endif
 
         /// <summary>
         /// Copy a remote directory locally

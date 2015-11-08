@@ -12,84 +12,6 @@ namespace AtlasSSHTest
     [TestClass]
     public class AtlasCommandsTest
     {
-#if false
-        ///
-        /// These are all off b.c. there are high speed, local command/response guys below.
-        ///
-
-        [TestMethod]
-        public void setupATLAS()
-        {
-            // THis contains an internal check, so no need to do anything special here.
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
-            {
-                s.setupATLAS();
-            }
-        }
-
-        [TestMethod]
-        public void setupRucioWithATLASSetup()
-        {
-            // This contains an internal check, so we only need to watch for it to "work".
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
-            {
-                s
-                    .setupATLAS()
-                    .setupRucio(info.Item2);
-            }
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void setupRucioWithoutATLASSetup()
-        {
-            // This contains an internal check, so we only need to watch for it to "work".
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
-            {
-                s
-                    .setupRucio(info.Item2);
-            }
-        }
-
-        [TestMethod]
-        public void vomsProxyInit()
-        {
-            // Init a voms proxy correctly. There is an internal check, so this should
-            // be fine.
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
-            {
-                s
-                    .setupATLAS()
-                    .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2);
-            }
-        }
-
-        [TestMethod]
-        public void getDSFileList()
-        {
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
-            {
-                var r = s
-                    .setupATLAS()
-                    .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
-                    .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1");
-                foreach (var fname in r)
-                {
-                    Console.WriteLine(fname);
-                }
-                Assert.AreEqual(10, r.Length);
-            }
-        }
-
-#endif
-
         [TestMethod]       
         public void setupATLAS()
         {
@@ -157,7 +79,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
             s
                 .setupATLAS()
                 .setupRucio("bogus")
-                .VomsProxyInit("atlas", "bogus");
+                .VomsProxyInit("atlas");
         }
 
         [TestMethod]
@@ -171,7 +93,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", "freak-out");
+                    .VomsProxyInit("atlas");
             }
         }
 
@@ -187,7 +109,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", "VOMSTestUser");
+                    .VomsProxyInit("atlas");
             }
         }
 
@@ -207,7 +129,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.11111", "/tmp/usergwattstempdata");
             }
         }
@@ -222,7 +144,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/fruitcake/usergwattstempdata");
             }
         }
@@ -239,7 +161,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
             var r = s
                 .setupATLAS()
                 .setupRucio("bogus")
-                .VomsProxyInit("atlas", "bogus")
+                .VomsProxyInit("atlas")
                 .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1");
 
             foreach (var fname in r)
@@ -259,7 +181,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
                 var r = s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .FilelistFromGRID("user.gwatts:user.gwatts.301295.EVNT.1111");
             }
         }
@@ -273,7 +195,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
                 s
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/tmp/usergwattstempdata");
 
                 // Now, check!
@@ -296,9 +218,10 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
             using (var s = new SSHConnection(info.Item1, info.Item2))
             {
                 s
+                    .ExecuteCommand("rm -rf /tmp/usergwattstempdataShort")
                     .setupATLAS()
                     .setupRucio(info.Item2)
-                    .VomsProxyInit("atlas", info.Item2)
+                    .VomsProxyInit("atlas")
                     .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1", "/tmp/usergwattstempdataShort", fileNameFilter: files =>
                     {
                         Assert.AreEqual(10, files.Length);

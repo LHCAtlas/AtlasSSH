@@ -105,14 +105,14 @@ namespace AtlasSSH
         /// <param name="GRIDUsername">The username to use to fetch the password for the voms proxy file</param>
         /// <param name="voms">The name of the voms to connect to</param>
         /// <returns>Connection on which the grid is setup and ready to go</returns>
-        public static ISSHConnection VomsProxyInit(this ISSHConnection connection, string voms, string GRIDUsername)
+        public static ISSHConnection VomsProxyInit(this ISSHConnection connection, string voms, Func<bool> failNow = null)
         {
             // Get the GRID VOMS password
-            var sclist = new CredentialSet(string.Format("{0}@GRID", GRIDUsername));
-            var passwordInfo = sclist.Load().Where(c => c.Username == GRIDUsername).FirstOrDefault();
+            var sclist = new CredentialSet("GRID");
+            var passwordInfo = sclist.Load().FirstOrDefault();
             if (passwordInfo == null)
             {
-                throw new ArgumentException(string.Format("There is no generic windows credential targeting the network address '{0}@GRID' for username '{0}'. This password should be your cert pass phrase. Please create one on this machine.", GRIDUsername));
+                throw new ArgumentException("There is no generic windows credential targeting the network address 'GRID' for username. This password should be your cert pass phrase and your on-the-grid username. Please create one on this machine.");
             }
 
             // Run the command
@@ -126,7 +126,7 @@ namespace AtlasSSH
                         goodProxy = goodProxy || l.Contains("Your proxy is valid");
                         whatHappened.Add(l);
                     },
-                    secondsTimeout: 20
+                    secondsTimeout: 20, failNow: failNow
                     );
 
             // If we failed to get the proxy, then build an error message that can be understood. Since this
@@ -158,11 +158,12 @@ namespace AtlasSSH
         /// <returns></returns>
         public static ISSHConnection DownloadFromGRID(this ISSHConnection connection, string datasetName, string localDirectory,
             Action<string> fileStatus = null,
-            Func<string[], string[]> fileNameFilter = null)
+            Func<string[], string[]> fileNameFilter = null,
+            Func<bool> failNow = null)
         {
             // Does the dataset exist?
             var response = new List<string>();
-            connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60);
+            connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
 
             var dsnames = response
                 .Where(l => l.Contains("DATASET") | l.Contains("CONTAINER"))
@@ -171,29 +172,29 @@ namespace AtlasSSH
                 .Select(sl => sl[1])
                 .ToArray();
 
-            if (!dsnames.Where(n => n.SantizeDSName() == datasetName).Any())
+            if (!dsnames.Where(n => n.SantizeDSName() == datasetName.SantizeDSName()).Any())
             {
                 throw new ArgumentException(string.Format("Unable to find any datasets with the name '{0}'.", datasetName));
             }
 
-            // If we are going to filter files, then the next thing we need to do is look at all files in the dataset.
-            var toDownload = datasetName;
-            if (fileNameFilter != null)
-            {
-                var fileNameList = connection.FilelistFromGRID(datasetName);
-                var goodFiles = fileNameFilter(fileNameList);
-                if (goodFiles.Length == 0)
-                {
-                    return connection;
-                }
+            // Get the complete list of files in the dataset.
+            var fileNameList = connection.FilelistFromGRID(datasetName, failNow: failNow);
 
-                var toDownloadBuilder = new StringBuilder();
-                foreach (var f in goodFiles)
-                {
-                    toDownloadBuilder.Append(f + " ");
-                }
-                toDownload = toDownloadBuilder.ToString();
+            // Filter them if need be.
+            var goodFiles = fileNameFilter != null
+                ? fileNameFilter(fileNameList)
+                : fileNameList;
+
+            // If we have no files to download, then we are totally done!
+            if (goodFiles.Length == 0)
+            {
+                return connection;
             }
+
+            // Create a file that contains all the files we want to download up on the host.
+            var fileListName = string.Format("/tmp/{0}.filelist", datasetName);
+            connection.ExecuteCommand("rm -rf " + fileListName);
+            connection.Apply(goodFiles, (c, fname) => c.ExecuteCommand(string.Format("echo {0} >> {1}", fname, fileListName)));
 
             // We good on creating the directory?
             connection.ExecuteCommand(string.Format("mkdir -p {0}", localDirectory),
@@ -202,7 +203,7 @@ namespace AtlasSSH
 
             // Next, do the download
             response.Clear();
-            connection.ExecuteCommand(string.Format("rucio download --dir {1} {0}", toDownload, localDirectory), l =>
+            connection.ExecuteCommand(string.Format("rucio download --dir {1} `cat {0}`", fileListName, localDirectory), l =>
             {
                 if (fileStatus != null)
                 {
@@ -215,7 +216,8 @@ namespace AtlasSSH
                         fileStatus(l.Substring(startOfFileName, closeBracket - startOfFileName));
                     }
                 }
-            });
+            }, 
+            refreshTimeout:true, failNow: failNow);
 
             return connection;
         }
@@ -226,7 +228,7 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="datasetName"></param>
         /// <returns></returns>
-        public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName)
+        public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow =null)
         {
             var fileNameList = new List<string>();
             var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +\S* +\| +\S* +\| +\S* +\| +\S* +\|");
@@ -249,11 +251,13 @@ namespace AtlasSSH
                         }
                     }
                 }
-            });
+            },
+            failNow: failNow
+            );
 
             if (bad)
             {
-                throw new ArgumentException("Dataset '{0}' does not exist - can't get its list of files.", datasetName);
+                throw new ArgumentException(string.Format("Dataset '{0}' does not exist - can't get its list of files.", datasetName));
             }
 
             return fileNameList.ToArray();

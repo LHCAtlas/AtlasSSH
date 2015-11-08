@@ -33,12 +33,12 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="linuxDirDestination"></param>
-        public void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdater = null, Func<string[], string[]> fileFilter = null)
+        public void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdater = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null)
         {
             var c = InitConnection(statusUpdater);
             if (statusUpdater != null)
                 statusUpdater("Starting download of files from GRID");
-            c.DownloadFromGRID(dsName, linuxDirDestination, statusUpdater, fileFilter);
+            c.DownloadFromGRID(dsName, linuxDirDestination, statusUpdater, fileFilter, failNow: failNow);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace AtlasWorkFlows.Locations
             _connection
                     .setupATLAS()
                     .setupRucio(_username)
-                    .VomsProxyInit("atlas", _username);
+                    .VomsProxyInit("atlas");
 
             return _connection;
         }
@@ -66,12 +66,12 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="p"></param>
         /// <returns></returns>
-        public string[] GetListOfFiles(string dsName, Action<string> statusUpdater = null)
+        public string[] GetListOfFiles(string dsName, Action<string> statusUpdater = null, Func<bool> failNow = null)
         {
             var s = InitConnection(statusUpdater);
             if (statusUpdater != null)
                 statusUpdater("Getting list of files in Dataset");
-            return s.FilelistFromGRID(dsName);
+            return s.FilelistFromGRID(dsName, failNow: failNow);
         }
 
         /// <summary>

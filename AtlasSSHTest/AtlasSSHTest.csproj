@@ -63,6 +63,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="dummySSHConnection.cs" />
+    <Compile Include="LineBufferTest.cs" />
     <Compile Include="SSHConnectionTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AtlasCommandsTest.cs" />

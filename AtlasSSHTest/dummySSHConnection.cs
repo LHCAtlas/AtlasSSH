@@ -72,7 +72,7 @@ namespace AtlasSSHTest
         /// <param name="output"></param>
         /// <param name="secondsTimeout"></param>
         /// <returns></returns>
-        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60)
+        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTiming = false, Func<bool> failNow = null)
         {
             string result;
             if (!_responses.TryGetValue(command, out result))

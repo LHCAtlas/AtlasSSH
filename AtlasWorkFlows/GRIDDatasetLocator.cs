@@ -20,12 +20,15 @@ namespace AtlasWorkFlows
         /// <param name="locationFilter">Filter out the locations that we are allowed to fetch the file from.</param>
         /// <param name="statusUpdate">Downloads from the grid can take a long time. Status updates will be posted here if not null.</param>
         /// <returns></returns>
-        public static Uri[] FetchDatasetUris(string datasetname, Action<string> statusUpdate = null, Func<string[],string[]> fileFilter = null, Func<string, bool> locationFilter = null)
+        public static Uri[] FetchDatasetUris(string datasetname, Action<string> statusUpdate = null,
+            Func<string[],string[]> fileFilter = null,
+            Func<string, bool> locationFilter = null,
+            Func<bool> failNow = null)
         {
             var dsinfo = FetchDSInfo(datasetname, fileFilter, locationFilter);
 
             // And delegate all the rest of our work to fetching.
-            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter);
+            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter, failNow);
         }
 
         /// <summary>
@@ -36,7 +39,7 @@ namespace AtlasWorkFlows
         /// <param name="locationFilter">Filter out the locations that we are allowed to fetch the file from.</param>
         /// <param name="statusUpdate">Downloads from the grid can take a long time. Status updates will be posted here if not null.</param>
         /// <returns></returns>
-        public static Uri[] FetchDatasetUrisAtLocation(string locationName, string datasetname, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null)
+        public static Uri[] FetchDatasetUrisAtLocation(string locationName, string datasetname, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null)
         {
             var locator = new Locator();
             var location = locator.FindLocation(locationName);
@@ -50,7 +53,7 @@ namespace AtlasWorkFlows
             var dsinfo = location.GetDSInfo(datasetname);
 
             // And delegate all the rest of our work to fetching.
-            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter);
+            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter, failNow);
         }
 
         /// <summary>

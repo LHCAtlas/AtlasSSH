@@ -80,7 +80,7 @@ namespace PSAtlasDatasetCommands
                         .Apply(() => DisplayStatus("Setting up Rucio"))
                         .setupRucio(gridCredentials.Username)
                         .Apply(() => DisplayStatus("Aquiring GRID credentials"))
-                        .VomsProxyInit("atlas", gridCredentials.Username)
+                        .VomsProxyInit("atlas")
                         .Apply(() => DisplayStatus("Checking dataset exists on the GRID"))
                         .FilelistFromGRID(DatasetName);
                     if (files.Length == 0)

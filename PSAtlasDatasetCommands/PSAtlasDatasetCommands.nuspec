@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A PowerShell module that adds commands that will fetch data from the GRID. Read docs to find out how to configure properly: requires properly configured Linux endpoint to work.</description>
-    <releaseNotes>Work with containers and datasets, also look in the .AtlasSSH directory under OneDrive</releaseNotes>
+    <releaseNotes>Make downloads interruptable and other small fixes</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>ATLAS GRID CERN PowerShell</tags>
   </metadata>
