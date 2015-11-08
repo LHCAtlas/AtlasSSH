@@ -80,9 +80,9 @@ namespace PSAtlasDatasetCommands
                         .Apply(() => DisplayStatus("Setting up Rucio"))
                         .setupRucio(gridCredentials.Username)
                         .Apply(() => DisplayStatus("Aquiring GRID credentials"))
-                        .VomsProxyInit("atlas")
+                        .VomsProxyInit("atlas", failNow: () => Stopping)
                         .Apply(() => DisplayStatus("Checking dataset exists on the GRID"))
-                        .FilelistFromGRID(DatasetName);
+                        .FilelistFromGRID(DatasetName, failNow: () => Stopping);
                     if (files.Length == 0)
                     {
                         throw new ArgumentException("Unable to find dataset '{0}' on the grid!");
@@ -90,7 +90,7 @@ namespace PSAtlasDatasetCommands
 
                     // Submit the job
                     connection
-                        .SubmitJob(job, DatasetName, ds, DisplayStatus);
+                        .SubmitJob(job, DatasetName, ds, DisplayStatus, failNow: () => Stopping);
 
                     // Try to find the job again. If this fails, then things are really bad!
                     pandaJob = (ds + "/").FindPandaJobWithTaskName();

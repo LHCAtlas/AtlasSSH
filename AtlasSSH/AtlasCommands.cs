@@ -339,7 +339,7 @@ namespace AtlasSSH
         /// <param name="scPackagePath">The svn path to the package. Basically what you would hand to the rc checkout command. Nohting like "tags" or "trunk" is permitted.</param>
         /// <param name="scRevision">The revision number. A SVN revision number. If blank, then the version associated with the build is checked out.</param>
         /// <returns></returns>
-        public static ISSHConnection CheckoutPackage(this ISSHConnection connection, string scPackagePath, string scRevision)
+        public static ISSHConnection CheckoutPackage(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null)
         {
             // Has the user asked us to do something we won't do?
             if (scPackagePath.EndsWith("/tags"))
@@ -378,7 +378,7 @@ namespace AtlasSSH
             }
 
             var sawRevisionMessage = false;            
-            connection.ExecuteCommand(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120);
+            connection.ExecuteCommand(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow);
             if (!sawRevisionMessage)
             {
                 throw new LinuxCommandErrorException(string.Format("Unable to check out svn package {0}.", scPackagePath));
@@ -406,12 +406,12 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="command"></param>
         /// <returns></returns>
-        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection, string command, Action<string> processLine = null)
+        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection, string command, Action<string> processLine = null, Func<bool> failNow = null)
         {
             string rtnValue = "";
             processLine = processLine == null ? l => { } : processLine; 
             connection
-                .ExecuteCommand(command, processLine)
+                .ExecuteCommand(command, processLine, failNow: failNow)
                 .ExecuteCommand("echo $?", l => rtnValue = l);
 
             if (rtnValue != "0")
@@ -426,15 +426,15 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="connection"></param>
         /// <returns></returns>
-        public static ISSHConnection BuildWorkArea(this ISSHConnection connection)
+        public static ISSHConnection BuildWorkArea(this ISSHConnection connection, Func<bool> failNow = null)
         {
             string findPkgError = null;
             var buildLines = new List<string>();
             try
             {
                 return connection
-                    .ExecuteLinuxCommand("rc find_packages", l => findPkgError = l)
-                    .ExecuteLinuxCommand("rc compile", l => buildLines.Add(l));
+                    .ExecuteLinuxCommand("rc find_packages", l => findPkgError = l, failNow: failNow)
+                    .ExecuteLinuxCommand("rc compile", l => buildLines.Add(l), failNow: failNow);
             } catch (LinuxCommandErrorException lerr)
             {
                 if (buildLines.Count > 0)

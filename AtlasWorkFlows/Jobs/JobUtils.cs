@@ -65,7 +65,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="job"></param>
         /// <param name="datasetToStartWith"></param>
         /// <returns></returns>
-        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null)
+        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Get the status update protected.
             Action<string> update = statusUpdate != null ? 
@@ -93,12 +93,12 @@ namespace AtlasWorkFlows.Jobs
                 .SetupRcRelease(linuxLocation, job.Release.Name)
                 .Apply(() => update("Getting CERN credentials"))
                 .Kinit(cernCred.Username, cernCred.Password)
-                .Apply(job.Packages, (c, j) => c.Apply(() => update("Checking out package " + j.Name)).CheckoutPackage(j.Name, j.SCTag))
-                .Apply(job.Commands, (co, cm) => co.Apply(() => update("Running command " + cm.CommandLine)).ExecuteLinuxCommand(cm.CommandLine))
+                .Apply(job.Packages, (c, j) => c.Apply(() => update("Checking out package " + j.Name)).CheckoutPackage(j.Name, j.SCTag, failNow: failNow))
+                .Apply(job.Commands, (co, cm) => co.Apply(() => update("Running command " + cm.CommandLine)).ExecuteLinuxCommand(cm.CommandLine, failNow: failNow))
                 .Apply(() => update("Compiling release"))
-                .BuildWorkArea()
+                .BuildWorkArea(failNow: failNow)
                 .Apply(() => update("Running submit command"))
-                .ExecuteLinuxCommand(string.Format(submitCmd, inputDataset, resultingDataset));
+                .ExecuteLinuxCommand(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow);
         }
 
     }
