@@ -28,11 +28,11 @@ namespace AtlasSSHTest
 
         public static Tuple<string, string> GetPasswordForKint(string username)
         {
-            var cs = new CredentialSet(string.Format("gwatts@kinit", username));
+            var cs = new CredentialSet(username);
             var thePasswordInfo = cs.Load().FirstOrDefault();
             if (thePasswordInfo == null)
             {
-                throw new InvalidOperationException(string.Format("Please create a generic windows password with the 'internet or network address' as '{0}@kinit', and as a username the target node name, and a password that contains the username", username));
+                throw new InvalidOperationException(string.Format("Please create a generic windows password with the 'internet or network address' as '{0}', and as a username the target node name, and a password that contains the username", username));
             }
             return Tuple.Create(thePasswordInfo.Username, thePasswordInfo.Password);
         }

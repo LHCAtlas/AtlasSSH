@@ -105,12 +105,6 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
-        public void EmptyJobList()
-        {
-            Assert.Inconclusive();
-        }
-
-        [TestMethod]
         public void EmptyJob()
         {
             var j = JobParser.ParseJob.Parse("job(DiVert,22){}");
