@@ -103,7 +103,7 @@ namespace AtlasWorkFlows.Jobs
         }
 
         private static Parser<IEnumerable<string>> ParseArgumentList =
-            from args in Parse.Identifier(Parse.LetterOrDigit, Parse.LetterOrDigit).DelimitedBy(Parse.Char(',').Token()).ParseInterior(Parse.Char('('), Parse.Char(')'))
+            from args in Parse.Identifier(Parse.LetterOrDigit, Parse.LetterOrDigit.Or(Parse.Chars("-/"))).DelimitedBy(Parse.Char(',').Token()).ParseInterior(Parse.Char('('), Parse.Char(')'))
             select args;
 
         /// <summary>

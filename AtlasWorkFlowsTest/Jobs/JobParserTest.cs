@@ -70,6 +70,14 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
+        public void GoodPackageWithExtraCharaters()
+        {
+            var s = "package(atlasphys-exo/Physics/Exotic/UEH/DisplacedJets/Run2/AnalysisCode/trunk/DiVertAnalysis, 247827)";
+            var c = JobParser.ParsePackage.Parse(s);
+            Assert.AreEqual("247827", c.SCTag);
+        }
+
+        [TestMethod]
         public void GoodPackageWithWS()
         {
             var s = "package ( pk , 1234 ) ";
