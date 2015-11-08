@@ -6,6 +6,7 @@ using Sprache;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace AtlasWorkFlowsTest.Jobs
 {
@@ -155,6 +156,49 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.AreEqual("Base,1234", j.Release.Name);
             Assert.IsNotNull(j.SubmitCommand);
             Assert.AreEqual("ls", j.SubmitCommand.SubmitCommand.CommandLine);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Sprache.ParseException))]
+        public void BadParseWithError()
+        {
+            var s = "job(DiVert,22) { job release(Base,1234) package(DiVertAnalysis,1234) submit(ls) }";
+            var j = JobParser.ParseJobFile.Parse(s);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Sprache.ParseException))]
+        public void BadParseWithError2()
+        {
+            var s = "job(DiVert,22) { release(Base,1234) package(DiVertAnalysis,1234) submit(ls) } job ";
+            var j = JobParser.ParseJobFile.Parse(s);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Sprache.ParseException))]
+        public void BadParseWithError3()
+        {
+            var s = "job(DiVert,22) { release(Base,1234) package(DiVertAnalysis,1234) submit(ls) } fork it over";
+            var j = JobParser.ParseJobFile.Parse(s);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(JobParseException))]
+        public void BadParseFromFile()
+        {
+            var f = new FileInfo("BadParseFromFile.txt");
+            if (f.Exists)
+            {
+                f.Delete();
+            }
+            using (var writer = f.CreateText())
+            {
+                writer.WriteLine("job(DiVert,22) { job release(Base,1234) package(DiVertAnalysis,1234) submit(ls) }");
+                writer.Close();
+            }
+
+            f.Refresh();
+            var r = f.ParseJobsInFile();
         }
 
         [TestMethod]

@@ -233,7 +233,7 @@ namespace AtlasWorkFlows.Jobs
                   ParseJob.ParseAs<Action<JobFile>, AtlasJob>(r => (JobFile f) => f.Jobs = f.Jobs.Append(r))
                   .Or(ParseSubmissionMachine.ParseAs<Action<JobFile>, SubmissionMachine>(r => (JobFile f) => f.machines = f.machines.Append(r)))
                   .Or(CommentLine.ParseAs<Action<JobFile>, string> (line => (JobFile f) => { }))
-                  ).Token().Many()
+                  ).Token().XMany()
               select AsJobFile(rid);
 
         /// <summary>
@@ -294,7 +294,7 @@ namespace AtlasWorkFlows.Jobs
             catch (Exception e)
             {
                 // Make sure they know where the error occured!!
-                throw new JobParseException(string.Format("Error parsing file '{0}': ", file.FullName), e);
+                throw new JobParseException(string.Format("Error parsing file '{0}': {1}", file.FullName, e.Message), e);
             }
         }
 
