@@ -70,6 +70,15 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
+        public void GoodPackageByRelease()
+        {
+            var s = "package(pk)";
+            var c = JobParser.ParsePackage.Parse(s);
+            Assert.AreEqual("pk", c.Name);
+            Assert.AreEqual("", c.SCTag);
+        }
+
+        [TestMethod]
         public void SubmissionMachine()
         {
             var s = "submission_machine(tev01.phys.washington.edu, gwatts)";

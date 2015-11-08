@@ -136,11 +136,17 @@ namespace AtlasWorkFlows.Jobs
         private static Package PackageBuilder(IEnumerable<string> args)
         {
             var a = args.ToArray();
-            if (a.Length != 2)
+            if (a.Length == 1)
             {
-                throw new ArgumentException("package primitive needs two arguments: a name and a source control tag");
+                return new Package() { Name = a[0], SCTag = "" };
             }
-            return new Package() { Name = a[0], SCTag = a[1] };
+            if (a.Length == 2)
+            {
+                return new Package() { Name = a[0], SCTag = a[1] };
+            }
+
+            // Not good!!
+                throw new ArgumentException("package primitive needs two arguments: a name and a source control tag - though the second is optional if you want to check out the version associated with the release");
         }
 
         /// <summary>
