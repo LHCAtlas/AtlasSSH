@@ -116,6 +116,8 @@ namespace AtlasWorkFlows.Jobs
             return connection
                 .Apply(() => update("Removing old build directory"))
                 .ExecuteCommand("rm -rf " + linuxLocation)
+                .Apply(() => update("Setting up panda"))
+                .ExecuteCommand("lsetup panda")
                 .Apply(() => update("Setting up release"))
                 .SetupRcRelease(linuxLocation, job.Release.Name)
                 .Apply(() => update("Getting CERN credentials"))
