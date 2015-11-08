@@ -51,4 +51,22 @@ namespace AtlasWorkFlows.Jobs
         public Command[] Commands { get; set; }
         public Submit SubmitCommand { get; set; }
     }
+
+    /// <summary>
+    /// Name of the machine and user we should use to log in for submissions.
+    /// </summary>
+    public class SubmissionMachine
+    {
+        public string MachineName { get; set; }
+        public string Username { get; set; }
+    }
+
+    /// <summary>
+    /// Everything that can be contained in a single file
+    /// </summary>
+    public class JobFile
+    {
+        public AtlasJob[] Jobs { get; set; }
+        public SubmissionMachine[] machines { get; set; }
+    }
 }

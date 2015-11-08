@@ -68,8 +68,12 @@ namespace PSAtlasDatasetCommands
 
                 if (pandaJob == null)
                 {
+                    // Where are we going to be doing the submission on?
+                    var sm = JobParser.GetSubmissionMachine();
+
                     // Check to see if the original dataset exists. We will use the location known as Local for doing the
                     // setup, I suppose.
+                    var connection = new SSHConnection(sm.MachineName, sm.Username);
                     var files = connection
                         .setupATLAS()
                         .setupRucio(gridCredentials.Username)

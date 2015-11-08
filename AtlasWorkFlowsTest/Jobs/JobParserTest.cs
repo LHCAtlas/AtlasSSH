@@ -70,6 +70,15 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
+        public void SubmissionMachine()
+        {
+            var s = "submission_machine(tev01.phys.washington.edu, gwatts)";
+            var c = JobParser.ParseSubmissionMachine.Parse(s);
+            Assert.AreEqual("tev01.phys.washington.edu", c.MachineName);
+            Assert.AreEqual("gwatts", c.Username);
+        }
+
+        [TestMethod]
         public void GoodPackageWithExtraCharaters()
         {
             var s = "package(atlasphys-exo/Physics/Exotic/UEH/DisplacedJets/Run2/AnalysisCode/trunk/DiVertAnalysis, 247827)";
@@ -166,6 +175,25 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.AreEqual("Base,1234", j.Release.Name);
             Assert.IsNotNull(j.SubmitCommand);
             Assert.AreEqual("ls", j.SubmitCommand.SubmitCommand.CommandLine);
+        }
+
+        [TestMethod]
+        public void FileWithMoreThanOne()
+        {
+            var s = @"job(DiVert,22) 
+    { 
+        release(Base,1234)
+        package(DiVertAnalysis,1234)
+        submit(ls)
+    }
+    submission_machine(tev01.phys.washington.edu,gwatts)
+    job(Dork,1) {
+      release(Base,123211)
+    }";
+            var j = JobParser.ParseJobFile.Parse(s);
+
+            Assert.AreEqual(2, j.Jobs.Length);
+            Assert.AreEqual(1, j.machines.Length);
         }
     }
 }

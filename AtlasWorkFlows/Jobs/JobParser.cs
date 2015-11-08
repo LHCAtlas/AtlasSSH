@@ -39,6 +39,19 @@ namespace AtlasWorkFlows.Jobs
         { }
     }
 
+
+    [Serializable]
+    public class JobConfigurationException : Exception
+    {
+        public JobConfigurationException() { }
+        public JobConfigurationException(string message) : base(message) { }
+        public JobConfigurationException(string message, Exception inner) : base(message, inner) { }
+        protected JobConfigurationException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        { }
+    }
+
     /// <summary>
     /// Code to parse a job definition(s) in a text file
     /// </summary>
@@ -103,7 +116,7 @@ namespace AtlasWorkFlows.Jobs
         }
 
         private static Parser<IEnumerable<string>> ParseArgumentList =
-            from args in Parse.Identifier(Parse.LetterOrDigit, Parse.LetterOrDigit.Or(Parse.Chars("-/"))).DelimitedBy(Parse.Char(',').Token()).ParseInterior(Parse.Char('('), Parse.Char(')'))
+            from args in Parse.Identifier(Parse.LetterOrDigit, Parse.LetterOrDigit.Or(Parse.Chars("-/."))).DelimitedBy(Parse.Char(',').Token()).ParseInterior(Parse.Char('('), Parse.Char(')'))
             select args;
 
         /// <summary>
@@ -158,11 +171,55 @@ namespace AtlasWorkFlows.Jobs
               select AsJob(args, interior);
 
         /// <summary>
+        /// Build the job file object up.
+        /// </summary>
+        /// <param name="rid"></param>
+        /// <returns></returns>
+        private static JobFile AsJobFile(IEnumerable<Action<JobFile>> rid)
+        {
+            var r = new JobFile() { machines = new SubmissionMachine[0], Jobs = new AtlasJob[0] };
+            foreach (var act in rid)
+            {
+                act(r);
+            }
+            return r;
+        }
+
+
+        /// <summary>
         /// Parse as many jobs as we can.
         /// </summary>
         public static Parser<AtlasJob[]> ParseJobs
             = from j in ParseJob.Token().Many()
               select j.ToArray();
+
+        /// <summary>
+        /// Look for a submission machine specification.
+        /// </summary>
+        public static Parser<SubmissionMachine> ParseSubmissionMachine
+            = from rid in Parse.String("submission_machine").Token()
+              from args in ParseArgumentList
+              select SubmissionBuilder(args);
+
+        private static SubmissionMachine SubmissionBuilder(IEnumerable<string> args)
+        {
+            var a = args.ToArray();
+            if (a.Length != 2)
+            {
+                throw new JobParseException("submission_machine requires two ");
+            }
+            return new SubmissionMachine() { MachineName = a[0], Username = a[1] };
+        }
+
+        /// <summary>
+        /// Parse a single job file, which can contain several things...
+        /// </summary>
+        public static Parser<JobFile> ParseJobFile
+            = from rid in (
+                  ParseJob.ParseAs<Action<JobFile>, AtlasJob>(r => (JobFile f) => f.Jobs = f.Jobs.Append(r))
+                  .Or(ParseSubmissionMachine.ParseAs<Action<JobFile>, SubmissionMachine>(r => (JobFile f) => f.machines = f.machines.Append(r)))
+                  ).Token().Many()
+              select AsJobFile(rid);
 
         /// <summary>
         /// Build a job from a list of items to add. Make sure that nothing is null that shouldn't be even if it wasn't specified.
@@ -200,19 +257,49 @@ namespace AtlasWorkFlows.Jobs
         /// <returns></returns>
         public static AtlasJob[] ParseJobsInFile (this FileInfo file)
         {
+            return file.ParseJobFileInfo().Jobs;
+        }
+
+        /// <summary>
+        /// Parse all the info in a fileinfo.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        private static JobFile ParseJobFileInfo (this FileInfo file)
+        {
             if (!file.Exists)
             {
                 throw new FileNotFoundException("Unable to open file to parse for job", file.FullName);
             }
-            
+
             try
             {
-                return ParseJobs.Parse(file.ReadToEnd().Aggregate(new StringBuilder(), (old, newline) => old.AppendLine(newline)).ToString());
-            } catch (Exception e)
+                return ParseJobFile.Parse(file.ReadToEnd().Aggregate(new StringBuilder(), (old, newline) => old.AppendLine(newline)).ToString());
+            }
+            catch (Exception e)
             {
                 // Make sure they know where the error occured!!
                 throw new JobParseException(string.Format("Error parsing file '{0}': ", file.FullName), e);
             }
+        }
+
+        /// <summary>
+        /// Grab the submission machine info from a file.
+        /// </summary>
+        /// <returns></returns>
+        public static SubmissionMachine GetSubmissionMachine()
+        {
+            var allFiles = Config.GoodConfigFilesOfName("jobs.jobspec");
+            var firstSubmissionLine = allFiles
+                .SelectMany(f => f.ParseJobFileInfo().machines)
+                .LastOrDefault();
+
+            if (firstSubmissionLine == null)
+            {
+                throw new JobConfigurationException("A submission_machine line just occur in your jobs.jobspec file!");
+            }
+
+            return firstSubmissionLine;
         }
 
         /// <summary>
