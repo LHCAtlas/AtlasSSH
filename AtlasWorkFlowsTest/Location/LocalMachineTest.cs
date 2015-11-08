@@ -115,7 +115,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = GenerateLocalConfig(d);
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
-            Assert.AreEqual(5, l.GetDS(r, null, null).Length);
+            Assert.AreEqual(5, l.GetDS(r, null, null, null).Length);
         }
 
         [TestMethod]
@@ -135,7 +135,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = GenerateLocalConfig(d);
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
-            Assert.AreEqual(1, l.GetDS(r, null, fslist => fslist.Take(1).ToArray()).Length);
+            Assert.AreEqual(1, l.GetDS(r, null, fslist => fslist.Take(1).ToArray(), null).Length);
         }
 
         [TestMethod]
@@ -157,7 +157,7 @@ namespace AtlasWorkFlowsTest.Location
             var c = GenerateLocalConfig(d);
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("ds1.1.1");
-            Assert.AreEqual(1, l.GetDS(r, null, fslist => fslist.Take(1).ToArray()).Length);
+            Assert.AreEqual(1, l.GetDS(r, null, fslist => fslist.Take(1).ToArray(), null).Length);
         }
 
         [TestMethod]
@@ -195,7 +195,7 @@ namespace AtlasWorkFlowsTest.Location
             var l = locator.FindLocation("MyTestLocalLocation");
             var r = l.GetDSInfo("ds1.1.1");
             Assert.IsFalse(r.IsLocal(null));
-            var files = l.GetDS(r, null, null);
+            var files = l.GetDS(r, null, null, null);
             Assert.AreEqual(5, files.Length);
             Assert.IsTrue(files[0].LocalPath.Contains("LoadNewFilesToLocalWhenMissingLocal"));
             Assert.AreEqual("ds1.1.1", d2.EnumerateDirectories().First().Name);
@@ -224,7 +224,7 @@ namespace AtlasWorkFlowsTest.Location
             var l = locator.FindLocation("MyTestLocalLocation");
             var r = l.GetDSInfo("ds1.1.1");
             Assert.IsFalse(r.IsLocal(null));
-            var files = l.GetDS(r, null, null);
+            var files = l.GetDS(r, null, null, null);
             Assert.AreEqual(5, files.Length);
             Assert.IsTrue(files[0].LocalPath.Contains("LoadNewFilesToLocalWhenMissingLocal"));
             Assert.AreEqual("ds1.1.1", d2.EnumerateDirectories().First().Name);
@@ -249,7 +249,7 @@ namespace AtlasWorkFlowsTest.Location
             var l = locator.FindLocation("MyTestLocalLocation");
             var r = l.GetDSInfo("ds1.1.1");
             Assert.IsFalse(r.IsLocal(null));
-            var files = l.GetDS(r, null, null);
+            var files = l.GetDS(r, null, null, null);
         }
 
         [TestMethod]
@@ -273,7 +273,7 @@ namespace AtlasWorkFlowsTest.Location
             var l = locator.FindLocation("MyTestLocalLocation");
             var r = l.GetDSInfo("ds1.1.1");
             Assert.IsFalse(r.IsLocal(null));
-            var files = l.GetDS(r, null, fslist => fslist.Take(2).ToArray());
+            var files = l.GetDS(r, null, fslist => fslist.Take(2).ToArray(), null);
             Assert.AreEqual(2, files.Length);
             Assert.IsTrue(files[0].LocalPath.Contains("LoadNewFilesToLocalWhenMissingLocal"));
             Assert.AreEqual(2, d2.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Count());
@@ -300,7 +300,7 @@ namespace AtlasWorkFlowsTest.Location
             var l = locator.FindLocation("MyTestLocalLocation");
             var r = l.GetDSInfo("ds1.1.1");
             Assert.IsFalse(r.IsLocal(null));
-            var files = l.GetDS(r, null, null);
+            var files = l.GetDS(r, null, null, null);
             Assert.AreEqual(5, files.Length);
             Assert.IsTrue(files[0].LocalPath.Contains("FetchOneMissingFileFromRemoteLocal"));
             Assert.AreEqual(5, d2.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Count());
@@ -334,7 +334,7 @@ namespace AtlasWorkFlowsTest.Location
             var l = locator.FindLocation("MyTestLocalLocation");
             var r = l.GetDSInfo("ds1.1.1");
             Assert.IsFalse(r.IsLocal(null));
-            var files = l.GetDS(r, null, null);
+            var files = l.GetDS(r, null, null, null);
             Assert.AreEqual(5, files.Length);
             Assert.IsTrue(files[0].LocalPath.Contains("FetchOneMissingFileFromBackupSourceLocal"));
             Assert.AreEqual(5, d2.EnumerateFiles("*.root.*", SearchOption.AllDirectories).Where(f => !f.Name.EndsWith(".part")).Count());
@@ -356,7 +356,7 @@ namespace AtlasWorkFlowsTest.Location
 
             var l = LocalMachine.GetLocation(c);
             var r = l.GetDSInfo("user.gwatts:user.gwatts.301295.EVNT.1");
-            Assert.AreEqual(1, l.GetDS(r, rep => Console.WriteLine(rep), fslist => fslist.Take(1).ToArray()).Length);
+            Assert.AreEqual(1, l.GetDS(r, rep => Console.WriteLine(rep), fslist => fslist.Take(1).ToArray(), null).Length);
 
             var dsdir = d.SubDir("user.gwatts.301295.EVNT.1");
             Assert.IsTrue(dsdir.Exists);

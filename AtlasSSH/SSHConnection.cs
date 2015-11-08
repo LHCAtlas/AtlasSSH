@@ -26,6 +26,19 @@ namespace AtlasSSH
     {
         const int TerminalWidth = 240;
 
+
+        [Serializable]
+        public class SSHCommandInterruptedException : Exception
+        {
+            public SSHCommandInterruptedException() { }
+            public SSHCommandInterruptedException(string message) : base(message) { }
+            public SSHCommandInterruptedException(string message, Exception inner) : base(message, inner) { }
+            protected SSHCommandInterruptedException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context)
+            { }
+        }
+
         public SSHConnection(string host, string username)
         {
             // Fetch the username and password.
@@ -95,7 +108,14 @@ namespace AtlasSSH
         /// <param name="s"></param>
         /// <param name="refreshTimeout">If we see something back from the host, reset the timeout counter</param>
         /// <param name="p"></param>
-        private void DumpTillFind(ShellStream s, string matchText, Action<string> ongo = null, bool dontdumplineofmatch = true, int secondsTimeout = 60*60, bool refreshTimeout = false)
+        /// <param name="failNow">Function that returns true if we should throw out right away</param>
+        private void DumpTillFind(ShellStream s, string matchText, 
+            Action<string> ongo = null, 
+            bool dontdumplineofmatch = true, 
+            int secondsTimeout = 60*60, 
+            bool refreshTimeout = false,
+            Func<bool> failNow = null
+            )
         {
             var lb = new LineBuffer(ongo);
             if (dontdumplineofmatch)
@@ -119,6 +139,11 @@ namespace AtlasSSH
                 }
 
                 lb.Add(data);
+
+                if (failNow != null && failNow())
+                {
+                    throw new SSHCommandInterruptedException();
+                }
             }
             if (!gotmatch)
             {
@@ -133,17 +158,20 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="command"></param>
         /// <param name="output"></param>
+        /// <param name="failNow">If this ever returns true, fail as fast as possible.</param>
         /// <returns></returns>
-        public SSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false)
+        public SSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null)
         {
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             _shell.Value.WriteLine(command);
-            DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth-30, command.Length)), secondsTimeout: 10); // The command is (normally) repeated back to us...
+            DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth-30, command.Length)), secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
             _shell.Value.ReadLine(); // Read back the end of line after the command is sent out.
-            DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout);
+            DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow);
             return this;
         }
 
+#if false
+        // Dead code, but it might be useful sometime.
         /// <summary>
         /// Run a command. Scan the input for text and when we see it, send response strings.
         /// </summary>
@@ -173,6 +201,7 @@ namespace AtlasSSH
             DumpTillFind(_shell.Value, _prompt, output);
             return this;
         }
+#endif
 
         /// <summary>
         /// Copy a remote directory locally

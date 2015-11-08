@@ -71,12 +71,12 @@ namespace PSAtlasDatasetCommands
                 {
                     using (var holder = GRIDDatasetLocator.SetLocationFilter(loc => false))
                     {
-                        r = GRIDDatasetLocator.FetchDatasetUrisAtLocation(Location, DatasetName, fname => DisplayStatus(fname), fileFilter: filter);
+                        r = GRIDDatasetLocator.FetchDatasetUrisAtLocation(Location, DatasetName, fname => DisplayStatus(fname), fileFilter: filter, failNow: () => Stopping);
                     }
                 }
                 else
                 {
-                    r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname), fileFilter: filter);
+                    r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname), fileFilter: filter, failNow: () => Stopping);
                 }
                 foreach (var ds in r)
                 {

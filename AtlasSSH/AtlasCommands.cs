@@ -61,7 +61,7 @@ namespace AtlasSSH
         /// <param name="GRIDUsername">The username to use to fetch the password for the voms proxy file</param>
         /// <param name="voms">The name of the voms to connect to</param>
         /// <returns>Connection on which the grid is setup and ready to go</returns>
-        public static SSHConnection VomsProxyInit(this SSHConnection connection, string voms)
+        public static SSHConnection VomsProxyInit(this SSHConnection connection, string voms, Func<bool> failNow = null)
         {
             // Get the GRID VOMS password
             var sclist = new CredentialSet("GRID");
@@ -82,7 +82,7 @@ namespace AtlasSSH
                         goodProxy = goodProxy || l.Contains("Your proxy is valid");
                         whatHappened.Add(l);
                     },
-                    secondsTimeout: 20
+                    secondsTimeout: 20, failNow: failNow
                     );
 
             // If we failed to get the proxy, then build an error message that can be understood. Since this
@@ -114,11 +114,12 @@ namespace AtlasSSH
         /// <returns></returns>
         public static SSHConnection DownloadFromGRID(this SSHConnection connection, string datasetName, string localDirectory,
             Action<string> fileStatus = null,
-            Func<string[], string[]> fileNameFilter = null)
+            Func<string[], string[]> fileNameFilter = null,
+            Func<bool> failNow = null)
         {
             // Does the dataset exist?
             var response = new List<string>();
-            connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60);
+            connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
 
             var dsnames = response
                 .Where(l => l.Contains("DATASET") | l.Contains("CONTAINER"))
@@ -133,7 +134,7 @@ namespace AtlasSSH
             }
 
             // Get the complete list of files in the dataset.
-            var fileNameList = connection.FilelistFromGRID(datasetName);
+            var fileNameList = connection.FilelistFromGRID(datasetName, failNow: failNow);
 
             // Filter them if need be.
             var goodFiles = fileNameFilter != null
@@ -171,7 +172,8 @@ namespace AtlasSSH
                         fileStatus(l.Substring(startOfFileName, closeBracket - startOfFileName));
                     }
                 }
-            }, refreshTimeout:true);
+            }, 
+            refreshTimeout:true, failNow: failNow);
 
             return connection;
         }
@@ -182,7 +184,7 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="datasetName"></param>
         /// <returns></returns>
-        public static string[] FilelistFromGRID(this SSHConnection connection, string datasetName)
+        public static string[] FilelistFromGRID(this SSHConnection connection, string datasetName, Func<bool> failNow =null)
         {
             var fileNameList = new List<string>();
             var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +\S* +\| +\S* +\| +\S* +\| +\S* +\|");
@@ -205,7 +207,9 @@ namespace AtlasSSH
                         }
                     }
                 }
-            });
+            },
+            failNow: failNow
+            );
 
             if (bad)
             {

@@ -61,7 +61,7 @@ namespace AtlasWorkFlows.Locations
 
             // Even though we claim we can't download a data file locally - we can. It is just that we won't do it automatically.
             var linuxFinder = FetchToRemoteLinuxDirInstance.FetchRemoteLinuxInstance(props);
-            l.GetDS = (dsinfo, status, filter) =>
+            l.GetDS = (dsinfo, status, filter, failNow) =>
                 {
                     var d = FindDataset(dirCacheLocations, dsinfo.Name);
                     if (d == null)
@@ -73,7 +73,7 @@ namespace AtlasWorkFlows.Locations
                         }
                         var dsdir = new DirectoryInfo(Path.Combine(validLocalCache.FullName, dsinfo.Name.SantizeDSName()));
                         dsdir.Create();
-                        return LoadDatasetFromOtherSource(new WindowsDataset(dsdir.Parent), dsinfo, status, filter, l.Name, linuxFinder, props["LinuxTempLocation"]);
+                        return LoadDatasetFromOtherSource(new WindowsDataset(dsdir.Parent), dsinfo, status, filter, l.Name, linuxFinder, props["LinuxTempLocation"], failNow);
                     }
                     var w = new WindowsDataset(d.Parent);
                     var result = w.FindDSFiles(dsinfo.Name, filter);
@@ -81,7 +81,7 @@ namespace AtlasWorkFlows.Locations
                     {
                         return result;
                     }
-                    return LoadDatasetFromOtherSource(w, dsinfo, status, filter, l.Name, linuxFinder, string.Format("{0}/{1}", props["LinuxTempLocation"], dsinfo.Name.SantizeDSName()));
+                    return LoadDatasetFromOtherSource(w, dsinfo, status, filter, l.Name, linuxFinder, string.Format("{0}/{1}", props["LinuxTempLocation"], dsinfo.Name.SantizeDSName()), failNow);
                 };
 
             return l;
@@ -113,12 +113,13 @@ namespace AtlasWorkFlows.Locations
             Func<string[], string[]> filter, 
             string locName, 
             IFetchToRemoteLinuxDir fetcher,
-            string linuxLocation)
+            string linuxLocation,
+            Func<bool> failNow)
         {
             // First, attempt to find the Uri's from somewhere that we can see and easily copy.
             try
             {
-                var files = GRIDDatasetLocator.FetchDatasetUris(dsinfo.Name, status, filter, locationFilter: locname => locname != locName);
+                var files = GRIDDatasetLocator.FetchDatasetUris(dsinfo.Name, status, filter, locationFilter: locname => locname != locName, failNow: failNow);
                 var dsinfoRemote = GRIDDatasetLocator.FetchDSInfo(dsinfo.Name, filter, locationFilter: locname => locname != locName);
                 if (files != null)
                 {
@@ -154,8 +155,8 @@ namespace AtlasWorkFlows.Locations
             // OK, nothing could get them. We need to fall back on our secondary copy method. So copy everything to a local Linux directory, and then
             // copy from there down to here.
             dsLocalLocation.MarkAsPartialDownload(dsinfo.Name);
-            var allfiles = fetcher.GetListOfFiles(dsinfo.Name, status);
-            fetcher.Fetch(dsinfo.Name, linuxLocation, status, filter);
+            var allfiles = fetcher.GetListOfFiles(dsinfo.Name, status, failNow: failNow);
+            fetcher.Fetch(dsinfo.Name, linuxLocation, status, filter, failNow: failNow);
 
             // Next, copy the files from there down to our location.
             dsLocalLocation.SaveListOfDSFiles(dsinfo.Name, allfiles);

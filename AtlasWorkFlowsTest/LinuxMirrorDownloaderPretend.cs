@@ -31,7 +31,7 @@ namespace AtlasWorkFlowsTest
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="linuxDirDestination"></param>
-        public void Fetch(string dsName, string linuxDirDestination, Action<string> statsUpdate, Func<string[], string[]> fileFilter = null)
+        public void Fetch(string dsName, string linuxDirDestination, Action<string> statsUpdate, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null)
         {
             // Do some basic checks on the Dir destination.
             Assert.IsFalse(linuxDirDestination.Contains(":"));
@@ -49,7 +49,7 @@ namespace AtlasWorkFlowsTest
         /// </summary>
         /// <param name="p"></param>
         /// <returns></returns>
-        public string[] GetListOfFiles(string dsname, Action<string> status = null)
+        public string[] GetListOfFiles(string dsname, Action<string> status = null, Func<bool> failNow = null)
         {
             // Make sure that the dsname is part of the ones we want to look at.
             if (!_dsNames.Select(ds => ds.SantizeDSName()).Contains(dsname.SantizeDSName()))

@@ -43,7 +43,7 @@ namespace AtlasWorkFlows
         /// the request can't be filled out, it will still return whatever files it can find.
         /// Use HasAllFiles to make sure.
         /// </remarks>
-        public Func<DSInfo, Action<string>, Func<string[], string[]>, Uri[]> GetDS { get; set; }
+        public Func<DSInfo, Action<string>, Func<string[], string[]>, Func<bool>, Uri[]> GetDS { get; set; }
 
         /// <summary>
         /// If you have more than one store and they will be able to answer similar with others,
