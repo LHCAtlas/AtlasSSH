@@ -181,6 +181,32 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
+        public void GoodJobWithCommentsOnLines()
+        {
+            var s = @"job(DiVert,22) 
+    { 
+// This is a test
+# so is this.
+        release(Base,1234)
+        package(DiVertAnalysis,1234)
+        submit(ls)
+# Dude!
+    }";
+            var j = JobParser.ParseJob.Parse(s);
+            Assert.IsNotNull(j.Commands);
+            Assert.AreEqual(0, j.Commands.Length);
+            Assert.AreEqual("DiVert", j.Name);
+            Assert.AreEqual(22, j.Version);
+            Assert.IsNotNull(j.Packages);
+            Assert.AreEqual(1, j.Packages.Length);
+            Assert.AreEqual("DiVertAnalysis", j.Packages[0].Name);
+            Assert.IsNotNull(j.Release);
+            Assert.AreEqual("Base,1234", j.Release.Name);
+            Assert.IsNotNull(j.SubmitCommand);
+            Assert.AreEqual("ls", j.SubmitCommand.SubmitCommand.CommandLine);
+        }
+
+        [TestMethod]
         public void FileWithMoreThanOne()
         {
             var s = @"job(DiVert,22) 
@@ -189,6 +215,26 @@ namespace AtlasWorkFlowsTest.Jobs
         package(DiVertAnalysis,1234)
         submit(ls)
     }
+    submission_machine(tev01.phys.washington.edu,gwatts)
+    job(Dork,1) {
+      release(Base,123211)
+    }";
+            var j = JobParser.ParseJobFile.Parse(s);
+
+            Assert.AreEqual(2, j.Jobs.Length);
+            Assert.AreEqual(1, j.machines.Length);
+        }
+
+        [TestMethod]
+        public void FileWithComments()
+        {
+            var s = @"job(DiVert,22) 
+    { 
+        release(Base,1234)
+        package(DiVertAnalysis,1234)
+        submit(ls)
+    }
+# this is the basic submission stuff now
     submission_machine(tev01.phys.washington.edu,gwatts)
     job(Dork,1) {
       release(Base,123211)

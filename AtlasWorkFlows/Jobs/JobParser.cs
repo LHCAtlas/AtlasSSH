@@ -163,6 +163,13 @@ namespace AtlasWorkFlows.Jobs
         }
 
         /// <summary>
+        /// Comments are started with a "#" or a "//"
+        /// </summary>
+        private static CommentParser CommentSharp = new CommentParser { Single = "#", NewLine = Environment.NewLine };
+        private static CommentParser CommentDoubleSlash = new CommentParser { Single = "//", NewLine = Environment.NewLine };
+        private static Parser<string> CommentLine = CommentSharp.SingleLineComment.Or(CommentDoubleSlash.SingleLineComment);
+
+        /// <summary>
         /// Parse a complete job
         /// </summary>
         public static Parser<AtlasJob> ParseJob
@@ -173,6 +180,7 @@ namespace AtlasWorkFlows.Jobs
                     .Or(ParseCommand.ParseAs<Action<AtlasJob>, Command>(c => (AtlasJob j) => j.Commands = j.Commands.Append(c)))
                     .Or(ParsePackage.ParseAs<Action<AtlasJob>, Package>(p => (AtlasJob j) => j.Packages = j.Packages.Append(p)))
                     .Or(ParseSubmit.ParseAs<Action<AtlasJob>,Submit>(s => (AtlasJob j) => j.SubmitCommand = s))
+                    .Or(CommentLine.ParseAs<Action<AtlasJob>, string>(r => (AtlasJob j) => { }))
                   ).Token().Many().ParseInterior(Parse.Char('{'), Parse.Char('}'))
               select AsJob(args, interior);
 
@@ -224,6 +232,7 @@ namespace AtlasWorkFlows.Jobs
             = from rid in (
                   ParseJob.ParseAs<Action<JobFile>, AtlasJob>(r => (JobFile f) => f.Jobs = f.Jobs.Append(r))
                   .Or(ParseSubmissionMachine.ParseAs<Action<JobFile>, SubmissionMachine>(r => (JobFile f) => f.machines = f.machines.Append(r)))
+                  .Or(CommentLine.ParseAs<Action<JobFile>, string> (line => (JobFile f) => { }))
                   ).Token().Many()
               select AsJobFile(rid);
 
