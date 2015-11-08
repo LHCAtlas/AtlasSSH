@@ -75,9 +75,13 @@ namespace PSAtlasDatasetCommands
                     // setup, I suppose.
                     var connection = new SSHConnection(sm.MachineName, sm.Username);
                     var files = connection
+                        .Apply(() => DisplayStatus("Setting up ATLAS"))
                         .setupATLAS()
+                        .Apply(() => DisplayStatus("Setting up Rucio"))
                         .setupRucio(gridCredentials.Username)
+                        .Apply(() => DisplayStatus("Aquiring GRID credentials"))
                         .VomsProxyInit("atlas", gridCredentials.Username)
+                        .Apply(() => DisplayStatus("Checking dataset exists on the GRID"))
                         .FilelistFromGRID(DatasetName);
                     if (files.Length == 0)
                     {
@@ -86,7 +90,7 @@ namespace PSAtlasDatasetCommands
 
                     // Submit the job
                     connection
-                        .SubmitJob(job, DatasetName, ds);
+                        .SubmitJob(job, DatasetName, ds, DisplayStatus);
 
                     // Try to find the job again. If this fails, then things are really bad!
                     pandaJob = (ds + "/").FindPandaJobWithTaskName();
@@ -103,6 +107,16 @@ namespace PSAtlasDatasetCommands
             {
                 Trace.Listeners.Remove(listener);
             }
+        }
+
+        /// <summary>
+        /// Called to build a status object
+        /// </summary>
+        /// <param name="fname"></param>
+        private void DisplayStatus(string message)
+        {
+            var pr = new ProgressRecord(1, string.Format("Submitting {0} v{1}", JobName, JobVersion), message);
+            WriteProgress(pr);
         }
     }
 }
