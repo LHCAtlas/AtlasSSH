@@ -132,24 +132,24 @@ namespace AtlasSSH
                 throw new ArgumentException(string.Format("Unable to find any datasets with the name '{0}'.", datasetName));
             }
 
-            // If we are going to filter files, then the next thing we need to do is look at all files in the dataset.
-            var toDownload = datasetName;
-            if (fileNameFilter != null)
-            {
-                var fileNameList = connection.FilelistFromGRID(datasetName);
-                var goodFiles = fileNameFilter(fileNameList);
-                if (goodFiles.Length == 0)
-                {
-                    return connection;
-                }
+            // Get the complete list of files in the dataset.
+            var fileNameList = connection.FilelistFromGRID(datasetName);
 
-                var toDownloadBuilder = new StringBuilder();
-                foreach (var f in goodFiles)
-                {
-                    toDownloadBuilder.Append(f + " ");
-                }
-                toDownload = toDownloadBuilder.ToString();
+            // Filter them if need be.
+            var goodFiles = fileNameFilter != null
+                ? fileNameFilter(fileNameList)
+                : fileNameList;
+
+            // If we have no files to download, then we are totally done!
+            if (goodFiles.Length == 0)
+            {
+                return connection;
             }
+
+            // Create a file that contains all the files we want to download up on the host.
+            var fileListName = string.Format("/tmp/{0}.filelist", datasetName);
+            connection.ExecuteCommand("rm -rf " + fileListName);
+            connection.Apply(goodFiles, (c, fname) => c.ExecuteCommand(string.Format("echo {0} >> {1}", fname, fileListName)));
 
             // We good on creating the directory?
             connection.ExecuteCommand(string.Format("mkdir -p {0}", localDirectory),
@@ -158,7 +158,7 @@ namespace AtlasSSH
 
             // Next, do the download
             response.Clear();
-            connection.ExecuteCommand(string.Format("rucio download --dir {1} {0}", toDownload, localDirectory), l =>
+            connection.ExecuteCommand(string.Format("rucio download --dir {1} `cat {0}`", fileListName, localDirectory), l =>
             {
                 if (fileStatus != null)
                 {

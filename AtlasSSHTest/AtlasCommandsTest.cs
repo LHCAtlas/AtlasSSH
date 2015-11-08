@@ -157,6 +157,7 @@ namespace AtlasSSHTest
             using (var s = new SSHConnection(info.Item1, info.Item2))
             {
                 s
+                    .ExecuteCommand("rm -rf /tmp/usergwattstempdataShort")
                     .setupATLAS()
                     .setupRucio(info.Item2)
                     .VomsProxyInit("atlas")
