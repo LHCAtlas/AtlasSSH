@@ -80,5 +80,26 @@ namespace AtlasWorkFlows.Panda
         {
             return new Uri(string.Format("http://bigpanda.cern.ch/{0}&days=365", stem));
         }
+
+        /// <summary>
+        /// Returns all the dataset containers that are used in a particular task.
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="streamname"></param>
+        /// <returns></returns>
+        public static string[] DatasetNames(this PandaTask task, string streamname)
+        {
+            return task.datasets.Where(ds => ds.streamname == streamname).GroupBy(ds => ds.containername).Select(k => k.Key).ToArray();
+        }
+
+        public static string[] DatasetNamesIN(this PandaTask task)
+        {
+            return task.DatasetNames("IN");
+        }
+
+        public static string[] DatasetNamesOUT(this PandaTask task)
+        {
+            return task.DatasetNames("OUTPUT0");
+        }
     }
 }

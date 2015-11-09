@@ -64,13 +64,11 @@ namespace PSAtlasDatasetCommands
             }
             if (InputContainerNames.IsPresent)
             {
-                var names = t.datasets.Where(ds => ds.streamname == "IN").GroupBy(ds => ds.containername).Select(k => k.Key).ToArray();
-                WriteObject(names);
+                WriteObject(t.DatasetNamesIN());
             }
             if (OutputContainerNames.IsPresent)
             {
-                var names = t.datasets.Where(ds => ds.streamname == "OUTPUT0").GroupBy(ds => ds.containername).Select(k => k.Key).ToArray();
-                WriteObject(names);
+                WriteObject(t.DatasetNamesOUT());
             }
         }
     }
