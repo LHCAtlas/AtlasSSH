@@ -25,6 +25,21 @@ namespace AtlasWorkFlows.Panda
         }
 
         /// <summary>
+        /// Given an ID fetch the task info
+        /// </summary>
+        /// <param name="taskID"></param>
+        /// <returns></returns>
+        public static PandaTask FindPandaJobWithTaskName(this int taskID)
+        {
+            var url = BuildTaskUri(string.Format("tasks/?jeditaskid={0}", taskID));
+
+            // Now we do the query...
+            var tasks = GetTaskDataFromPanda(url);
+            var mytask = tasks.FirstOrDefault();
+            return mytask;
+        }
+
+        /// <summary>
         /// Gets the list of tasks back
         /// </summary>
         /// <param name="url"></param>

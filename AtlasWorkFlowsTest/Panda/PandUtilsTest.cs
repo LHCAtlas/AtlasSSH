@@ -21,5 +21,20 @@ namespace AtlasWorkFlowsTest.Panda
             var task = "user.emmat.mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.__EXOT15_v3/".FindPandaJobWithTaskName();
             Assert.IsNull(task);
         }
+
+        [TestMethod]
+        public void OnlineGoodTaskID()
+        {
+            var task = 6923254.FindPandaJobWithTaskName();
+            Assert.IsNotNull(task);
+            Assert.AreEqual("done", task.status);
+        }
+
+        [TestMethod]
+        public void OnlineBadTaskID()
+        {
+            var task = 692325724.FindPandaJobWithTaskName();
+            Assert.IsNull(task);
+        }
     }
 }

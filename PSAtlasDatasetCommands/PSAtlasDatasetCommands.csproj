@@ -58,6 +58,7 @@
     <Compile Include="GetGRIDDataLocations.cs" />
     <Compile Include="GetGRIDDataset.cs" />
     <Compile Include="GetGRIDJobSpec.cs" />
+    <Compile Include="GetGRIDJobStatus.cs" />
     <Compile Include="InvokeGRIDJob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\PSListener.cs" />

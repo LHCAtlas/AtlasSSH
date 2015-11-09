@@ -9,8 +9,8 @@
     <licenseUrl>https://github.com/LHCAtlas/AtlasSSH/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>A PowerShell module that adds commands that will fetch data from the GRID. Read docs to find out how to configure properly: requires properly configured Linux endpoint to work.</description>
-    <releaseNotes>Make downloads interruptable and other small fixes</releaseNotes>
+    <description>A PowerShell module that adds commands that will fetch data from the GRID and run jobs on the grid. Read docs to find out how to configure properly: requires properly configured Linux endpoint to work.</description>
+    <releaseNotes>GRIDJobs supported with Find-GRIDJobs, Get-GRIDJobSpec, Invoke-GRIDJob</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>ATLAS GRID CERN PowerShell</tags>
   </metadata>
