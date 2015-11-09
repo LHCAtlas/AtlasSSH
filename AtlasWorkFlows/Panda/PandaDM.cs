@@ -10,7 +10,45 @@ namespace AtlasWorkFlows.Panda
     /// File contains the various objects that we will get back from a panda query.
     /// </summary>
 
-    /// Dataset info.
+    // Actual datasets
+    public class Dataset
+    {
+        public string containername { get; set; }
+        public string datasetname { get; set; }
+        public int nfilesfinished { get; set; }
+        public int nfilesonhold { get; set; }
+        public string creationtime { get; set; }
+        public string site { get; set; }
+        public string vo { get; set; }
+        public object frozentime { get; set; }
+        public int nfilesfailed { get; set; }
+        public string statechecktime { get; set; }
+        public string cloud { get; set; }
+        public int neventsused { get; set; }
+        public string destination { get; set; }
+        public string state { get; set; }
+        public string storagetoken { get; set; }
+        public int? provenanceid { get; set; }
+        public int jeditaskid { get; set; }
+        public string lockedby { get; set; }
+        public object lockedtime { get; set; }
+        public string status { get; set; }
+        public int? nfilestobeused { get; set; }
+        public object masterid { get; set; }
+        public int? templateid { get; set; }
+        public int nfiles { get; set; }
+        public int nfilesused { get; set; }
+        public int neventstobeused { get; set; }
+        public string type { get; set; }
+        public string streamname { get; set; }
+        public string modificationtime { get; set; }
+        public int nevents { get; set; }
+        public int datasetid { get; set; }
+        public string attributes { get; set; }
+        public object statecheckexpiration { get; set; }
+    }
+
+    /// Results of running (files, pass, fail, etc.).
     public class Dsinfo
     {
         public int nfilesfailed { get; set; }
@@ -70,6 +108,7 @@ namespace AtlasWorkFlows.Panda
         public string endtime { get; set; }
         public string iointensityunit { get; set; }
         public int walltime { get; set; }
+        public List<Dataset> datasets { get; set; }
         public int jeditaskid { get; set; }
         public string outdiskunit { get; set; }
         public int outdiskcount { get; set; }
