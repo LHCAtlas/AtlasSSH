@@ -163,6 +163,10 @@ namespace AtlasSSH
             int timeout = 3600)
         {
             // Does the dataset exist?
+            if (fileStatus != null)
+            {
+                fileStatus("Checking the dataset exists");
+            }
             var response = new List<string>();
             connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
 
@@ -179,6 +183,10 @@ namespace AtlasSSH
             }
 
             // Get the complete list of files in the dataset.
+            if (fileStatus != null)
+            {
+                fileStatus("Getting the complete list of files from the dataset");
+            }
             var fileNameList = connection.FilelistFromGRID(datasetName, failNow: failNow);
 
             // Filter them if need be.
@@ -204,6 +212,10 @@ namespace AtlasSSH
 
             // Next, do the download
             response.Clear();
+            if (fileStatus != null)
+            {
+                fileStatus("Starting GRID download...");
+            }
             connection.ExecuteCommand(string.Format("rucio download --dir {1} `cat {0}`", fileListName, localDirectory), l =>
             {
                 if (fileStatus != null)
