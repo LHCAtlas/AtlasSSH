@@ -133,7 +133,7 @@ namespace AtlasSSH
                     break;
 
                 var data = s.Read();
-                if (data != null && data.Length > 0)
+                if (data != null && data.Length > 0 && refreshTimeout)
                 {
                     timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
                 }
@@ -142,7 +142,7 @@ namespace AtlasSSH
 
                 if (failNow != null && failNow())
                 {
-                    throw new SSHCommandInterruptedException();
+                    throw new SSHCommandInterruptedException("Calling routine requested termination of command");
                 }
             }
             if (!gotmatch)
