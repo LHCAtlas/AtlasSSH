@@ -159,7 +159,8 @@ namespace AtlasSSH
         public static ISSHConnection DownloadFromGRID(this ISSHConnection connection, string datasetName, string localDirectory,
             Action<string> fileStatus = null,
             Func<string[], string[]> fileNameFilter = null,
-            Func<bool> failNow = null)
+            Func<bool> failNow = null,
+            int timeout = 3600)
         {
             // Does the dataset exist?
             var response = new List<string>();
@@ -217,7 +218,7 @@ namespace AtlasSSH
                     }
                 }
             }, 
-            refreshTimeout:true, failNow: failNow);
+            refreshTimeout:true, failNow: failNow, secondsTimeout: timeout);
 
             return connection;
         }

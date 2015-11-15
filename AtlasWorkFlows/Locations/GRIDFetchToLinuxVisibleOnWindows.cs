@@ -48,7 +48,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="info"></param>
         /// <returns></returns>
-        public Uri[] GetDS (string dsname, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null)
+        public Uri[] GetDS (string dsname, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null, int timeoutDuringDownloadSecs = 3600)
         {
             // First, we attempt to get the files from the downloaded directory.
             var flist = _winDataset.FindDSFiles(dsname, fileFilter);
@@ -75,7 +75,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Fetch the files from the GRID now.
-            LinuxFetcher.Fetch(dsname, string.Format("{0}/{1}", LinuxRootDSDirectory, dsname.SantizeDSName()), statusUpdate, fileFilter, failNow: failNow);
+            LinuxFetcher.Fetch(dsname, string.Format("{0}/{1}", LinuxRootDSDirectory, dsname.SantizeDSName()), statusUpdate, fileFilter, failNow: failNow, timeout: timeoutDuringDownloadSecs);
 
             // And then the files should all be down! If we got them all, then don't mark it as partial.
             var result = _winDataset.FindDSFiles(dsname, fileFilter, returnWhatWeHave: true);
@@ -84,9 +84,9 @@ namespace AtlasWorkFlows.Locations
 
             return result;
         }
-        public Uri[] GetDS (DSInfo info, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null)
+        public Uri[] GetDS (DSInfo info, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null, int timeout = 3600)
         {
-            return GetDS(info.Name, statusUpdate, fileFilter, failNow);
+            return GetDS(info.Name, statusUpdate, fileFilter, failNow, timeout);
         }
 
         /// <summary>

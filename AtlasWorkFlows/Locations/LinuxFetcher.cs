@@ -33,12 +33,12 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="linuxDirDestination"></param>
-        public void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdater = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null)
+        public void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdater = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null, int timeout = 3600)
         {
             var c = InitConnection(statusUpdater);
             if (statusUpdater != null)
                 statusUpdater("Starting download of files from GRID");
-            c.DownloadFromGRID(dsName, linuxDirDestination, statusUpdater, fileFilter, failNow: failNow);
+            c.DownloadFromGRID(dsName, linuxDirDestination, statusUpdater, fileFilter, failNow: failNow, timeout: timeout);
         }
 
         /// <summary>

@@ -41,12 +41,16 @@ namespace PSAtlasDatasetCommands
         [Parameter(HelpMessage = "Do use any other intermediate locations (only valid with --Location)")]
         public SwitchParameter DoNotUseRelay { get; set; }
 
+        [Parameter(HelpMessage = "Timeout in seconds between updates from the download. Defaults to 1 hour")]
+        public int Timeout { get; set; }
+
         /// <summary>
         /// Setup defaults.
         /// </summary>
         public GetGRIDDataset()
         {
             DoNotUseRelay = false;
+            Timeout = 3600;
         }
 
         /// <summary>
@@ -71,12 +75,12 @@ namespace PSAtlasDatasetCommands
                 {
                     using (var holder = GRIDDatasetLocator.SetLocationFilter(loc => false))
                     {
-                        r = GRIDDatasetLocator.FetchDatasetUrisAtLocation(Location, DatasetName, fname => DisplayStatus(fname), fileFilter: filter, failNow: () => Stopping);
+                        r = GRIDDatasetLocator.FetchDatasetUrisAtLocation(Location, DatasetName, fname => DisplayStatus(fname), fileFilter: filter, failNow: () => Stopping, timeoutDownloadSecs: Timeout);
                     }
                 }
                 else
                 {
-                    r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname), fileFilter: filter, failNow: () => Stopping);
+                    r = GRIDDatasetLocator.FetchDatasetUris(DatasetName, fname => DisplayStatus(fname), fileFilter: filter, failNow: () => Stopping, timeoutDownloadSecs: Timeout);
                 }
                 foreach (var ds in r)
                 {

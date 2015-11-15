@@ -17,7 +17,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="linuxDirDestination"></param>
-        void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null);
+        void Fetch(string dsName, string linuxDirDestination, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null, int timeout = 3600);
 
         /// <summary>
         /// Return a list of all files in the dataset - this is everything, not just what is on disk.

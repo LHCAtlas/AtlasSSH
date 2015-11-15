@@ -19,16 +19,18 @@ namespace AtlasWorkFlows
         /// <param name="fileFilter">Filter the potential list of files to be returned or downloaded (can really speed up things if you want one file in a large dataset).</param>
         /// <param name="locationFilter">Filter out the locations that we are allowed to fetch the file from.</param>
         /// <param name="statusUpdate">Downloads from the grid can take a long time. Status updates will be posted here if not null.</param>
+        /// <param name="timeoutDownloadSecs">How many seconds between a response back from rucio download</param>
         /// <returns></returns>
         public static Uri[] FetchDatasetUris(string datasetname, Action<string> statusUpdate = null,
             Func<string[],string[]> fileFilter = null,
             Func<string, bool> locationFilter = null,
-            Func<bool> failNow = null)
+            Func<bool> failNow = null,
+            int timeoutDownloadSecs = 3600)
         {
             var dsinfo = FetchDSInfo(datasetname, fileFilter, locationFilter);
 
             // And delegate all the rest of our work to fetching.
-            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter, failNow);
+            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter, failNow, timeoutDownloadSecs);
         }
 
         /// <summary>
@@ -39,7 +41,11 @@ namespace AtlasWorkFlows
         /// <param name="locationFilter">Filter out the locations that we are allowed to fetch the file from.</param>
         /// <param name="statusUpdate">Downloads from the grid can take a long time. Status updates will be posted here if not null.</param>
         /// <returns></returns>
-        public static Uri[] FetchDatasetUrisAtLocation(string locationName, string datasetname, Action<string> statusUpdate = null, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null)
+        public static Uri[] FetchDatasetUrisAtLocation(string locationName, string datasetname, 
+            Action<string> statusUpdate = null, 
+            Func<string[], string[]> fileFilter = null, 
+            Func<bool> failNow = null, 
+            int timeoutDownloadSecs = 3600)
         {
             var locator = new Locator();
             var location = locator.FindLocation(locationName);
@@ -53,7 +59,7 @@ namespace AtlasWorkFlows
             var dsinfo = location.GetDSInfo(datasetname);
 
             // And delegate all the rest of our work to fetching.
-            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter, failNow);
+            return dsinfo.LocationProvider.GetDS(dsinfo, statusUpdate, fileFilter, failNow, timeoutDownloadSecs);
         }
 
         /// <summary>
