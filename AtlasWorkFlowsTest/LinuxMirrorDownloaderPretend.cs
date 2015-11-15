@@ -31,7 +31,7 @@ namespace AtlasWorkFlowsTest
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="linuxDirDestination"></param>
-        public void Fetch(string dsName, string linuxDirDestination, Action<string> statsUpdate, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null)
+        public void Fetch(string dsName, string linuxDirDestination, Action<string> statsUpdate, Func<string[], string[]> fileFilter = null, Func<bool> failNow = null, int timeout = 3600)
         {
             // Do some basic checks on the Dir destination.
             Assert.IsFalse(linuxDirDestination.Contains(":"));
