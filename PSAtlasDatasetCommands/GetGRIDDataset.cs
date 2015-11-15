@@ -32,6 +32,7 @@ namespace PSAtlasDatasetCommands
         /// The location where we should download the dataset to.
         /// </summary>
         [Parameter(HelpMessage="Location where the dataset should be downloaded to")]
+        [ValidateLocation]
         public string Location { get; set; }
 
         /// <summary>
