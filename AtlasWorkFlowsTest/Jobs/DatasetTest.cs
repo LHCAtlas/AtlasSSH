@@ -58,5 +58,20 @@ namespace AtlasWorkFlowsTest.Jobs
             var ds = j.ResultingDatasetName("data15_13TeV:data15_13TeV.00280500.physics_Main.merge.DAOD_EXOT15.f631_m1504_p2425_tid06603342_00", "user.bogus");
             Assert.AreEqual("user.bogus.00280500.physics_Main.DAOD_EXOT15.f631_m1504_p2425.DiVertAnalysis_v22_1044055743", ds);
         }
+
+        [TestMethod]
+        public void HashConstantEverywhere()
+        {
+            var s = "hi there dude";
+            Assert.AreEqual(1715311051, s.GetHashCode());
+        }
+
+        [TestMethod]
+        public void HashInTwoStrings()
+        {
+            var s1 = "hi there fork";
+            var s2 = "hi there fork";
+            Assert.AreEqual(s1.GetHashCode(), s2.GetHashCode());
+        }
     }
 }

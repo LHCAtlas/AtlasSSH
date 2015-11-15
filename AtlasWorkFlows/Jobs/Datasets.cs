@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CredentialManagement;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -72,7 +73,36 @@ namespace AtlasWorkFlows.Jobs
         }
 
         /// <summary>
-        /// Remove everythign in the string before the search string. Return full string if the search string is not found.
+        /// Return the resulting dataset name given a credential for the user name
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="origDSName"></param>
+        /// <param name="gridCredentials"></param>
+        /// <returns></returns>
+        public static string ResultingDatasetName(this AtlasJob job, string origDSName, Credential gridCredentials)
+        {
+            var scope = string.Format("user.{0}", gridCredentials.Username);
+            return job.ResultingDatasetName(origDSName, scope);
+        }
+
+        /// <summary>
+        /// Fetch from GRID the credential name.
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="origDSName"></param>
+        /// <returns></returns>
+        public static string ResultingDatasetName(this AtlasJob job, string origDSName)
+        {
+            var gridCredentials = new CredentialSet("GRID").Load().FirstOrDefault();
+            if (gridCredentials == null)
+            {
+                throw new ArgumentException("Please create a generic windows credential with the target 'GRID' with the user name as the rucio grid user name and the password to be used with voms proxy init");
+            }
+            return job.ResultingDatasetName(origDSName, gridCredentials);
+        }
+
+        /// <summary>
+        /// Remove everything in the string before the search string. Return full string if the search string is not found.
         /// </summary>
         /// <param name="src"></param>
         /// <param name="removeThisAndBefore"></param>

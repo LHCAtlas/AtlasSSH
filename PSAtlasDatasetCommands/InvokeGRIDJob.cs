@@ -59,9 +59,7 @@ namespace PSAtlasDatasetCommands
                 {
                     throw new ArgumentException("Please create a generic windows credential with the target 'GRID' with the username as the rucio grid username and the password to be used with voms proxy init");
                 }
-
-                var scope = string.Format("user.{0}", gridCredentials.Username);
-                var ds = job.ResultingDatasetName(DatasetName, scope);
+                string ds = job.ResultingDatasetName(DatasetName, gridCredentials);
 
                 // See if there is already a job defined that will produce this
                 var pandaJob = (ds + "/").FindPandaJobWithTaskName();
@@ -79,7 +77,7 @@ namespace PSAtlasDatasetCommands
                         .setupATLAS()
                         .Apply(() => DisplayStatus("Setting up Rucio"))
                         .setupRucio(gridCredentials.Username)
-                        .Apply(() => DisplayStatus("Aquiring GRID credentials"))
+                        .Apply(() => DisplayStatus("Acquiring GRID credentials"))
                         .VomsProxyInit("atlas", failNow: () => Stopping)
                         .Apply(() => DisplayStatus("Checking dataset exists on the GRID"))
                         .FilelistFromGRID(DatasetName, failNow: () => Stopping);
@@ -103,7 +101,8 @@ namespace PSAtlasDatasetCommands
                 // Return a helper obj that contains the info about this job that can be used by other commands.
                 var r = new AtlasPandaTaskID() { ID = pandaJob.jeditaskid, Name = pandaJob.taskname };
                 WriteObject(r);
-            } finally
+            }
+            finally
             {
                 Trace.Listeners.Remove(listener);
             }
