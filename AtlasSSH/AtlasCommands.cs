@@ -179,7 +179,7 @@ namespace AtlasSSH
 
             if (!dsnames.Where(n => n.SantizeDSName() == datasetName.SantizeDSName()).Any())
             {
-                throw new ArgumentException(string.Format("Unable to find any datasets with the name '{0}'.", datasetName));
+                throw new ArgumentException(string.Format("Unable to find any datasets on the GRID (in rucuio) with the name '{0}'.", datasetName));
             }
 
             // Get the complete list of files in the dataset.
