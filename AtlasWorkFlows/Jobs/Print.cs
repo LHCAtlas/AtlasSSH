@@ -66,7 +66,7 @@ namespace AtlasWorkFlows.Jobs
             if (r.Release != null) r.Release.Print(bld);
             if (r.Packages != null)
             {
-                foreach (var p in r.Packages)
+                foreach (var p in r.Packages.OrderBy(p => $"{p.Name}-{p.SCTag}"))
                 {
                     p.Print(bld);
                 }

@@ -82,5 +82,28 @@ namespace AtlasWorkFlowsTest.Jobs
             var j2 = new AtlasJob() { Name = "DiVertAnalysis", Version = 22 };
             Assert.AreNotEqual(j1.Hash(), j2.Hash());
         }
+
+        [TestMethod]
+        public void HashSameForReorderedPackages()
+        {
+            var j1 = new AtlasJob() { Name = "DiVertAnalysis", Version = 22,
+                Packages = new Package[]
+                {
+                    new Package() { Name = "pkg1", SCTag = "v00-00-00" },
+                    new Package() { Name = "pkg2", SCTag = "v00-01-00" }
+                },
+            };
+            var j2 = new AtlasJob()
+            {
+                Name = "DiVertAnalysis",
+                Version = 22,
+                Packages = new Package[]
+                {
+                    new Package() { Name = "pkg2", SCTag = "v00-01-00" },
+                    new Package() { Name = "pkg1", SCTag = "v00-00-00" },
+                },
+            };
+            Assert.AreEqual(j1.Hash(), j2.Hash());
+        }
     }
 }
