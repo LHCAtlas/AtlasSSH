@@ -2,7 +2,9 @@
 using CredentialManagement;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -31,13 +33,25 @@ namespace AtlasWorkFlows.Jobs
         }
 
         /// <summary>
+        /// Hash algorithm (which will work no matter what machine or bitness we are in).
+        /// </summary>
+        private static Lazy<MD5> _hasher = new Lazy<MD5>(() => MD5.Create());
+
+        /// <summary>
         /// Return the hash code for this job definition.
         /// </summary>
         /// <param name="J"></param>
         /// <returns></returns>
-        public static int Hash (this AtlasJob J)
+        public static string Hash (this AtlasJob J)
         {
-            return J.Print().GetHashCode();
+            var jobspec = J.Print();
+
+            // Convert the input string to a byte array and compute the hash.
+            byte[] data = _hasher.Value.ComputeHash(Encoding.UTF8.GetBytes(jobspec));
+            var sBuilder = data.Where((x,i) => i % 4 == 0).Aggregate(new StringBuilder(), (bld, d) => { bld.Append(d.ToString("X2")); return bld; });
+
+            Trace.WriteLine($"Hash {sBuilder.ToString()} for job spec {jobspec}");
+            return sBuilder.ToString();
         }
 
         /// <summary>

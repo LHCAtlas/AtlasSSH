@@ -60,18 +60,27 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
-        public void HashConstantEverywhere()
+        public void StableHash()
         {
-            var s = "hi there dude";
-            Assert.AreEqual(1715311051, s.GetHashCode());
+            var j = new AtlasJob() { Name = "DiVertAnalysis", Version = 22 };
+            var h = j.Hash();
+            Assert.AreEqual("3B233454", h);
         }
 
         [TestMethod]
-        public void HashInTwoStrings()
+        public void HashTheSame()
         {
-            var s1 = "hi there fork";
-            var s2 = "hi there fork";
-            Assert.AreEqual(s1.GetHashCode(), s2.GetHashCode());
+            var j1 = new AtlasJob() { Name = "DiVertAnalysis", Version = 22 };
+            var j2 = new AtlasJob() { Name = "DiVertAnalysis", Version = 22 };
+            Assert.AreEqual(j1.Hash(), j2.Hash());
+        }
+
+        [TestMethod]
+        public void HashNotSame()
+        {
+            var j1 = new AtlasJob() { Name = "DiVertAnalysiss", Version = 22 };
+            var j2 = new AtlasJob() { Name = "DiVertAnalysis", Version = 22 };
+            Assert.AreNotEqual(j1.Hash(), j2.Hash());
         }
     }
 }

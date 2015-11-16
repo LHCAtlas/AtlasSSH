@@ -56,7 +56,7 @@ namespace AtlasWorkFlows.Jobs
             }
 
             // Done. Combine into a single string and check length!
-            var dsNew = scopeDSName + "." + dsParts.AsSingleString(".") + "." + job.Name + "_v" + job.Version + "_" + job.Hash().AsPositiveNumber();
+            var dsNew = $"{scopeDSName}.{dsParts.AsSingleString(".")}.{job.Name}_v{job.Version}_{job.Hash()}";
             while ((dsNew + "_hist-output.root/").Length > 133)
             {
                 var oneLess = dsNew.RemoveATag();
