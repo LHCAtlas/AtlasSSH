@@ -24,7 +24,7 @@ namespace AtlasWorkFlows.Jobs
             // Remove the scope if it is there.
             var result = orignalDSName.RemoveBefore(":");
 
-            // Split the dataset into its consituant parts.
+            // Split the dataset into its constituent parts.
             var dsParts = result.Split('.').ToList();
 
             // If the first item in the list is a user, remove that and the next item.
@@ -48,7 +48,7 @@ namespace AtlasWorkFlows.Jobs
                 dsParts.Replace(containsTID, minusTID);
             }
 
-            // Ok, if the second guy is a number, then it is a run number. That means the first one is almost certianly a scope. So remove it.
+            // Ok, if the second guy is a number, then it is a run number. That means the first one is almost certainly a scope. So remove it.
             int runNumber = 0;
             if (dsParts.Count > 1 && int.TryParse(dsParts[1], out runNumber))
             {
