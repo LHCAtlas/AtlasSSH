@@ -72,4 +72,15 @@ Development
 
 Make sure the version numbers in the nuspec and psd1 file's track.
 Run nuget pack from the PSAtlasDatasetCommands directory after building in release mode.
-Upload to myget (or wherever).
+Upload to myget (or wherever) for the Powershell commands.
+
+Building the library
+====================
+
+Make sure to build in release mode.
+
+Using powershell, from the AtlasWorkflows directory:
+
+    nuget pack -IncludeReferencedProjects -Prop Configuration=Release
+	nuget push AtlasSSH.XXX.nupkg
+

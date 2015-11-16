@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("AtlasWorkFlows")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Allows user to download datasets from the GRID and run jobs on the GRID. Geared towards use at ATLAS, but no reason it can't be adapted for other experiments.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Gordon Watts")]
 [assembly: AssemblyProduct("AtlasWorkFlows")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]

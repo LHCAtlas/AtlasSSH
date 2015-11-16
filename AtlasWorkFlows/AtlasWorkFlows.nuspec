@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>AtlasSSH</id>
+    <version>$version$</version>
+    <title>Atlas SSH</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/LHCAtlas/AtlasSSH/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>Library supports datasets and GRID jobs</releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <tags>GRID Atlas LHC CERN</tags>
+  </metadata>
+</package>
