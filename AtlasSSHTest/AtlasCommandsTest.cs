@@ -221,6 +221,36 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        public void downloadDSSelectionWithSlash()
+        {
+            var info = util.GetUsernameAndPassword();
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                s
+                    .ExecuteCommand("rm -rf /tmp/usergwattstempdataShort")
+                    .setupATLAS()
+                    .setupRucio(info.Item2)
+                    .VomsProxyInit("atlas")
+                    .DownloadFromGRID("user.gwatts:user.gwatts.301295.EVNT.1/", "/tmp/usergwattstempdataShort", fileNameFilter: files =>
+                    {
+                        Assert.AreEqual(10, files.Length);
+                        return files.OrderBy(f => f).Take(1).ToArray();
+                    });
+
+                // Now, check!
+                var foundfiles = new List<string>();
+                s.ExecuteCommand("find /tmp/usergwattstempdataShort -type f", l => foundfiles.Add(l));
+
+                foreach (var fname in foundfiles)
+                {
+                    Console.WriteLine("-> " + fname);
+                }
+
+                Assert.AreEqual(1, foundfiles.Count);
+            }
+        }
+
+        [TestMethod]
         public void setupGoodRcRelease()
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()

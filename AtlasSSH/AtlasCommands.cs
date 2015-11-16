@@ -201,7 +201,7 @@ namespace AtlasSSH
             }
 
             // Create a file that contains all the files we want to download up on the host.
-            var fileListName = string.Format("/tmp/{0}.filelist", datasetName);
+            var fileListName = string.Format("/tmp/{0}.filelist", datasetName.SantizeDSName());
             connection.ExecuteCommand("rm -rf " + fileListName);
             connection.Apply(goodFiles, (c, fname) => c.ExecuteCommand(string.Format("echo {0} >> {1}", fname, fileListName)));
 

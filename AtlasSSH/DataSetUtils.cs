@@ -17,6 +17,11 @@ namespace AtlasSSH
                 dsname = dsname.Substring(scopeMarker + 1);
             }
 
+            if (dsname.EndsWith("/"))
+            {
+                dsname = dsname.Substring(0, dsname.Length - 1);
+            }
+
             return dsname;
         }
     }
