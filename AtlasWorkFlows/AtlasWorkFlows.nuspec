@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Library supports datasets and GRID jobs</releaseNotes>
+    <releaseNotes>Library supports datasets and GRID jobs; better cleanup of Dataset names</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>GRID Atlas LHC CERN</tags>
   </metadata>
