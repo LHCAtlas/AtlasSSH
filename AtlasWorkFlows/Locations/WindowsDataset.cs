@@ -178,8 +178,13 @@ namespace AtlasWorkFlows.Locations
             var d = BuildDSRootDirectory(dsname);
             if (!d.Exists)
             {
-                d.Create();
-                UpdateContentsFile(dsname);
+                try {
+                    d.Create();
+                    UpdateContentsFile(dsname);
+                } catch (Exception e)
+                {
+                    throw new IOException($"I/O Failure while trying to create dataset directory ({d.FullName}) and update file content: {e.Message}", e);
+                }
             }
             return d;
         }
