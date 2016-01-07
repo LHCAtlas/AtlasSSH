@@ -69,4 +69,62 @@ namespace AtlasWorkFlows.Jobs
         public AtlasJob[] Jobs { get; set; }
         public SubmissionMachine[] machines { get; set; }
     }
+
+    public static class JobDataStructuresUtils
+    {
+        /// <summary>
+        /// Set the name and version of the job.
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static AtlasJob NameVersionRelease(this AtlasJob job, string name, int version, string release)
+        {
+            job.Name = name;
+            job.Version = version;
+            job.Release = new Release() { Name = release };
+            return job;
+        }
+
+        /// <summary>
+        /// Add a SC package onto the list so it can be checked out before running.
+        /// </summary>
+        /// <param name="job">The job we should add a package to</param>
+        /// <param name="packageName">The source control path to the package</param>
+        /// <param name="SCTag">The source control tag. If it is blank, then the version associated with the release is checked out</param>
+        /// <returns></returns>
+        public static AtlasJob Package(this AtlasJob job, string packageName, string SCTag = "")
+        {
+            job.Packages = job.Packages
+                .Append(new Package() { Name = packageName, SCTag = SCTag });
+
+            return job;
+        }
+
+        /// <summary>
+        /// Add a new command into the job.
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="commandLine"></param>
+        /// <returns></returns>
+        public static AtlasJob Command(this AtlasJob job, string commandLine)
+        {
+            job.Commands = job.Commands
+                .Append(new Command() { CommandLine = commandLine });
+            return job;
+        }
+
+        /// <summary>
+        /// Add the submit command to the atlas job.
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="commandLine"></param>
+        /// <returns></returns>
+        public static AtlasJob SubmitCommand(this AtlasJob job, string commandLine)
+        {
+            job.SubmitCommand = new Submit() { SubmitCommand = new Jobs.Command() { CommandLine = commandLine } };
+            return job;
+        }
+    }
 }
