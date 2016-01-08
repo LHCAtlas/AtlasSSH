@@ -63,6 +63,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="GRIDDatasetLocatorTest.cs" />
+    <Compile Include="Jobs\AtlasJobEnvrionmentTest.cs" />
     <Compile Include="Jobs\DatasetTest.cs" />
     <Compile Include="Jobs\JobDataStructuresTest.cs" />
     <Compile Include="Jobs\JobParserTest.cs" />

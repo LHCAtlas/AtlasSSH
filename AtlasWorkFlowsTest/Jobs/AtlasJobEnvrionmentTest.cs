@@ -1,26 +1,37 @@
-﻿using AtlasWorkFlows.Jobs;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using static AtlasWorkFlows.Jobs.AtlasJobEnvrionmentUtils;
+
 namespace AtlasWorkFlowsTest.Jobs
 {
     [TestClass]
-    public class JobDataStructuresTest
+    public class AtlasJobEnvrionmentTest
     {
         [TestMethod]
-        public void BuildJobFunctionally()
+        public void GetCleanEnvironment()
         {
-            var job = new AtlasJob()
+            var e = CleanAtlasJobEnvrionment;
+            Assert.IsNotNull(e);
+            Assert.IsNull(e.Job);
+        }
+
+        [TestMethod]
+        public void BuildJobFunctionality()
+        {
+            var e = CleanAtlasJobEnvrionment
                 .NameVersionRelease("DiVertAnalysis", 3, "2.3.32")
                 .Package("JetSelectorTools")
                 .Package("atlasphys-exo/Physics/Exotic/UEH/DisplacedJets/Run2/AnalysisCode/trunk/DiVertAnalysis", "248132")
                 .Command("grep -v \"emf < 0.05\" JetSelectorTools/Root/JetCleaningTool.cxx > JetSelectorTools/Root/JetCleaningTool-New.cxx")
                 .Command("mv JetSelectorTools/Root/JetCleaningTool-New.cxx JetSelectorTools/Root/JetCleaningTool.cxx")
                 .SubmitCommand("DiVertAnalysisRunner -EventLoopDriver GRID *INPUTDS* -ELGRIDOutputSampleName *OUTPUTDS* -WaitTillDone FALSE -isLLPMC true");
+
+            var job = e.Job;
 
             Assert.AreEqual("DiVertAnalysis", job.Name);
             Assert.AreEqual(3, job.Version);
@@ -40,12 +51,19 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
-        public void JobNullForNameAndRelease()
+        public void CopyNotModify()
         {
-            AtlasJob j = null;
-            j = j.NameVersionRelease("hi", 10, "there");
-            Assert.IsNotNull(j);
-            Assert.AreEqual("hi", j.Name);
+            var eBase = CleanAtlasJobEnvrionment
+                .NameVersionRelease("DiVertAnalysis", 3, "2.3.32")
+                .Package("JetSelectorTools");
+
+            var e1 = eBase
+                .Package("atlasphys-exo/Physics/Exotic/UEH/DisplacedJets/Run2/AnalysisCode/trunk/DiVertAnalysis", "248132");
+
+            Assert.AreEqual(1, eBase.Job.Packages.Length);
+            Assert.AreEqual(2, e1.Job.Packages.Length);
         }
     }
+
+    
 }

@@ -18,16 +18,30 @@ namespace AtlasWorkFlows.Jobs
         /// The source control tag
         /// </summary>
         public string SCTag { get; set; }
+
+        internal Package Clone()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class Command
     {
         public string CommandLine { get; set; }
+
+        internal Command Clone()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class Submit
     {
         public Command SubmitCommand { get; set; }
+        internal Submit Clone()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -36,6 +50,11 @@ namespace AtlasWorkFlows.Jobs
     public class Release
     {
         public string Name { get; set; }
+
+        internal Release Clone()
+        {
+            throw new NotImplementedException();
+        }
     }
 
 
@@ -50,6 +69,23 @@ namespace AtlasWorkFlows.Jobs
         public Package[] Packages { get; set; }
         public Command[] Commands { get; set; }
         public Submit SubmitCommand { get; set; }
+
+        /// <summary>
+        /// Do a deep copy of the job.
+        /// </summary>
+        /// <returns></returns>
+        internal AtlasJob Clone()
+        {
+            var r = new AtlasJob ();
+
+            r.Name = Name;
+            r.Version = r.Version;
+            r.Release = r.Release.Clone();
+            r.Packages = r.Packages.Select(p => p.Clone()).ToArray();
+            r.Commands = r.Commands.Select(c => c.Clone()).ToArray();
+            r.SubmitCommand = r.SubmitCommand.Clone();
+            return r;
+        }
     }
 
     /// <summary>
@@ -81,6 +117,7 @@ namespace AtlasWorkFlows.Jobs
         /// <returns></returns>
         public static AtlasJob NameVersionRelease(this AtlasJob job, string name, int version, string release)
         {
+            job = job == null ? new AtlasJob() : job;
             job.Name = name;
             job.Version = version;
             job.Release = new Release() { Name = release };
@@ -96,6 +133,7 @@ namespace AtlasWorkFlows.Jobs
         /// <returns></returns>
         public static AtlasJob Package(this AtlasJob job, string packageName, string SCTag = "")
         {
+            job = job == null ? new AtlasJob() : job;
             job.Packages = job.Packages
                 .Append(new Package() { Name = packageName, SCTag = SCTag });
 
@@ -110,6 +148,7 @@ namespace AtlasWorkFlows.Jobs
         /// <returns></returns>
         public static AtlasJob Command(this AtlasJob job, string commandLine)
         {
+            job = job == null ? new AtlasJob() : job;
             job.Commands = job.Commands
                 .Append(new Command() { CommandLine = commandLine });
             return job;
@@ -123,8 +162,11 @@ namespace AtlasWorkFlows.Jobs
         /// <returns></returns>
         public static AtlasJob SubmitCommand(this AtlasJob job, string commandLine)
         {
+            job = job == null ? new AtlasJob() : job;
             job.SubmitCommand = new Submit() { SubmitCommand = new Jobs.Command() { CommandLine = commandLine } };
             return job;
         }
     }
+
+
 }
