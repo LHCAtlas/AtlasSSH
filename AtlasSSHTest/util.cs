@@ -220,6 +220,59 @@ Total files : 10
 Total size : 2693475134
 ");
             }
+            else if (dsname == "mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
+            {
+                return dict
+                    .AddEntry("rucio list-files mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282",
+                    @"+---------------------------------------------+--------------------------------------+-------------+------------+----------+
+| SCOPE:NAME                                  | GUID                                 | ADLER32     | FILESIZE   |   EVENTS |
+|---------------------------------------------+--------------------------------------+-------------+------------+----------|
+| mc15_13TeV:AOD.07483884._000001.pool.root.1 | D9F3F7A4-352B-1A4A-8547-5C3544D11FE5 | ad:753349a4 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000002.pool.root.1 | 06537715-8719-6C45-BB57-28D129B8A769 | ad:2786b7f7 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000003.pool.root.1 | 306775A9-EE22-F549-95DE-9584CAF3FB9D | ad:2d9d8c63 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000004.pool.root.1 | A5F03A54-975F-EC4C-B271-1868D40FB662 | ad:827317d0 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000005.pool.root.1 | 287E5D10-DDE0-3643-9088-F1182B2144C4 | ad:8b7e6c4f | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000006.pool.root.1 | 55A558B1-D02B-A648-9B80-02AC9933A9AB | ad:75b1fb76 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000007.pool.root.1 | B7D7D8DF-D638-2646-964B-C8955F0B1352 | ad:2b1b278e | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000008.pool.root.1 | FFAD6EC3-9A51-1D47-9AC8-15AC32E91949 | ad:23b669e7 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000009.pool.root.1 | 2AD25562-5FB1-0540-B0C6-7E4F1F8C21AA | ad:fbf827eb | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000010.pool.root.1 | 10993A2F-4637-F748-A964-513B31729FF1 | ad:f84527ff | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000011.pool.root.1 | 68DD962E-E498-014E-B115-CCE9E9740F47 | ad:689d3658 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000012.pool.root.1 | 83F703DB-E5A0-3C4B-A6F6-3CA1A359D47F | ad:b2c9284f | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000013.pool.root.1 | 6B830295-9514-C643-993F-ABB94A5C5F16 | ad:b053a9dc | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000014.pool.root.1 | 38FBDD38-D439-A64E-9E52-89093D3E8928 | ad:5678d3ee | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000015.pool.root.1 | 74B8B748-3A33-2F40-A5F4-AEFCE0D3256C | ad:0f663851 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000016.pool.root.1 | 9F06C466-71BC-1B4E-8793-426F14F44B57 | ad:3c2ca059 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000017.pool.root.1 | F278E911-6851-3C42-BFB4-9E0794437EA3 | ad:befc131a | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000018.pool.root.1 | EA2D1803-A70D-5249-A4C9-8D98095C2F4A | ad:06431aac | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000019.pool.root.1 | FE25E88E-AC1E-2843-BA66-62F81EE9F9DF | ad:6f50757a | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000020.pool.root.1 | AD608786-A470-054B-89DB-85689D612253 | ad:a669a5fe | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000021.pool.root.1 | B209EE55-BAA3-074F-9307-C93334059A1B | ad:c86cdbb3 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000022.pool.root.1 | 2C98061E-74C2-0A47-9637-6D074DADB7C9 | ad:85cc7fbc | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000023.pool.root.1 | AC09A00D-BEA1-B841-81AA-0AD9A647605E | ad:333286ee | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000024.pool.root.1 | 0B837A30-9ABB-684D-8E30-AB5BA09FDCE7 | ad:77bf8f33 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000025.pool.root.1 | 974F8345-BC2E-E84E-9390-5C5DE4BE9AD2 | ad:504e04fe | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000026.pool.root.1 | FC513715-B597-2B41-A977-99EBA8E26A97 | ad:3fc9c3e1 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000027.pool.root.1 | 1A2A3874-A3FD-0B47-BA84-4EAC357F577C | ad:19b3c548 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000028.pool.root.1 | 7705072C-4272-B642-B37D-6701E0F92613 | ad:acbc3ced | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000029.pool.root.1 | 71A06BAB-08A2-1A40-AF29-B1509885333A | ad:1a37801a | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000030.pool.root.1 | 8523FB3F-31BA-904F-B1EE-7FC2F2D3AE39 | ad:550f08ec | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000031.pool.root.1 | 2DFEAB42-AD16-7D46-B124-71DF119B01A1 | ad:8bfd2c81 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000033.pool.root.1 | 01BD2B71-E010-384B-920C-EA30225026EC | ad:aa1770af | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000036.pool.root.1 | 88D70585-ADDC-C242-942A-13A03842ABB7 | ad:0400ad71 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000037.pool.root.1 | 7FB4DCD9-D90F-2C47-9E6B-82C58C6AE31D | ad:b7332d60 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000038.pool.root.1 | C59DE348-8494-284E-82B5-E3127E3E9D42 | ad:7026e741 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000039.pool.root.1 | C457114E-B9CB-C74C-AD32-05ED9625F5B7 | ad:f06dc531 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000040.pool.root.1 | 2ED9F860-9ABE-AD4A-81F6-733DB6C36D71 | ad:c688e9e4 | 2.2 GB     |     5000 |
+| mc15_13TeV:AOD.07483884._000041.pool.root.1 | 1C4DE59E-28B3-1A4E-9441-3B67D806FB46 | ad:22030cb4 | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000042.pool.root.1 | 95587D17-0256-824C-8D2D-7D83804F6539 | ad:21c12fff | 4.4 GB     |    10000 |
+| mc15_13TeV:AOD.07483884._000043.pool.root.1 | 868E3A37-C74C-8C47-ACCA-776ACDC55721 | ad:b78a21ae | 4.4 GB     |    10000 |
++---------------------------------------------+--------------------------------------+-------------+------------+----------+
+Total files : 40
+Total size : 173359640796
+Total events : 395000
+");
+            }
             else
             {
                 Assert.IsTrue(false, "Unknown dataset: " + dsname);

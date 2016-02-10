@@ -244,7 +244,7 @@ namespace AtlasSSH
         public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow =null)
         {
             var fileNameList = new List<string>();
-            var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +\S* +\| +\S* +\| +\S* +\| +\S* +\|");
+            var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +[^\|]+\| +[^\|]+\|");
             bool bad = false;
             connection.ExecuteCommand(string.Format("rucio list-files {0}", datasetName), l =>
             {
