@@ -236,11 +236,6 @@ namespace AtlasSSH
             }
         }
 
-        void Value_Downloading(object sender, Renci.SshNet.Common.ScpDownloadEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// We make sure to shut down everything attached to us
         /// </summary>
