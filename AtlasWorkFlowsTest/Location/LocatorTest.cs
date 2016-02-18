@@ -35,6 +35,15 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void NormalCall()
+        {
+            // Make sure it doesn't break.
+            var location = new Locator();
+            var ls = location.FindBestLocations();
+            Assert.IsNotNull(ls);
+        }
+
+        [TestMethod]
         public void CERNNotAtCERN()
         {
             AtlasWorkFlows.Utils.IPLocationTests.SetIpName("bogus.nytimes.com");

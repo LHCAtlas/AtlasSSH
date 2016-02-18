@@ -17,6 +17,10 @@ namespace AtlasWorkFlows.Utils
         static bool _ipNameFound = false;
         static string _ipName;
 
+        /// <summary>
+        /// For testing
+        /// </summary>
+        /// <param name="name"></param>
         static internal void SetIpName (string name)
         {
             _ipName = name;
@@ -40,20 +44,30 @@ namespace AtlasWorkFlows.Utils
             if (_ipNameFound)
                 return _ipName;
 
-            // Do the look up. We have to be a little careful here since the HostName isn't (often) what we want.
-            var address = Dns.GetHostAddresses(Dns.GetHostName())
-                .Where(addr => !IPAddress.IsLoopback(addr))
-                .Select(addr => Dns.GetHostEntry(addr))
-                .FirstOrDefault();
-
-            if (address == null)
+            // We have to get the IP address that the external world sees, rather than the one we see.
+            // This is to deal with internal DNS reverse lookup problems.
+            using (var wc = new WebClient())
             {
-                Trace.WriteLine("Unable to find any DNS name for this computer.", "FindLocalIpName");
-                return "";
+                var iptext = wc.DownloadString("http://bot.whatismyipaddress.com/");
+                Trace.WriteLine($"IP address seen by external world is {iptext}.");
+
+                // Do the look up. We have to be a little careful here since the HostName isn't (often) what we want.
+                var address = Dns.GetHostAddresses(iptext)
+                    .Where(addr => !IPAddress.IsLoopback(addr))
+                    .Select(addr => Dns.GetHostEntry(addr))
+                    .FirstOrDefault();
+
+                if (address == null)
+                {
+                    Trace.WriteLine("Unable to find any DNS name for this computer.", "FindLocalIpName");
+                    return "";
+                }
+
+                Trace.WriteLine(string.Format("DNS name for this computer is '{0}'", address.HostName), "FindLocalIpName");
+                return address.HostName;
             }
 
-            Trace.WriteLine(string.Format("DNS name for this computer is '{0}'", address.HostName), "FindLocalIpName");
-            return address.HostName;
+
 
 #if false
             var name = Dns.GetHostName();
