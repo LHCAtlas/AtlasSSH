@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DNS.Client;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -36,6 +37,8 @@ namespace AtlasWorkFlows.Utils
             _ipName = null;
         }
 
+        private static Lazy<DnsClient> _clientDNS = new Lazy<DnsClient>(() => new DnsClient("8.8.8.8"));
+
         /// <summary>
         /// Fetch the host IP name
         /// </summary>
@@ -48,9 +51,10 @@ namespace AtlasWorkFlows.Utils
             // This is to deal with internal DNS reverse lookup problems.
             using (var wc = new WebClient())
             {
+                // Get the external ip address. This tells us where we are located, generally.
                 string iptext = "";
                 try {
-                    iptext = wc.DownloadString("http://bot.whatismyipaddress.com/");
+                    iptext = wc.DownloadString("http://ipv4bot.whatismyipaddress.com/");
                     Trace.WriteLine($"IP address seen by external world is {iptext}.", "FindLocalIpName");
                 } catch (WebException)
                 {
@@ -58,11 +62,19 @@ namespace AtlasWorkFlows.Utils
                     return "";
                 }
 
-                // Do the look up. We have to be a little careful here since the HostName isn't (often) what we want.
-                var address = Dns.GetHostAddresses(iptext)
-                    .Where(addr => !IPAddress.IsLoopback(addr))
-                    .Select(addr => Dns.GetHostEntry(addr))
-                    .FirstOrDefault();
+                // Next, do a reverse lookup in DNS.
+                string rs = "";
+                try {
+                    rs = _clientDNS.Value.Reverse(iptext);
+                    Trace.WriteLine($"Reverse lookup of ip address is {rs}.", "FindLocalIpName");
+                    return rs;
+                } catch
+                {
+
+                }
+
+                // Can we get something out of windows for this now?
+                var address = Dns.GetHostEntry(iptext);
 
                 if (address == null)
                 {
@@ -73,8 +85,6 @@ namespace AtlasWorkFlows.Utils
                 Trace.WriteLine(string.Format("DNS name for this computer is '{0}'", address.HostName), "FindLocalIpName");
                 return address.HostName;
             }
-
-
 
 #if false
             var name = Dns.GetHostName();
