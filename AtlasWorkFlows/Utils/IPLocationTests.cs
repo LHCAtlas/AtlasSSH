@@ -48,8 +48,15 @@ namespace AtlasWorkFlows.Utils
             // This is to deal with internal DNS reverse lookup problems.
             using (var wc = new WebClient())
             {
-                var iptext = wc.DownloadString("http://bot.whatismyipaddress.com/");
-                Trace.WriteLine($"IP address seen by external world is {iptext}.");
+                string iptext = "";
+                try {
+                    iptext = wc.DownloadString("http://bot.whatismyipaddress.com/");
+                    Trace.WriteLine($"IP address seen by external world is {iptext}.");
+                } catch (WebException)
+                {
+                    Trace.WriteLine("Unable to reach whatsmyipaddress.com - perhaps not connected to the internet?");
+                    return "";
+                }
 
                 // Do the look up. We have to be a little careful here since the HostName isn't (often) what we want.
                 var address = Dns.GetHostAddresses(iptext)
