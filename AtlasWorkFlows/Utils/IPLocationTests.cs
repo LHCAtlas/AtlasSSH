@@ -51,10 +51,10 @@ namespace AtlasWorkFlows.Utils
                 string iptext = "";
                 try {
                     iptext = wc.DownloadString("http://bot.whatismyipaddress.com/");
-                    Trace.WriteLine($"IP address seen by external world is {iptext}.");
+                    Trace.WriteLine($"IP address seen by external world is {iptext}.", "FindLocalIpName");
                 } catch (WebException)
                 {
-                    Trace.WriteLine("Unable to reach whatsmyipaddress.com - perhaps not connected to the internet?");
+                    Trace.WriteLine("Unable to reach whatsmyipaddress.com - perhaps not connected to the Internet?", "FindLocalIpName");
                     return "";
                 }
 

@@ -51,7 +51,7 @@ Windows 10:
 There is a onetime setup you must do in order to declare the myget feed where these commands are published to
 one-get:
 
-  Register-PSRepository -name "atlas-myget" -source https://www.myget.org/F/gwatts-powershell/api/v2
+  Register-PSRepository -name "atlas-myget" -source https://www.myget.org/F/gwatts-powershell/api/v2 -InstallationPolicy Trusted
 
 That done, you should now be able to locate the module for installation:
 
