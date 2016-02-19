@@ -35,7 +35,7 @@ namespace AtlasSSH
             Thread.Sleep(msToWaitAfterText);
 
             // Sometimes two lines are sent. No idea why.
-            var r = shell.ReadLine();
+            var r = shell.ReadLine(TimeSpan.FromMilliseconds(1));
             if (r != null)
             {
                 return r;
@@ -66,7 +66,7 @@ namespace AtlasSSH
                 }
 
                 string line;
-                while ((line = shell.ReadLine()) != null)
+                while ((line = shell.ReadLine(TimeSpan.FromMilliseconds(1))) != null)
                 {
                     Trace.WriteLine("WaitTillPromptText: read text: " + line, "SSHConnection");
                 }

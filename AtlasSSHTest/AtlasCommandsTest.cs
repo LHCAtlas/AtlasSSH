@@ -101,6 +101,19 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
 #endif
 
         [TestMethod]
+        public void RunATLASSetup()
+        {
+            // Dirt simple test to make sure setup ATLAS actually works.
+            // Seen some failures with new versions of SSH.NET in the field.
+            var info = util.GetUsernameAndPassword();
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                s
+                    .setupATLAS();
+            }
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
         public void downloadBadDS()
         {

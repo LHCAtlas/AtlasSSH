@@ -11,18 +11,18 @@ namespace AtlasWorkFlowsTest
     [TestClass]
     public class GRIDDatasetLocatorTest
     {
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void AskForWSDataset()
-        {
-            GRIDDatasetLocator.FetchDatasetUris(" ");
-        }
-
         [TestCleanup]
         public void CleanupConfig()
         {
             // Reset where we get the locations from!
             Locator._getLocations = null;
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void AskForWSDataset()
+        {
+            GRIDDatasetLocator.FetchDatasetUris(" ");
         }
 
         [TestMethod]
