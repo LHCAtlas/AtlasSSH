@@ -194,12 +194,6 @@ namespace AtlasSSH
                 ? fileNameFilter(fileNameList)
                 : fileNameList;
 
-            // If we have no files to download, then we are totally done!
-            if (goodFiles.Length == 0)
-            {
-                return connection;
-            }
-
             // Create a file that contains all the files we want to download up on the host.
             var fileListName = string.Format("/tmp/{0}.filelist", datasetName.SantizeDSName());
             connection.ExecuteCommand("rm -rf " + fileListName);
@@ -209,6 +203,14 @@ namespace AtlasSSH
             connection.ExecuteCommand(string.Format("mkdir -p {0}", localDirectory),
                 l => { throw new ArgumentException("Error trying to create directory {0} for dataset on remote machine.", localDirectory); },
                 secondsTimeout: 20);
+
+            // If we have no files to download, then we are totally done!
+            // We do this after the directory is created, so if there are no files, a check still
+            // works.
+            if (goodFiles.Length == 0)
+            {
+                return connection;
+            }
 
             // Next, do the download
             response.Clear();
@@ -236,7 +238,7 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Returns the list of files associated with a dataset.
+        /// Returns the list of files associated with a dataset, as fetched from the grid.
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="datasetName"></param>

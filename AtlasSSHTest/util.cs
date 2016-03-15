@@ -273,6 +273,18 @@ Total size : 173359640796
 Total events : 395000
 ");
             }
+            else if (dsname == "user.gwatts.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.DAOD_EXOT15.r6765_r6282_p2452.DiVertAnalysis_v4_539A3CCD_hist")
+            {
+                return dict
+                    .AddEntry("rucio list-files user.gwatts.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.DAOD_EXOT15.r6765_r6282_p2452.DiVertAnalysis_v4_539A3CCD_hist",
+                    @"+---------------------------------------------+--------------------------------------+-------------+------------+----------+
+| SCOPE:NAME                                  | GUID                                 | ADLER32     | FILESIZE   |   EVENTS |
+|---------------------------------------------+--------------------------------------+-------------+------------+----------|
++---------------------------------------------+--------------------------------------+-------------+------------+----------+
+Total files : 0
+Total size : 0
+");
+            }
             else
             {
                 Assert.IsTrue(false, "Unknown dataset: " + dsname);

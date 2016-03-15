@@ -164,6 +164,26 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        public void getZeroDSFileList()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRucioListFiles("user.gwatts.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.DAOD_EXOT15.r6765_r6282_p2452.DiVertAnalysis_v4_539A3CCD_hist")
+                );
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .FilelistFromGRID("user.gwatts.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.DAOD_EXOT15.r6765_r6282_p2452.DiVertAnalysis_v4_539A3CCD_hist");
+
+            foreach (var fname in r)
+            {
+                Console.WriteLine(fname);
+            }
+            Assert.AreEqual(0, r.Length);
+        }
+
+        [TestMethod]
         public void getDSFileListT()
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()
