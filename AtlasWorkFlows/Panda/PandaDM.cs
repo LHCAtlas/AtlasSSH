@@ -101,7 +101,7 @@ namespace AtlasWorkFlows.Panda
         public int totevrem { get; set; }
         public int? cputime { get; set; }
         public string splitrule { get; set; }
-        public int eventservice { get; set; }
+        public string eventservice { get; set; }
         public string errordialog { get; set; }
         public int parent_tid { get; set; }
         public string superstatus { get; set; }

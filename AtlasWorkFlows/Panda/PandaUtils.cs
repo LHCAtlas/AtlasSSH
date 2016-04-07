@@ -65,7 +65,15 @@ namespace AtlasWorkFlows.Panda
                 {
                     using (var r = new StreamReader(rdr))
                     {
-                        return JsonConvert.DeserializeObject<PandaTask[]>(r.ReadToEnd());
+                        var text = r.ReadToEnd();
+                        try
+                        {
+                            return JsonConvert.DeserializeObject<PandaTask[]>(text);
+                        } catch (Exception e)
+                        {
+                            Console.WriteLine($"Error parsing JSON back from {url.OriginalString}. JSON was: '{text}'.");
+                            throw;
+                        }
                     }
                 }
             }
