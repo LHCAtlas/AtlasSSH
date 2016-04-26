@@ -21,6 +21,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             Locator._getLocations = null;
             Locator.SetLocationFilter(null);
+            AtlasWorkFlows.Utils.IPLocationTests.ResetIpName();
         }
 
         [TestMethod]
