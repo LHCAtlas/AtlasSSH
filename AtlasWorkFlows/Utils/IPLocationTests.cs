@@ -73,17 +73,23 @@ namespace AtlasWorkFlows.Utils
 
                 }
 
-                // Can we get something out of windows for this now?
-                var address = Dns.GetHostEntry(iptext);
-
-                if (address == null)
+                // Can we get something out of windows for this now?\
+                try
                 {
-                    Trace.WriteLine("Unable to find any DNS name for this computer.", "FindLocalIpName");
+                    var address = Dns.GetHostEntry(iptext);
+                    if (address == null)
+                    {
+                        Trace.WriteLine("Unable to find any DNS name for this computer.", "FindLocalIpName");
+                        return "";
+                    }
+
+                    Trace.WriteLine(string.Format("DNS name for this computer is '{0}'", address.HostName), "FindLocalIpName");
+                    return address.HostName;
+                } catch
+                {
+                    Trace.WriteLine($"Unable to reverse look up {iptext}.");
                     return "";
                 }
-
-                Trace.WriteLine(string.Format("DNS name for this computer is '{0}'", address.HostName), "FindLocalIpName");
-                return address.HostName;
             }
 
 #if false
