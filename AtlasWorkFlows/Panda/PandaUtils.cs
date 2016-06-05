@@ -71,7 +71,7 @@ namespace AtlasWorkFlows.Panda
                             return JsonConvert.DeserializeObject<PandaTask[]>(text);
                         } catch (Exception e)
                         {
-                            Console.WriteLine($"Error parsing JSON back from {url.OriginalString}. JSON was: '{text}'.");
+                            Console.WriteLine($"Error parsing JSON back from {url.OriginalString}. JSON was: '{text}' (error: {e.Message}).");
                             throw;
                         }
                     }
