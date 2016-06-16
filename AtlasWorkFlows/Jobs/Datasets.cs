@@ -18,11 +18,20 @@ namespace AtlasWorkFlows.Jobs
         /// </summary>
         /// <param name="job"></param>
         /// <param name="orignalDSName"></param>
-        /// <returns></returns>
+        /// <returns>
+        /// Use the name of the job and the version number as part of the name
+        /// Use a hash of the commands incase the user changes the commands but forgets to change the version number
+        /// Truncate the ds name if it gets too long (rucio has some limits)
+        /// Make sure that the uniqueness of the lost dataset name is not lost.
+        /// </returns>
         public static string ResultingDatasetName (this AtlasJob job, string orignalDSName, string scopeDSName)
         {
             // Remove the scope if it is there.
             var result = orignalDSName.RemoveBefore(":");
+
+            // Grab a hash to deal with bits we are dropping (for uniqueness)
+            var originalHash = result.GetHashCode();
+            originalHash = originalHash < 0 ? -originalHash : originalHash;
 
             // Split the dataset into its constituent parts.
             var dsParts = result.Split('.').ToList();
@@ -56,7 +65,7 @@ namespace AtlasWorkFlows.Jobs
             }
 
             // Done. Combine into a single string and check length!
-            var dsNew = $"{scopeDSName}.{dsParts.AsSingleString(".")}.{job.Name}_v{job.Version}_{job.Hash()}";
+            var dsNew = $"{scopeDSName}.{dsParts.AsSingleString(".")}.{job.Name}_v{job.Version}_{job.Hash()}_{originalHash}";
             while ((dsNew + "_hist-output.root/").Length > 133)
             {
                 var oneLess = dsNew.RemoveATag();
