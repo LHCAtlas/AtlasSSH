@@ -82,5 +82,5 @@ Make sure to build in release mode.
 Using powershell, from the AtlasWorkflows directory:
 
     nuget pack -IncludeReferencedProjects -Prop Configuration=Release .\AtlasWorkflows.csproj
-	nuget push AtlasSSH.XXX.nupkg
+	nuget push AtlasSSH.XXX.nupkg -Source https://www.nuget.org
 
