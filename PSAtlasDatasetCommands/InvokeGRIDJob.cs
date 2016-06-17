@@ -2,6 +2,7 @@
 using AtlasWorkFlows.Jobs;
 using AtlasWorkFlows.Panda;
 using CredentialManagement;
+using Polly;
 using PSAtlasDatasetCommands.Utils;
 using System;
 using System.Collections.Generic;
@@ -91,11 +92,21 @@ namespace PSAtlasDatasetCommands
                         .SubmitJob(job, DatasetName, ds, DisplayStatus, failNow: () => Stopping);
 
                     // Try to find the job again. If this fails, then things are really bad!
-                    pandaJob = (ds + "/").FindPandaJobWithTaskName();
-                    if (pandaJob == null)
+                    var pandJobResult = Policy
+                        .Handle<InvalidOperationException>()
+                        .WaitAndRetry(new[]
+                        {
+                            TimeSpan.FromSeconds(30),
+                            TimeSpan.FromMinutes(1),
+                            TimeSpan.FromMinutes(2),
+                            TimeSpan.FromMinutes(2)
+                        }, (e, ts) => { WriteVerbose($"Failed to find the submitted panda job on bigpanda: {e.Message}"); })
+                        .ExecuteAndCapture(() => FindPandaJobForDS(ds));
+                    if (pandJobResult.Outcome != OutcomeType.Successful)
                     {
-                        throw new InvalidOperationException(string.Format("Unknown error - submitted job ({0},{1}) on dataset {2}, but no panda task found!", JobName, JobVersion, DatasetName));
+                        throw pandJobResult.FinalException;
                     }
+                    pandaJob = pandJobResult.Result;
                 }
 
                 // Return a helper obj that contains the info about this job that can be used by other commands.
@@ -106,6 +117,22 @@ namespace PSAtlasDatasetCommands
             {
                 Trace.Listeners.Remove(listener);
             }
+        }
+
+        /// <summary>
+        /// Do the panda task lookup. Throw if we can't find the job.
+        /// </summary>
+        /// <param name="ds"></param>
+        /// <returns></returns>
+        private PandaTask FindPandaJobForDS(string ds)
+        {
+            PandaTask pandaJob = (ds + "/").FindPandaJobWithTaskName();
+            if (pandaJob == null)
+            {
+                throw new InvalidOperationException(string.Format("Unknown error - submitted job ({0},{1}) on dataset {2}, but no panda task found!", JobName, JobVersion, DatasetName));
+            }
+
+            return pandaJob;
         }
 
         /// <summary>
