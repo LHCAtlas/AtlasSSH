@@ -79,6 +79,7 @@
     <Compile Include="Utils\Config.cs" />
     <Compile Include="Utils\DataSetUtils.cs" />
     <Compile Include="Utils\FileInfoUtils.cs" />
+    <Compile Include="Utils\Hash.cs" />
     <Compile Include="Utils\IPLocationTests.cs" />
   </ItemGroup>
   <ItemGroup>

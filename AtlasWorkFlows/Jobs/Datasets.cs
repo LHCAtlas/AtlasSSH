@@ -1,6 +1,8 @@
-﻿using CredentialManagement;
+﻿using AtlasWorkFlows.Utils;
+using CredentialManagement;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,24 +19,23 @@ namespace AtlasWorkFlows.Jobs
         /// Returns a dataset name that this job should produce given the original dataset name.
         /// </summary>
         /// <param name="job"></param>
-        /// <param name="orignalDSName"></param>
+        /// <param name="originalDSName"></param>
         /// <returns>
         /// Use the name of the job and the version number as part of the name
         /// Use a hash of the commands incase the user changes the commands but forgets to change the version number
         /// Truncate the ds name if it gets too long (rucio has some limits)
         /// Make sure that the uniqueness of the lost dataset name is not lost.
         /// </returns>
-        public static string ResultingDatasetName (this AtlasJob job, string orignalDSName, string scopeDSName)
+        public static string ResultingDatasetName (this AtlasJob job, string originalDSName, string scopeDSName)
         {
             // Remove the scope if it is there.
-            var result = orignalDSName.RemoveBefore(":");
+            var sanitizedDSName = originalDSName.RemoveBefore(":");
 
             // Grab a hash to deal with bits we are dropping (for uniqueness)
-            var originalHash = result.GetHashCode();
-            originalHash = originalHash < 0 ? -originalHash : originalHash;
+            var originalHash = sanitizedDSName.ComputeMD5Hash();
 
             // Split the dataset into its constituent parts.
-            var dsParts = result.Split('.').ToList();
+            var dsParts = sanitizedDSName.Split('.').ToList();
 
             // If the first item in the list is a user, remove that and the next item.
             if (dsParts[0] == "user")
@@ -72,11 +73,13 @@ namespace AtlasWorkFlows.Jobs
                 if (oneLess == dsNew)
                 {
                     StringBuilder bld = new StringBuilder();
-                    bld.AppendFormat("Dataset '{0}' is more than 133 characters after accounting for EventLoop naming (from ds '{1}'). It needs to be made shorter", dsNew, orignalDSName);
+                    bld.AppendFormat("Dataset '{0}' is more than 133 characters after accounting for EventLoop naming (from ds '{1}'). It needs to be made shorter", dsNew, originalDSName);
                     throw new ArgumentException(bld.ToString());
                 }
                 dsNew = oneLess;
             }
+
+            Trace.WriteLine($"Job {job.Name} v{job.Version} run on dataset {sanitizedDSName} will be sent to the dataset {dsNew}.");
 
             return dsNew;
         }
