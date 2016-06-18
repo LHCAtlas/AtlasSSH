@@ -21,7 +21,7 @@ namespace AtlasWorkFlows.Jobs
         {
             // do a deep copy
             var result = new AtlasJobEnvrionment();
-            result.Job = this.Job.Clone();
+            result.Job = this.Job?.Clone();
 
             // If asked, then we can modify this before it comes back (and avoid
             // the normal deep copy).

@@ -175,14 +175,6 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Sprache.ParseException))]
-        public void BadParseWithError3()
-        {
-            var s = "job(DiVert,22) { release(Base,1234) package(DiVertAnalysis,1234) submit(ls) } fork it over";
-            var j = JobParser.ParseJobFile.Parse(s);
-        }
-
-        [TestMethod]
         [ExpectedException(typeof(JobParseException))]
         public void BadParseFromFile()
         {

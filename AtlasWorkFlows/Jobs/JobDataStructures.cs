@@ -21,7 +21,7 @@ namespace AtlasWorkFlows.Jobs
 
         internal Package Clone()
         {
-            throw new NotImplementedException();
+            return new Package() { Name = this.Name, SCTag = this.SCTag };
         }
     }
 
@@ -31,7 +31,7 @@ namespace AtlasWorkFlows.Jobs
 
         internal Command Clone()
         {
-            throw new NotImplementedException();
+            return new Command() { CommandLine = this.CommandLine };
         }
     }
 
@@ -53,7 +53,7 @@ namespace AtlasWorkFlows.Jobs
 
         internal Release Clone()
         {
-            throw new NotImplementedException();
+            return new Release() { Name = this.Name };
         }
     }
 
@@ -79,11 +79,11 @@ namespace AtlasWorkFlows.Jobs
             var r = new AtlasJob ();
 
             r.Name = Name;
-            r.Version = r.Version;
-            r.Release = r.Release.Clone();
-            r.Packages = r.Packages.Select(p => p.Clone()).ToArray();
-            r.Commands = r.Commands.Select(c => c.Clone()).ToArray();
-            r.SubmitCommand = r.SubmitCommand.Clone();
+            r.Version = Version;
+            r.Release = Release?.Clone();
+            r.Packages = Packages?.Select(p => p.Clone()).ToArray();
+            r.Commands = Commands?.Select(c => c.Clone()).ToArray();
+            r.SubmitCommand = SubmitCommand?.Clone();
             return r;
         }
     }

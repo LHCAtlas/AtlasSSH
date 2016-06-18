@@ -25,6 +25,7 @@ namespace AtlasSSHTest
         /// entered them into the credential store.
         /// </summary>
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void KnownUserAndCTor()
         {
             var info = util.GetUsernameAndPassword();
@@ -32,6 +33,7 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void ListDirectory()
         {
             var info = util.GetUsernameAndPassword();
@@ -44,6 +46,7 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void PWDOutputAsExpected()
         {
             var info = util.GetUsernameAndPassword();
@@ -62,6 +65,7 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void ListDirectoryWithNoOutput()
         {
             var info = util.GetUsernameAndPassword();
@@ -109,6 +113,7 @@ namespace AtlasSSHTest
 #endif
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void copyRemoteDirectoryLocal()
         {
             var info = util.GetUsernameAndPassword();
@@ -145,6 +150,7 @@ namespace AtlasSSHTest
 
         [TestMethod]
         [ExpectedException(typeof(ScpException))]
+        [Ignore] // Because this requires real remote and is slow.
         public void copyBadRemoteDirectoryLocal()
         {
             var info = util.GetUsernameAndPassword();
@@ -163,6 +169,7 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void CopyTwice()
         {
             var info = util.GetUsernameAndPassword();

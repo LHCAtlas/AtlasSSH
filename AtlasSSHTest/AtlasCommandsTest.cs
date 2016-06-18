@@ -101,6 +101,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
 #endif
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void RunATLASSetup()
         {
             // Dirt simple test to make sure setup ATLAS actually works.
@@ -115,6 +116,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
+        [Ignore] // Because this requires real remote and is slow.
         public void downloadBadDS()
         {
             var info = util.GetUsernameAndPassword();
@@ -130,6 +132,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
+        [Ignore] // Because this requires real remote and is slow.
         public void downloadToBadDir()
         {
             var info = util.GetUsernameAndPassword();
@@ -205,6 +208,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
+        [Ignore] // Because this requires real remote and is slow.
         public void getBadDSFileList()
         {
             var info = util.GetUsernameAndPassword();
@@ -219,6 +223,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void downloadDS()
         {
             var info = util.GetUsernameAndPassword();
@@ -244,6 +249,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void downloadDSSelection()
         {
             var info = util.GetUsernameAndPassword();
@@ -274,6 +280,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void downloadDSSelectionWithSlash()
         {
             var info = util.GetUsernameAndPassword();
@@ -892,6 +899,7 @@ RootCore: Error failed to compile package DiVertAnalysis")
         }
 
         [TestMethod]
+        [Ignore] // Because this requires real remote and is slow.
         public void OnlineFullCheckoutAndBuild()
         {
             // Do it for real to make sure all the dummy test stuff we have above actually works.

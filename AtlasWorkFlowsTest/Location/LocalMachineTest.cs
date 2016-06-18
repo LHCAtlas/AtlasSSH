@@ -341,6 +341,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [Ignore]
         public void FetchOneFileWithNoBackupOverNetwork()
         {
             // This is a real run (so it is slow), and it will fetch data over the network.
