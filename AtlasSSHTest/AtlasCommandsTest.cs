@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace AtlasSSHTest
@@ -223,8 +224,42 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        public void DownloadDS()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
+                .AddGoodDownloadResponses("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282", "/tmp/gwattsdownload/now")
+                );
+
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .DownloadFromGRID("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282", "/tmp/gwattsdownload/now");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(FileFailedToDownloadException))]
+        public void DownloadDSBadFileDownload()
+        {
+            // A file fails to download correctly.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
+                .AddBadDownloadResponses("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282", "/tmp/gwattsdownload/now")
+                );
+
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .DownloadFromGRID("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282", "/tmp/gwattsdownload/now");
+        }
+
+        [TestMethod]
         [Ignore] // Because this requires real remote and is slow.
-        public void downloadDS()
+        public void downloadDSFromGRID()
         {
             var info = util.GetUsernameAndPassword();
             using (var s = new SSHConnection(info.Item1, info.Item2))

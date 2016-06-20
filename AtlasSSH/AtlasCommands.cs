@@ -51,6 +51,18 @@ namespace AtlasSSH
         { }
     }
 
+
+    [Serializable]
+    public class FileFailedToDownloadException : Exception
+    {
+        public FileFailedToDownloadException() { }
+        public FileFailedToDownloadException(string message) : base(message) { }
+        public FileFailedToDownloadException(string message, Exception inner) : base(message, inner) { }
+        protected FileFailedToDownloadException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     /// <summary>
     /// Some commands
     /// </summary>
@@ -220,6 +232,7 @@ namespace AtlasSSH
             }
             connection.ExecuteCommand(string.Format("rucio download --dir {1} `cat {0}`", fileListName, localDirectory), l =>
             {
+                // Look for something that indicates which file we are currently getting from the GRID.
                 if (fileStatus != null)
                 {
                     const string fileNameMarker = "Starting the download of ";
@@ -229,6 +242,17 @@ namespace AtlasSSH
                         var closeBracket = l.IndexOf(']', idx);
                         var startOfFileName = idx + fileNameMarker.Length;
                         fileStatus(l.Substring(startOfFileName, closeBracket - startOfFileName));
+                    }
+                }
+
+                // Watch for the end to see the overall status
+                if (l.Contains("Files that cannot be downloaded :"))
+                {
+                    var info = l.Split(' ').Where(i => !string.IsNullOrWhiteSpace(i)).Last();
+                    if (info != "0")
+                    {
+                        // Something went wrong with the download!
+                        throw new FileFailedToDownloadException($"Failed to download all the files from the GRID - {info} files failed to download!");
                     }
                 }
             }, 
