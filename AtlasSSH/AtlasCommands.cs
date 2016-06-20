@@ -1,4 +1,5 @@
 ﻿using CredentialManagement;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,6 +60,18 @@ namespace AtlasSSH
         public FileFailedToDownloadException(string message) : base(message) { }
         public FileFailedToDownloadException(string message, Exception inner) : base(message, inner) { }
         protected FileFailedToDownloadException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+
+    [Serializable]
+    public class ClockSkewException : Exception
+    {
+        public ClockSkewException() { }
+        public ClockSkewException(string message) : base(message) { }
+        public ClockSkewException(string message, Exception inner) : base(message, inner) { }
+        protected ClockSkewException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
@@ -226,10 +239,26 @@ namespace AtlasSSH
 
             // Next, do the download
             response.Clear();
-            if (fileStatus != null)
-            {
-                fileStatus("Starting GRID download...");
-            }
+            fileStatus?.Invoke("Starting GRID download...");
+
+            Policy
+                .Handle<ClockSkewException>()
+                .WaitAndRetry(new[]
+                {
+                    TimeSpan.FromSeconds(10),
+                    TimeSpan.FromMinutes(1),
+                    TimeSpan.FromMinutes(1),
+                    TimeSpan.FromMinutes(1),
+                    TimeSpan.FromMinutes(1)
+                }, (e, ts) => { fileStatus?.Invoke("Clock Skew error - wait and re-try"); })
+                .Execute(() => DoRucioDownload(connection, localDirectory, fileStatus, failNow, timeout, fileListName));
+            return connection;
+        }
+
+        private static void DoRucioDownload(ISSHConnection connection, string localDirectory, Action<string> fileStatus, Func<bool> failNow, int timeout, string fileListName)
+        {
+            string filesThatFailedToDownload = "";
+            bool foundClockSkewMessage = false;
             connection.ExecuteCommand(string.Format("rucio download --dir {1} `cat {0}`", fileListName, localDirectory), l =>
             {
                 // Look for something that indicates which file we are currently getting from the GRID.
@@ -248,17 +277,24 @@ namespace AtlasSSH
                 // Watch for the end to see the overall status
                 if (l.Contains("Files that cannot be downloaded :"))
                 {
-                    var info = l.Split(' ').Where(i => !string.IsNullOrWhiteSpace(i)).Last();
-                    if (info != "0")
-                    {
-                        // Something went wrong with the download!
-                        throw new FileFailedToDownloadException($"Failed to download all the files from the GRID - {info} files failed to download!");
-                    }
+                    filesThatFailedToDownload = l.Split(' ').Where(i => !string.IsNullOrWhiteSpace(i)).Last();
                 }
-            }, 
-            refreshTimeout:true, failNow: failNow, secondsTimeout: timeout);
+                foundClockSkewMessage |= l.Contains("check clock skew between hosts.");
+            },
+            refreshTimeout: true, failNow: failNow, secondsTimeout: timeout);
 
-            return connection;
+            // Check for errors that happened while running the command.
+            if (filesThatFailedToDownload != "0")
+            {
+                // Special case - there was a clock skew error.
+                if (foundClockSkewMessage)
+                {
+                    throw new ClockSkewException($"Failed to download {filesThatFailedToDownload} files due to clock skew. Please double check!");
+                }
+
+                // Something else - will likely require a human to get involved.
+                throw new FileFailedToDownloadException($"Failed to download all the files from the GRID - {filesThatFailedToDownload} files failed to download!");
+            }
         }
 
         /// <summary>

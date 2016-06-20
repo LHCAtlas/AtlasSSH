@@ -258,6 +258,42 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        [ExpectedException(typeof(ClockSkewException))]
+        public void DownloadDSClockSkewFileDownload()
+        {
+            // A file fails to download correctly due to clock skew... But we don't catch up in the timeout times.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
+                .AddClockSkewDownloadResponses("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282", "/tmp/gwattsdownload/now")
+                );
+
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .DownloadFromGRID("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282", "/tmp/gwattsdownload/now");
+        }
+
+        [TestMethod]
+        public void DownloadDSClockSkewThatGetsBetterFileDownload()
+        {
+            // A file fails to download correctly due to clock skew... but a little while later it is ok.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
+                .AddClockSkewDownloadResponses("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282", "/tmp/gwattsdownload/now")
+                );
+            s.AddClockSkewDownloadOKResponses("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282");
+
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .DownloadFromGRID("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282", "/tmp/gwattsdownload/now");
+        }
+
+        [TestMethod]
         [Ignore] // Because this requires real remote and is slow.
         public void downloadDSFromGRID()
         {

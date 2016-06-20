@@ -1115,8 +1115,7 @@ DID mc15_13TeV:mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH20
 Total files :                                40
 Downloaded files :                           39
 Files already found locally :                 0
-Files that cannot be downloaded :             1
-");
+Files that cannot be downloaded :             1");
             }
             else
             {
@@ -1124,6 +1123,462 @@ Files that cannot be downloaded :             1
             }
 
             return d;
+        }
+
+        /// <summary>
+        /// Download, with a repeated clock-skew failure.
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <param name="dsName"></param>
+        /// <param name="linuxDir"></param>
+        /// <returns></returns>
+        public static Dictionary<string, string> AddClockSkewDownloadResponses(this Dictionary<string, string> dict, string dsName, string linuxDir)
+        {
+            var d = dict
+                .AddEntry($"rm -rf /tmp/{dsName}.filelist", "")
+                .AddEntry($"mkdir -p {linuxDir}", "")
+                ;
+
+            // Stuff that is custom
+            if (dsName == "mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
+            {
+                foreach (var fileIndex in Enumerable.Range(1, 43))
+                {
+                    d = d.AddEntry($"echo mc15_13TeV:AOD.07483884._0000{fileIndex.ToString("00")}.pool.root.1 >> /tmp/{dsName}.filelist", "");
+                }
+                d = d.AddEntry("rucio download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
+                    @"2016-06-18 15:35:07,774 INFO [Starting download for user.gwatts:user.gwatts.8746548._000001.hist-output.root with 1 files]
+2016-06-18 15:35:07,980 INFO [Starting the download of user.gwatts:user.gwatts.8746548._000001.hist-output.root]
+No handlers could be found for logger ""gfal2""
+2016 - 06 - 18 15:35:12, 260 WARNING[The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_ftp_client: the server responded with an error 530 530 - globus_xio: Authentication Error  530 - OpenSSL Error: s3_srvr.c:3288: in library: SSL routines, function SSL3_GET_CLIENT_CERTIFICATE: no certificate returned  530 - globus_gsi_callback_module: Could not verify credential  530 - globus_gsi_callback_module: The certificate is not yet valid: Cert with subject: / DC = ch / DC = cern / OU = Organic Units / OU = Users / CN = gwatts / CN = 517517 / CN = Gordon Watts / CN = proxy is not yet valid - check clock skew between hosts.  530 End.]
+2016 - 06 - 18 15:35:15, 668 WARNING[The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_ftp_client: the server responded with an error 530 530 - globus_xio: Authentication Error  530 - OpenSSL Error: s3_srvr.c:3288: in library: SSL routines, function SSL3_GET_CLIENT_CERTIFICATE: no certificate returned  530 - globus_gsi_callback_module: Could not verify credential  530 - globus_gsi_callback_module: The certificate is not yet valid: Cert with subject: / DC = ch / DC = cern / OU = Organic Units / OU = Users / CN = gwatts / CN = 517517 / CN = Gordon Watts / CN = proxy is not yet valid - check clock skew between hosts.  530 End.]
+2016 - 06 - 18 15:35:19, 176 WARNING[The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_ftp_client: the server responded with an error 530 530 - globus_xio: Authentication Error  530 - OpenSSL Error: s3_srvr.c:3288: in library: SSL routines, function SSL3_GET_CLIENT_CERTIFICATE: no certificate returned  530 - globus_gsi_callback_module: Could not verify credential  530 - globus_gsi_callback_module: The certificate is not yet valid: Cert with subject: / DC = ch / DC = cern / OU = Organic Units / OU = Users / CN = gwatts / CN = 517517 / CN = Gordon Watts / CN = proxy is not yet valid - check clock skew between hosts.  530 End.]
+2016 - 06 - 18 15:35:22, 696 WARNING[The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_ftp_client: the server responded with an error 530 530 - globus_xio: Authentication Error  530 - OpenSSL Error: s3_srvr.c:3288: in library: SSL routines, function SSL3_GET_CLIENT_CERTIFICATE: no certificate returned  530 - globus_gsi_callback_module: Could not verify credential  530 - globus_gsi_callback_module: The certificate is not yet valid: Cert with subject: / DC = ch / DC = cern / OU = Organic Units / OU = Users / CN = gwatts / CN = 517517 / CN = Gordon Watts / CN = proxy is not yet valid - check clock skew between hosts.  530 End.]
+2016 - 06 - 18 15:35:26, 186 WARNING[The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_ftp_client: the server responded with an error 530 530 - globus_xio: Authentication Error  530 - OpenSSL Error: s3_srvr.c:3288: in library: SSL routines, function SSL3_GET_CLIENT_CERTIFICATE: no certificate returned  530 - globus_gsi_callback_module: Could not verify credential  530 - globus_gsi_callback_module: The certificate is not yet valid: Cert with subject: / DC = ch / DC = cern / OU = Organic Units / OU = Users / CN = gwatts / CN = 517517 / CN = Gordon Watts / CN = proxy is not yet valid - check clock skew between hosts.  530 End.]
+2016 - 06 - 18 15:35:26, 893 ERROR[Cannot download file user.gwatts:user.gwatts.8746548._000001.hist - output.root]
+2016 - 06 - 18 15:35:28, 001 INFO[Download operation for user.gwatts:user.gwatts.8746548._000001.hist - output.root done]
+----------------------------------
+    Download summary
+    ----------------------------------------
+    DID user.gwatts:user.gwatts.8746548._000001.hist - output.root
+    Total files :                                 1
+    Downloaded files :                            0
+    Files already found locally :                 0
+    Files that cannot be downloaded :             1");
+            }
+            else
+            {
+                Assert.IsTrue(false, $"Unknown dataset: {dsName}");
+            }
+
+            return d;
+        }
+
+        /// <summary>
+        /// After we see the download command, then make the second time it is run "ok".
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        public static dummySSHConnection AddClockSkewDownloadOKResponses(this dummySSHConnection s, string dsname)
+        {
+            s.AddQueuedChange("rucio download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
+                "rucio download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
+                @"[32;1m2016-06-18 18:07:45,515 INFO [Starting download for mc15_13TeV:mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282 with 40 files][0m
+[32;1m2016-06-18 18:07:46,095 INFO [Starting the download of mc15_13TeV:AOD.07787075._000002.pool.root.1][0m
+[32;1m2016-06-18 18:07:46,095 INFO [Starting the download of mc15_13TeV:AOD.07787075._000001.pool.root.1][0m
+[32;1m2016-06-18 18:07:46,096 INFO [Starting the download of mc15_13TeV:AOD.07787075._000003.pool.root.1][0m
+No handlers could be found for logger ""gfal2""
+[33; 1m2016 - 06 - 18 18:07:50,254 WARNING[The requested service is not available at the moment.
+     Details: An unknown exception occurred.
+     Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 18:35:53,426 INFO [File mc15_13TeV:AOD.07787075._000002.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 18:35:54,464 INFO [File mc15_13TeV:AOD.07787075._000002.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1688.36847115 seconds][0m
+[32;1m2016-06-18 18:35:54,464 INFO [Starting the download of mc15_13TeV:AOD.07787075._000005.pool.root.1][0m
+No handlers could be found for logger ""gfal2""
+[33;1m2016-06-18 18:35:58,296 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 18:39:14,853 INFO [File mc15_13TeV:AOD.07787075._000001.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 18:39:15,487 INFO [File mc15_13TeV:AOD.07787075._000003.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 18:39:15,565 INFO [File mc15_13TeV:AOD.07787075._000001.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1889.4696362 seconds][0m
+[32;1m2016-06-18 18:39:15,565 INFO [Starting the download of mc15_13TeV:AOD.07787075._000006.pool.root.1][0m
+[32;1m2016-06-18 18:39:16,196 INFO [File mc15_13TeV:AOD.07787075._000003.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1890.09949017 seconds][0m
+[32;1m2016-06-18 18:39:16,196 INFO [Starting the download of mc15_13TeV:AOD.07787075._000004.pool.root.1][0m
+[33;1m2016-06-18 18:39:20,146 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+No handlers could be found for logger ""gfal2""
+[33;1m2016-06-18 18:39:21,560 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 18:39:24,248 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 19:01:15,026 INFO [File mc15_13TeV:AOD.07787075._000005.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:01:16,053 INFO [File mc15_13TeV:AOD.07787075._000005.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1521.58848286 seconds][0m
+[32;1m2016-06-18 19:01:16,053 INFO [Starting the download of mc15_13TeV:AOD.07787075._000009.pool.root.1][0m
+[32;1m2016-06-18 19:03:47,019 INFO [File mc15_13TeV:AOD.07787075._000004.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:03:47,721 INFO [File mc15_13TeV:AOD.07787075._000004.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1471.52423596 seconds][0m
+[32;1m2016-06-18 19:03:47,721 INFO [Starting the download of mc15_13TeV:AOD.07787075._000008.pool.root.1][0m
+[33;1m2016-06-18 19:03:50,437 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:03:56,575 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 19:06:15,489 INFO [File mc15_13TeV:AOD.07787075._000006.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:06:16,194 INFO [File mc15_13TeV:AOD.07787075._000006.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1620.62827492 seconds][0m
+[32;1m2016-06-18 19:06:16,194 INFO [Starting the download of mc15_13TeV:AOD.07787075._000007.pool.root.1][0m
+[33;1m2016-06-18 19:06:20,145 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:06:22,284 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:06:24,319 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 19:24:17,962 INFO [File mc15_13TeV:AOD.07787075._000009.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:24:18,848 INFO [File mc15_13TeV:AOD.07787075._000009.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1382.79514408 seconds][0m
+[32;1m2016-06-18 19:24:18,848 INFO [Starting the download of mc15_13TeV:AOD.07787075._000010.pool.root.1][0m
+[33;1m2016-06-18 19:24:22,717 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 19:27:28,312 INFO [File mc15_13TeV:AOD.07787075._000008.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:27:29,048 INFO [File mc15_13TeV:AOD.07787075._000008.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1421.32698298 seconds][0m
+[32;1m2016-06-18 19:27:29,048 INFO [Starting the download of mc15_13TeV:AOD.07787075._000014.pool.root.1][0m
+[32;1m2016-06-18 19:29:24,995 INFO [File mc15_13TeV:AOD.07787075._000007.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:29:25,749 INFO [File mc15_13TeV:AOD.07787075._000007.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1389.55475783 seconds][0m
+[32;1m2016-06-18 19:29:25,749 INFO [Starting the download of mc15_13TeV:AOD.07787075._000012.pool.root.1][0m
+[33;1m2016-06-18 19:29:28,437 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:29:32,250 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:29:34,283 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:29:38,220 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 19:49:18,205 INFO [File mc15_13TeV:AOD.07787075._000010.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:49:19,079 INFO [File mc15_13TeV:AOD.07787075._000010.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1500.23046708 seconds][0m
+[32;1m2016-06-18 19:49:19,079 INFO [Starting the download of mc15_13TeV:AOD.07787075._000011.pool.root.1][0m
+[33;1m2016-06-18 19:49:26,028 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:49:32,014 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:49:34,173 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:49:36,219 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:49:38,260 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 19:52:40,827 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE]
+        [StatusOfGetRequest]
+        [ETIMEDOUT]
+        httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 19:54:14,416 INFO [File mc15_13TeV:AOD.07787075._000014.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:54:15,126 INFO [File mc15_13TeV:AOD.07787075._000014.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1606.07766199 seconds][0m
+[32;1m2016-06-18 19:54:15,126 INFO [Starting the download of mc15_13TeV:AOD.07787075._000021.pool.root.1][0m
+[32;1m2016-06-18 19:55:30,022 INFO [File mc15_13TeV:AOD.07787075._000012.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 19:55:30,724 INFO [File mc15_13TeV:AOD.07787075._000012.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1564.97463489 seconds][0m
+[32;1m2016-06-18 19:55:30,724 INFO [Starting the download of mc15_13TeV:AOD.07787075._000015.pool.root.1][0m
+[32;1m2016-06-18 20:14:40,857 INFO [File mc15_13TeV:AOD.07787075._000011.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 20:14:41,724 INFO [File mc15_13TeV:AOD.07787075._000011.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1522.64424896 seconds][0m
+[32;1m2016-06-18 20:14:41,724 INFO [Starting the download of mc15_13TeV:AOD.07787075._000013.pool.root.1][0m
+[33;1m2016-06-18 20:17:40,736 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE]
+        [StatusOfGetRequest]
+        [ETIMEDOUT]
+        httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 20:18:39,150 INFO [File mc15_13TeV:AOD.07787075._000021.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 20:18:39,858 INFO [File mc15_13TeV:AOD.07787075._000021.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1464.73195505 seconds][0m
+[32;1m2016-06-18 20:18:39,859 INFO [Starting the download of mc15_13TeV:AOD.07787075._000024.pool.root.1][0m
+[32;1m2016-06-18 20:19:40,268 INFO [File mc15_13TeV:AOD.07787075._000015.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 20:19:41,027 INFO [File mc15_13TeV:AOD.07787075._000015.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1450.30274987 seconds][0m
+[32;1m2016-06-18 20:19:41,027 INFO [Starting the download of mc15_13TeV:AOD.07787075._000016.pool.root.1][0m
+[32;1m2016-06-18 20:37:47,475 INFO [File mc15_13TeV:AOD.07787075._000013.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 20:37:48,519 INFO [File mc15_13TeV:AOD.07787075._000013.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1386.79511619 seconds][0m
+[32;1m2016-06-18 20:37:48,519 INFO [Starting the download of mc15_13TeV:AOD.07787075._000017.pool.root.1][0m
+[33;1m2016-06-18 20:40:47,697 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE]
+        [StatusOfGetRequest]
+        [ETIMEDOUT]
+        httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 20:42:01,174 INFO [File mc15_13TeV:AOD.07787075._000024.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 20:42:01,906 INFO [File mc15_13TeV:AOD.07787075._000024.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1402.04727793 seconds][0m
+[32;1m2016-06-18 20:42:01,906 INFO [Starting the download of mc15_13TeV:AOD.07787075._000031.pool.root.1][0m
+[32;1m2016-06-18 20:43:44,255 INFO [File mc15_13TeV:AOD.07787075._000016.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 20:43:44,962 INFO [File mc15_13TeV:AOD.07787075._000016.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1443.93537712 seconds][0m
+[32;1m2016-06-18 20:43:44,963 INFO [Starting the download of mc15_13TeV:AOD.07787075._000018.pool.root.1][0m
+[33;1m2016-06-18 20:43:51,870 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 20:44:01,971 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 21:07:57,006 INFO [File mc15_13TeV:AOD.07787075._000017.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 21:07:58,069 INFO [File mc15_13TeV:AOD.07787075._000017.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1809.55001307 seconds][0m
+[32;1m2016-06-18 21:07:58,070 INFO [Starting the download of mc15_13TeV:AOD.07787075._000020.pool.root.1][0m
+[33;1m2016-06-18 21:10:59,047 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE]
+        [StatusOfGetRequest]
+        [ETIMEDOUT]
+        httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 21:12:40,294 INFO [File mc15_13TeV:AOD.07787075._000018.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 21:12:41,035 INFO [File mc15_13TeV:AOD.07787075._000018.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1736.07202721 seconds][0m
+[32;1m2016-06-18 21:12:41,035 INFO [Starting the download of mc15_13TeV:AOD.07787075._000019.pool.root.1][0m
+[33;1m2016-06-18 21:12:44,872 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 21:12:48,865 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 21:12:52,808 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 21:12:56,797 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 21:13:00,717 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 21:14:13,346 INFO [File mc15_13TeV:AOD.07787075._000031.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 21:14:14,057 INFO [File mc15_13TeV:AOD.07787075._000031.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1932.15072584 seconds][0m
+[32;1m2016-06-18 21:14:14,057 INFO [Starting the download of mc15_13TeV:AOD.07787075._000035.pool.root.1][0m
+[33;1m2016-06-18 21:16:01,281 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE]
+        [StatusOfGetRequest]
+        [ETIMEDOUT]
+        httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 21:36:19,776 INFO [File mc15_13TeV:AOD.07787075._000020.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 21:36:20,651 INFO [File mc15_13TeV:AOD.07787075._000020.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1702.58084106 seconds][0m
+[32;1m2016-06-18 21:36:20,651 INFO [Starting the download of mc15_13TeV:AOD.07787075._000025.pool.root.1][0m
+[33;1m2016-06-18 21:39:19,710 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE]
+        [StatusOfGetRequest]
+        [ETIMEDOUT]
+        httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 21:40:38,774 INFO [File mc15_13TeV:AOD.07787075._000019.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 21:40:39,508 INFO [File mc15_13TeV:AOD.07787075._000019.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1678.47296882 seconds][0m
+[32;1m2016-06-18 21:40:39,508 INFO [Starting the download of mc15_13TeV:AOD.07787075._000022.pool.root.1][0m
+[33;1m2016-06-18 21:43:38,505 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE]
+        [StatusOfGetRequest]
+        [ETIMEDOUT]
+        httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 21:44:14,839 INFO [File mc15_13TeV:AOD.07787075._000035.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 21:44:15,709 INFO [File mc15_13TeV:AOD.07787075._000035.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1801.65164685 seconds][0m
+[32;1m2016-06-18 21:44:15,709 INFO [Starting the download of mc15_13TeV:AOD.07787075._000038.pool.root.1][0m
+[33;1m2016-06-18 21:44:21,683 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se05.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[33;1m2016-06-18 21:44:31,331 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: Could not open source: globus_xio: Unable to connect to se04.esc.qmul.ac.uk:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused][0m
+[32;1m2016-06-18 22:07:58,031 INFO [File mc15_13TeV:AOD.07787075._000025.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 22:07:58,977 INFO [File mc15_13TeV:AOD.07787075._000025.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1898.32642102 seconds][0m
+[32;1m2016-06-18 22:07:58,978 INFO [Starting the download of mc15_13TeV:AOD.07787075._000026.pool.root.1][0m
+[32;1m2016-06-18 22:10:01,725 INFO [File mc15_13TeV:AOD.07787075._000022.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 22:10:02,577 INFO [File mc15_13TeV:AOD.07787075._000022.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1763.06805682 seconds][0m
+[32;1m2016-06-18 22:10:02,577 INFO [Starting the download of mc15_13TeV:AOD.07787075._000023.pool.root.1][0m
+[33;1m2016-06-18 22:10:57,971 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 22:12:01,940 INFO [File mc15_13TeV:AOD.07787075._000038.pool.root.1 successfully downloaded from UKI-LT2-QMUL_DATADISK][0m
+[32;1m2016-06-18 22:12:02,640 INFO [File mc15_13TeV:AOD.07787075._000038.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1666.92999101 seconds][0m
+./mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282/AOD.07787075._000003.pool.root.1.part already exists, probably from a failed attempt. Will remove it
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+[33;1m2016-06-18 22:13:03,228 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 22:30:20,655 INFO [File mc15_13TeV:AOD.07787075._000026.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 22:30:21,708 INFO [File mc15_13TeV:AOD.07787075._000026.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1342.73055696 seconds][0m
+[32;1m2016-06-18 22:30:21,709 INFO [Starting the download of mc15_13TeV:AOD.07787075._000027.pool.root.1][0m
+[32;1m2016-06-18 22:31:43,652 INFO [File mc15_13TeV:AOD.07787075._000023.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 22:31:44,417 INFO [File mc15_13TeV:AOD.07787075._000023.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1301.840518 seconds][0m
+[32;1m2016-06-18 22:31:44,418 INFO [Starting the download of mc15_13TeV:AOD.07787075._000029.pool.root.1][0m
+[33;1m2016-06-18 22:33:20,693 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[33;1m2016-06-18 22:34:43,338 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 22:58:49,731 INFO [File mc15_13TeV:AOD.07787075._000027.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 22:58:50,692 INFO [File mc15_13TeV:AOD.07787075._000027.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1708.98274994 seconds][0m
+[32;1m2016-06-18 22:58:50,692 INFO [Starting the download of mc15_13TeV:AOD.07787075._000028.pool.root.1][0m
+[32;1m2016-06-18 23:01:39,524 INFO [File mc15_13TeV:AOD.07787075._000029.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 23:01:40,246 INFO [File mc15_13TeV:AOD.07787075._000029.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1795.82815194 seconds][0m
+[32;1m2016-06-18 23:01:40,246 INFO [Starting the download of mc15_13TeV:AOD.07787075._000037.pool.root.1][0m
+[33;1m2016-06-18 23:01:49,569 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[33;1m2016-06-18 23:04:39,307 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 23:24:42,104 INFO [File mc15_13TeV:AOD.07787075._000037.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 23:24:42,997 INFO [File mc15_13TeV:AOD.07787075._000037.pool.root.1 successfully downloaded. 3.9 GB bytes downloaded in 1382.75059414 seconds][0m
+[32;1m2016-06-18 23:24:42,997 INFO [Starting the download of mc15_13TeV:AOD.07787075._000040.pool.root.1][0m
+[32;1m2016-06-18 23:26:13,975 INFO [File mc15_13TeV:AOD.07787075._000028.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 23:26:14,675 INFO [File mc15_13TeV:AOD.07787075._000028.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1643.98309779 seconds][0m
+[32;1m2016-06-18 23:26:14,675 INFO [Starting the download of mc15_13TeV:AOD.07787075._000030.pool.root.1][0m
+[33;1m2016-06-18 23:27:43,683 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[33;1m2016-06-18 23:29:13,601 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-18 23:41:29,306 INFO [File mc15_13TeV:AOD.07787075._000040.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 23:41:30,184 INFO [File mc15_13TeV:AOD.07787075._000040.pool.root.1 successfully downloaded. 2.7 GB bytes downloaded in 1007.18631005 seconds][0m
+./mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282/AOD.07787075._000001.pool.root.1.part already exists, probably from a failed attempt. Will remove it
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+[32;1m2016-06-18 23:52:33,220 INFO [File mc15_13TeV:AOD.07787075._000030.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-18 23:52:34,316 INFO [File mc15_13TeV:AOD.07787075._000030.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1579.64014387 seconds][0m
+[32;1m2016-06-18 23:52:34,316 INFO [Starting the download of mc15_13TeV:AOD.07787075._000032.pool.root.1][0m
+[33;1m2016-06-18 23:55:33,224 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-19 00:18:47,533 INFO [File mc15_13TeV:AOD.07787075._000032.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-19 00:18:48,584 INFO [File mc15_13TeV:AOD.07787075._000032.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1574.2682879 seconds][0m
+[32;1m2016-06-19 00:18:48,585 INFO [Starting the download of mc15_13TeV:AOD.07787075._000033.pool.root.1][0m
+[33;1m2016-06-19 00:21:47,434 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-19 00:45:02,570 INFO [File mc15_13TeV:AOD.07787075._000033.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-19 00:45:03,900 INFO [File mc15_13TeV:AOD.07787075._000033.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1575.31498194 seconds][0m
+[32;1m2016-06-19 00:45:03,900 INFO [Starting the download of mc15_13TeV:AOD.07787075._000034.pool.root.1][0m
+[33;1m2016-06-19 00:48:04,971 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-19 01:09:54,777 INFO [File mc15_13TeV:AOD.07787075._000034.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-19 01:09:55,847 INFO [File mc15_13TeV:AOD.07787075._000034.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1491.94715786 seconds][0m
+[32;1m2016-06-19 01:09:55,848 INFO [Starting the download of mc15_13TeV:AOD.07787075._000036.pool.root.1][0m
+[33;1m2016-06-19 01:12:54,892 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-19 01:34:38,077 INFO [File mc15_13TeV:AOD.07787075._000036.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-19 01:34:38,972 INFO [File mc15_13TeV:AOD.07787075._000036.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1483.12419295 seconds][0m
+[32;1m2016-06-19 01:34:38,972 INFO [Starting the download of mc15_13TeV:AOD.07787075._000039.pool.root.1][0m
+[33;1m2016-06-19 01:37:38,152 WARNING [The requested service is not available at the moment.
+Details: An unknown exception occurred.
+Details: SOURCE SRM_GET_TURL srm-ifce err: Connection timed out, err: [SE][StatusOfGetRequest][ETIMEDOUT] httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2: User timeout over][0m
+[32;1m2016-06-19 01:59:59,061 INFO [File mc15_13TeV:AOD.07787075._000039.pool.root.1 successfully downloaded from BNL-OSG2_MCTAPE][0m
+[32;1m2016-06-19 02:00:00,149 INFO [File mc15_13TeV:AOD.07787075._000039.pool.root.1 successfully downloaded. 4.4 GB bytes downloaded in 1521.17686605 seconds][0m
+./mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282/AOD.07787075._000002.pool.root.1.part already exists, probably from a failed attempt. Will remove it
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+File downloaded. Will be validated
+File validated
+[32;1m2016-06-19 02:00:01,797 INFO [Download operation for mc15_13TeV:mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282 done][0m
+----------------------------------
+Download summary
+----------------------------------------
+DID mc15_13TeV:mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282
+Total files :                                40
+Downloaded files :                           40
+Files already found locally :                 0
+Files that cannot be downloaded :             0");
+            return s;
         }
 
         public static Dictionary<string,string> AddRcSetup(this Dictionary<string,string> dict, string dirLocation, string releaseName)
