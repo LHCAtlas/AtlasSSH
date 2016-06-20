@@ -70,9 +70,14 @@ recent version, use:
 Development
 ===========
 
-Make sure the version numbers in the nuspec and psd1 file's track.
-Run nuget pack from the PSAtlasDatasetCommands directory after building in release mode.
-Upload to myget (or wherever) for the Powershell commands.
+Make sure the version numbers in the nuspec and psd1 file's track. MAKE SURE TO BUILD IN Release MODE!!!
+
+	nuget pack .\PSAtlasDatasetCommands.nuspec
+	nuget push .\PSAtlasDatasetCommands.XXXX.nupkg -Source https://www.myget.org/F/gwatts-powershell/api/v2/package
+
+Note that the first command will generate lots of warnings - that is because you are packing
+up a command, not a library! Obviously, the second line only makes sense if you are pushing to my
+myget feed. :-)
 
 Building the library
 ====================
