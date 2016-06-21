@@ -59,6 +59,7 @@
     <Compile Include="AtlasJobSpec.cs" />
     <Compile Include="AtlasPandaTaskID.cs" />
     <Compile Include="FindGRIDJob.cs" />
+    <Compile Include="GetAMIDatasetInfo.cs" />
     <Compile Include="GetGRIDDataLocations.cs" />
     <Compile Include="GetGRIDDataset.cs" />
     <Compile Include="GetGRIDJobSpec.cs" />
