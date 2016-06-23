@@ -27,15 +27,32 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
+        /// Good location cache
+        /// </summary>
+        static Location[] _locationCache = null;
+
+        /// <summary>
+        /// Reset the location cache so that it is re-populated. For testing.
+        /// </summary>
+        public static void ResetLocationCache()
+        {
+            _locationCache = null;
+        }
+
+        /// <summary>
         /// Evaluate the various locations and return a list of valid ones.
         /// </summary>
         /// <returns></returns>
         public Location[] FindBestLocations()
         {
-            return GetAllLocations()
-                .Where(l => l.LocationIsGood())
-                .Where(l => _locationFilter == null ? true : _locationFilter(l.Name))
-                .ToArray();
+            if (_locationCache == null)
+            {
+                _locationCache = GetAllLocations()
+                    .Where(l => l.LocationIsGood())
+                    .Where(l => _locationFilter == null ? true : _locationFilter(l.Name))
+                    .ToArray();
+            }
+            return _locationCache;
         }
 
         /// <summary>

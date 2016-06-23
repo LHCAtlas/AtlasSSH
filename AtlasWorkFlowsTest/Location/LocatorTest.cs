@@ -14,6 +14,7 @@ namespace AtlasWorkFlowsTest.Location
         public void SetupConfig()
         {
             Locator._getLocations = () => utils.GetLocal(new DirectoryInfo(@"C:\"));
+            Locator.ResetLocationCache();
         }
 
         [TestCleanup]

@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlows.Panda
 {
@@ -55,9 +56,16 @@ namespace AtlasWorkFlows.Panda
         /// <returns></returns>
         private static PandaTask[] GetTaskDataFromPanda(Uri url)
         {
+            // If it is located in the cache, then pull it.
+            var cached = PullFromCache(url);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            // Do a full web request.
             var wr = WebRequest.CreateHttp(url);
             wr.Accept = "application/json";
-            //wr.ContentType = "application/json";
 
             using (var data = wr.GetResponse())
             {
@@ -68,7 +76,12 @@ namespace AtlasWorkFlows.Panda
                         var text = r.ReadToEnd();
                         try
                         {
-                            return JsonConvert.DeserializeObject<PandaTask[]>(text);
+                            var result = JsonConvert.DeserializeObject<PandaTask[]>(text);
+                            if (!result.Where(t => t.status != "done" && t.status != "finished").Any())
+                            {
+                                SendToCache(url, result);
+                            }
+                            return result;
                         } catch (Exception e)
                         {
                             Console.WriteLine($"Error parsing JSON back from {url.OriginalString}. JSON was: '{text}' (error: {e.Message}).");
@@ -76,6 +89,90 @@ namespace AtlasWorkFlows.Panda
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// What directory in app data should we store the cache in?
+        /// </summary>
+        private static string _cacheDirectoryName = "PandaCache";
+
+        /// <summary>
+        /// Reset the Lazy cache object. Used only for testing.
+        /// </summary>
+        public static void ResetCache(string cacheDirName = null)
+        {
+            _cacheDirectoryName = cacheDirName == null ? "PandaCache" : cacheDirName;
+            if (_cacheLocation.IsValueCreated)
+            {
+                _cacheLocation = new Lazy<DirectoryInfo>(() => {
+                    var d = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), _cacheDirectoryName));
+                    if (!d.Exists)
+                    {
+                        d.Create();
+                    }
+                    return d;
+                });
+            }
+        }
+
+        /// <summary>
+        /// Where the directory cache for panda info is located.
+        /// </summary>
+        private static Lazy<DirectoryInfo> _cacheLocation = new Lazy<DirectoryInfo> (() => {
+            var d = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), _cacheDirectoryName));
+            if (!d.Exists)
+            {
+                d.Create();
+            }
+            return d;
+        });
+
+        /// <summary>
+        /// Write out the result to a cache so we don't have to do the lookup next time.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="result"></param>
+        private static void SendToCache(Uri url, PandaTask[] result)
+        {
+            if (result.Length == 0)
+            {
+                return;
+            }
+
+            FileInfo cFile = CacheFile(url);
+            using (var wrt = cFile.CreateText())
+            {
+                wrt.Write(JsonConvert.SerializeObject(result));
+                wrt.Close();
+            }
+        }
+
+        /// <summary>
+        /// Generate the cache filename
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        private static FileInfo CacheFile(Uri url)
+        {
+            return new FileInfo($"{Path.Combine(_cacheLocation.Value.FullName, url.OriginalString.ComputeMD5Hash())}.json");
+        }
+
+        /// <summary>
+        /// See if we can pull it from the cache.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        private static PandaTask[] PullFromCache(Uri url)
+        {
+            var f = CacheFile(url);
+            if (!f.Exists)
+            {
+                return null;
+            }
+            using (var rdr = f.OpenText())
+            {
+                return JsonConvert.DeserializeObject<PandaTask[]>(rdr.ReadToEnd());
             }
         }
 

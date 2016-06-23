@@ -16,6 +16,7 @@ namespace AtlasWorkFlowsTest
         {
             // Reset where we get the locations from!
             Locator._getLocations = null;
+            Locator.ResetLocationCache();
         }
 
         [TestMethod]
