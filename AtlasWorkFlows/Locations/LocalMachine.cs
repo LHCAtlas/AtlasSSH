@@ -157,11 +157,12 @@ namespace AtlasWorkFlows.Locations
             // copy from there down to here.
             dsLocalLocation.MarkAsPartialDownload(dsinfo.Name);
             var allfiles = fetcher.GetListOfFiles(dsinfo.Name, status, failNow: failNow);
-            fetcher.Fetch(dsinfo.Name, linuxLocation, status, filter, failNow: failNow, timeout: timeout);
+            var linuxLocationPerDS = $"{linuxLocation}/{dsinfo.Name}";
+            fetcher.Fetch(dsinfo.Name, linuxLocationPerDS, status, filter, failNow: failNow, timeout: timeout);
 
             // Next, copy the files from there down to our location.
             dsLocalLocation.SaveListOfDSFiles(dsinfo.Name, allfiles);
-            fetcher.CopyFromRemote(linuxLocation, dsLocalLocation.LocationOfDataset(dsinfo.Name), status, removeDirectoryWhenDone: true);
+            fetcher.CopyFromRemote(linuxLocationPerDS, dsLocalLocation.LocationOfDataset(dsinfo.Name), status, removeDirectoryWhenDone: true);
             dsLocalLocation.RemovePartialDownloadMark(dsinfo.Name);
 
             return dsLocalLocation.FindDSFiles(dsinfo.Name, filter);
