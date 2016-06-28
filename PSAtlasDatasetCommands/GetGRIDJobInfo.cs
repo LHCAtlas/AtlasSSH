@@ -1,4 +1,5 @@
-﻿using AtlasWorkFlows.Panda;
+﻿using AtlasWorkFlows.Jobs;
+using AtlasWorkFlows.Panda;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,15 @@ namespace PSAtlasDatasetCommands
 
         [Parameter(Mandatory = true, HelpMessage = "BigPanda task Object (e.g. from Invoke-GRIDJob)", ValueFromPipeline = true, Position = 1, ParameterSetName = "TaskObject")]
         public AtlasPandaTaskID PandaTaskObject { get; set; }
+
+        [Parameter(Mandatory =true, HelpMessage ="Input dataset name", ValueFromPipeline =true, Position =1, ParameterSetName ="DatasetGRIDJob")]
+        public string DatasetName { get; set; }
+
+        [Parameter(Mandatory = true, HelpMessage = "Input dataset name", ValueFromPipeline = false, ParameterSetName = "DatasetGRIDJob")]
+        public int JobVersion { get; set; }
+
+        [Parameter(Mandatory = true, HelpMessage = "Input dataset name", ValueFromPipeline = false, ParameterSetName = "DatasetGRIDJob")]
+        public string JobName { get; set; }
 
         [Parameter(HelpMessage ="Get the job's current status")]
         public SwitchParameter JobStatus { get; set; }
@@ -51,6 +61,15 @@ namespace PSAtlasDatasetCommands
             if (ParameterSetName == "TaskName")
             {
                 t = TaskName.FindPandaJobWithTaskName(needdatasets);
+            }
+            if (ParameterSetName == "DatasetGRIDJob")
+            {
+                // Get the job and resulting dataset name.
+                var job = JobParser.FindJob(JobName, JobVersion);
+                var ds = job.ResultingDatasetName(DatasetName);
+
+                // Now, look up the job itself.
+                t = (ds + "/").FindPandaJobWithTaskName();
             }
 
             if (t == null)
