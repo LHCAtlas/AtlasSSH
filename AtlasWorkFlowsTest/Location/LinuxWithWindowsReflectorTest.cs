@@ -46,6 +46,14 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void CERNSecondLocation()
+        {
+            AtlasWorkFlows.Utils.IPLocationTests.SetIpName("pc.ch.ch");
+            var c = LinuxWithWindowsReflector.GetLocation(Locator.GetMasterConfig()["MyTestLocation"]);
+            Assert.IsTrue(c.LocationIsGood());
+        }
+
+        [TestMethod]
         public void CERNLocationAtWhereWeAre()
         {
             AtlasWorkFlows.Utils.IPLocationTests.ResetIpName();

@@ -22,7 +22,9 @@ namespace AtlasWorkFlows.Locations
         {
             var l = new Location();
             l.Name = props["Name"];
-            l.LocationTests.Add(() => IPLocationTests.FindLocalIpName().EndsWith(props["DNSEndString"]));
+            var dnsString = props["DNSEndString"];
+            Func<bool> test = () => dnsString.Split(',').Select(s => s.Trim()).Select(en => IPLocationTests.FindLocalIpName().EndsWith(en)).Where(t => t).Any();
+            l.LocationTests.Add(() => test());
 
             var fetcher = FetchToRemoteLinuxDirInstance.FetchRemoteLinuxInstance(props);
             var dsfinder = new GRIDFetchToLinuxVisibleOnWindows(new DirectoryInfo(props["WindowsPath"]), fetcher, props["LinuxPath"]);

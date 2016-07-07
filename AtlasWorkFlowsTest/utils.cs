@@ -117,7 +117,7 @@ namespace AtlasWorkFlowsTest
             if (locLinuxWithWindows != null)
             {
                 var c = new Dictionary<string, string>();
-                c["DNSEndString"] = ".cern.ch";
+                c["DNSEndString"] = ".cern.ch, .ch.ch";
                 c["Name"] = "MyTestLocation";
                 c["WindowsPath"] = locLinuxWithWindows.FullName;
                 c["LinuxPath"] = "/LLPData/GRIDDS";
