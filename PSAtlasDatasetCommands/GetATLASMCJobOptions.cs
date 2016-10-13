@@ -39,25 +39,6 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         public SvnClient _client = new SvnClient();
 
-        /// <summary>
-        /// List of the DSID's that this MC job options colleciton knows about.
-        /// </summary>
-        public Collection<SvnListEventArgs> _dsidList = null;
-
-        /// <summary>
-        /// Create the SSH link
-        /// </summary>
-        protected override void BeginProcessing()
-        {
-            // We will need to target where we are going for svn here. Get the top level directory
-            // and cache it.
-
-
-            //client.GetList(target, out _dsidList);
-
-            base.BeginProcessing();
-        }
-
         protected override void ProcessRecord()
         {
             // Make sure this is a 6 digit number as a string.
@@ -87,6 +68,7 @@ namespace PSAtlasDatasetCommands
             // Next, fetch the file down.
             var targetTempPath = System.IO.Path.GetTempFileName();
             var args = new SvnExportArgs() { Overwrite = true };
+            WriteVerbose($"Downloading svn file {ds.Uri.OriginalString}");
             _client.Export(BuildTarget(ds.Uri), targetTempPath, args);
 
             // And read the temp file back.
@@ -114,6 +96,7 @@ namespace PSAtlasDatasetCommands
         private Collection<SvnListEventArgs> FetchListing(SvnTarget svnTarget)
         {
             var result = new Collection<SvnListEventArgs>();
+            WriteVerbose($"Fetching svn listing from {svnTarget.TargetName}");
             _client.GetList(svnTarget, out result);
             return result;
         }
@@ -148,14 +131,6 @@ namespace PSAtlasDatasetCommands
             SvnTarget target;
             SvnTarget.TryParse(path.OriginalString, out target);
             return target;
-        }
-
-        /// <summary>
-        /// Kill off the SSH link.
-        /// </summary>
-        protected override void EndProcessing()
-        {
-            base.EndProcessing();
         }
     }
 }
