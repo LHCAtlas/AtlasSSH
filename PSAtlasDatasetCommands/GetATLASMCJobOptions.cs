@@ -71,18 +71,9 @@ namespace PSAtlasDatasetCommands
             WriteVerbose($"Downloading svn file {ds.Uri.OriginalString}");
             _client.Export(BuildTarget(ds.Uri), targetTempPath, args);
 
-            // And read the temp file back.
-            using (var rdr = System.IO.File.OpenText(targetTempPath))
+            foreach (var line in new FileInfo(targetTempPath).ReadLines())
             {
-                string line = "";
-                while (line != null)
-                {
-                    line = rdr.ReadLine();
-                    if (line != null)
-                    {
-                        WriteObject(line);
-                    }
-                }
+                WriteObject(line);
             }
 
             base.ProcessRecord();
