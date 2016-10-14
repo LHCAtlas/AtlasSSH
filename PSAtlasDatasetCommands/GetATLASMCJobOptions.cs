@@ -29,9 +29,16 @@ namespace PSAtlasDatasetCommands
         [Parameter(HelpMessage = "MC Campaign. Defaults to MC15 (MC10, MC12, etc. are possible)", Mandatory = false)]
         public string MCCampaign { get; set; }
 
+        /// <summary>
+        /// Get/Set if we are going to expand include lines.
+        /// </summary>
+        [Parameter(HelpMessage = "Should include files be expanded inline?", Mandatory = false)]
+        public bool ExpandIncludeFiles { get; set; }
+
         public GetATLASMCJobOptions()
         {
             MCCampaign = "MC15";
+            ExpandIncludeFiles = false;
         }
 
         /// <summary>
@@ -71,7 +78,12 @@ namespace PSAtlasDatasetCommands
             WriteVerbose($"Downloading svn file {ds.Uri.OriginalString}");
             _client.Export(BuildTarget(ds.Uri), targetTempPath, args);
 
-            foreach (var line in new FileInfo(targetTempPath).ReadLines())
+            // Transfer process the lines
+            var lines = new FileInfo(targetTempPath)
+                .ReadLines()
+                .SelectMany(l => l.ReplaceIncludeFiles(ExpandIncludeFiles));
+
+            foreach (var line in lines)
             {
                 WriteObject(line);
             }
@@ -123,5 +135,61 @@ namespace PSAtlasDatasetCommands
             SvnTarget.TryParse(path.OriginalString, out target);
             return target;
         }
+    }
+}
+
+internal static class PSAtlasMCJobOptionHelpers
+{
+    /// <summary>
+    /// If we have an include, try to fetch the include files and download them.
+    /// </summary>
+    /// <param name="l"></param>
+    /// <returns></returns>
+    public static IEnumerable<string> ReplaceIncludeFiles(this string l, bool expandIncludeFiles)
+    {
+        if (!expandIncludeFiles)
+        {
+            yield return l;
+        }
+
+        var includeInfo = ExtractIncludeInformation(l);
+        if (includeInfo == null)
+        {
+            yield return l;
+        }
+        else
+        {
+            yield return $"# -> {l}";
+            var lines = ExtractIncludeContents(includeInfo)
+                .SelectMany(ll => ll.ReplaceIncludeFiles(expandIncludeFiles));
+                foreach (var ln in lines)
+            {
+                yield return ln;
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// Return the contents of an include file.
+    /// </summary>
+    /// <param name="includeInfo"></param>
+    /// <returns></returns>
+    private static IEnumerable<string> ExtractIncludeContents(IncludeInfo includeInfo)
+    {
+        yield return "hi";
+    }
+
+    /// <summary>
+    /// Basic info about an include
+    /// </summary>
+    private class IncludeInfo
+    {
+
+    }
+
+    private static IncludeInfo ExtractIncludeInformation(string l)
+    {
+        return new IncludeInfo();
     }
 }
