@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace PSAtlasDatasetCommands
@@ -20,7 +21,7 @@ namespace PSAtlasDatasetCommands
         /// <summary>
         /// The MC run number
         /// </summary>
-        [Parameter(HelpMessage = "Run number to fetch", ValueFromPipeline = true ,Mandatory = true, Position = 1)]
+        [Parameter(HelpMessage = "Run number to fetch", ValueFromPipeline = true, Mandatory = true, Position = 1)]
         public int MCJobNumber;
 
         /// <summary>
@@ -33,12 +34,11 @@ namespace PSAtlasDatasetCommands
         /// Get/Set if we are going to expand include lines.
         /// </summary>
         [Parameter(HelpMessage = "Should include files be expanded inline?", Mandatory = false)]
-        public bool ExpandIncludeFiles { get; set; }
+        public SwitchParameter ExpandIncludeFiles { get; set; }
 
         public GetATLASMCJobOptions()
         {
             MCCampaign = "MC15";
-            ExpandIncludeFiles = false;
         }
 
         /// <summary>
@@ -72,16 +72,7 @@ namespace PSAtlasDatasetCommands
             }
             var ds = myMCFile[0];
 
-            // Next, fetch the file down.
-            var targetTempPath = System.IO.Path.GetTempFileName();
-            var args = new SvnExportArgs() { Overwrite = true };
-            WriteVerbose($"Downloading svn file {ds.Uri.OriginalString}");
-            _client.Export(BuildTarget(ds.Uri), targetTempPath, args);
-
-            // Transfer process the lines
-            var lines = new FileInfo(targetTempPath)
-                .ReadLines()
-                .SelectMany(l => l.ReplaceIncludeFiles(ExpandIncludeFiles));
+            IEnumerable<string> lines = GetSvnFileLines(BuildTarget(ds.Uri));
 
             foreach (var line in lines)
             {
@@ -92,15 +83,36 @@ namespace PSAtlasDatasetCommands
         }
 
         /// <summary>
+        /// Given a listing, return an item.
+        /// </summary>
+        /// <param name="ds"></param>
+        /// <returns></returns>
+        private IEnumerable<string> GetSvnFileLines(SvnTarget ds)
+        {
+            // Next, fetch the file down.
+            var targetTempPath = Path.GetTempFileName();
+            var args = new SvnExportArgs() { Overwrite = true };
+            WriteVerbose($"Downloading svn file {ds.TargetName}");
+            _client.Export(ds, targetTempPath, args);
+
+            // Transfer process the lines
+            var lines = new FileInfo(targetTempPath)
+                .ReadLines()
+                .SelectMany(l => ReplaceIncludeFiles(l, ExpandIncludeFiles));
+            return lines;
+        }
+
+        /// <summary>
         /// Returns a list of the contents of the directory
         /// </summary>
         /// <param name="svnTarget"></param>
         /// <returns></returns>
-        private Collection<SvnListEventArgs> FetchListing(SvnTarget svnTarget)
+        private Collection<SvnListEventArgs> FetchListing(SvnTarget svnTarget, SvnListArgs args = null)
         {
+            args = args == null ? new SvnListArgs() : args;
             var result = new Collection<SvnListEventArgs>();
             WriteVerbose($"Fetching svn listing from {svnTarget.TargetName}");
-            _client.GetList(svnTarget, out result);
+            _client.GetList(svnTarget, args, out result);
             return result;
         }
 
@@ -129,67 +141,195 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        private SvnTarget BuildTarget (Uri path)
+        private SvnTarget BuildTarget(Uri path)
         {
             SvnTarget target;
             SvnTarget.TryParse(path.OriginalString, out target);
             return target;
         }
-    }
-}
 
-internal static class PSAtlasMCJobOptionHelpers
-{
-    /// <summary>
-    /// If we have an include, try to fetch the include files and download them.
-    /// </summary>
-    /// <param name="l"></param>
-    /// <returns></returns>
-    public static IEnumerable<string> ReplaceIncludeFiles(this string l, bool expandIncludeFiles)
-    {
-        if (!expandIncludeFiles)
+        /// <summary>
+        /// If we have an include, try to fetch the include files and download them.
+        /// </summary>
+        /// <param name="l"></param>
+        /// <returns></returns>
+        public IEnumerable<string> ReplaceIncludeFiles(string l, bool expandIncludeFiles)
         {
-            yield return l;
-        }
-
-        var includeInfo = ExtractIncludeInformation(l);
-        if (includeInfo == null)
-        {
-            yield return l;
-        }
-        else
-        {
-            yield return $"# -> {l}";
-            var lines = ExtractIncludeContents(includeInfo)
-                .SelectMany(ll => ll.ReplaceIncludeFiles(expandIncludeFiles));
-                foreach (var ln in lines)
+            if (!expandIncludeFiles)
             {
-                yield return ln;
+                yield return l;
+            }
+            else
+            {
+                var includeInfo = ExtractIncludeInformation(l);
+                if (includeInfo == null)
+                {
+                    yield return l;
+                }
+                else
+                {
+                    yield return "#";
+                    yield return $"# Including File {l}";
+                    yield return "#";
+                    var lines = FetchIncludeContents(includeInfo)
+                        .SelectMany(ll => ReplaceIncludeFiles(ll, expandIncludeFiles));
+                    foreach (var ln in lines)
+                    {
+                        yield return ln;
+                    }
+                    yield return "#";
+                    yield return $"# Done including file {l}";
+                    yield return "#";
+                }
             }
         }
-    }
 
 
-    /// <summary>
-    /// Return the contents of an include file.
-    /// </summary>
-    /// <param name="includeInfo"></param>
-    /// <returns></returns>
-    private static IEnumerable<string> ExtractIncludeContents(IncludeInfo includeInfo)
-    {
-        yield return "hi";
-    }
+        /// <summary>
+        /// Return the contents of an include file.
+        /// </summary>
+        /// <param name="includeInfo"></param>
+        /// <returns></returns>
+        private IEnumerable<string> FetchIncludeContents(IncludeInfo includeInfo)
+        {
+            // Find the include file
+            var f = FindIncludeFile(includeInfo.includeName);
+            if (f == null)
+            {
+                yield return "# *** Unable to find include file in svn!";
+            } else
+            {
+                foreach (var l in GetSvnFileLines(f))
+                {
+                    yield return l;
+                }
+            }
+        }
 
-    /// <summary>
-    /// Basic info about an include
-    /// </summary>
-    private class IncludeInfo
-    {
+        /// <summary>
+        /// Find an include file by looking at the target. Return null if it doesn't work.
+        /// </summary>
+        /// <param name="includeName"></param>
+        /// <returns></returns>
+        private SvnTarget FindIncludeFile(string includeName)
+        {
+            var f = ScanCache(includeName);
+            if (f == null)
+            {
+                ReloadCache();
+                f = ScanCache(includeName);
+            }
 
-    }
+            return f;
+        }
 
-    private static IncludeInfo ExtractIncludeInformation(string l)
-    {
-        return new IncludeInfo();
+        /// <summary>
+        /// Update the cache with all the files.
+        /// </summary>
+        private void ReloadCache()
+        {
+            // Build the ls target.
+            var lsTargetCommon = BuildTarget("common");
+            var lsTargetNonStandard = BuildTarget("nonStandard");
+
+            // Now do a recursve ls to get back everything.
+            var opt = new SvnListArgs() { Depth = SvnDepth.Infinity };
+            var linesCommon = FetchListing(lsTargetCommon, opt);
+            var linesNonStandard = FetchListing(lsTargetNonStandard, opt);
+
+            // Next, write out the cache
+            var cacheFile = GetCacheFileInfo();
+            using (var writer = cacheFile.CreateText())
+            {
+                foreach (var item in linesCommon.Concat(linesNonStandard))
+                {
+                    writer.WriteLine(item.Uri.OriginalString);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Return a reference to the cache file.
+        /// </summary>
+        /// <returns></returns>
+        private FileInfo GetCacheFileInfo()
+        {
+            var f = new FileInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"ATLASGeneratorSVNCaches\include_file_cache.txt"));
+            if (!f.Directory.Exists)
+            {
+                f.Directory.Create();
+            }
+            return f;
+        }
+
+        /// <summary>
+        /// Scan the cache of files to see if we can find one that fits. Return a
+        /// svn target for downloading.
+        /// </summary>
+        /// <param name="includeName"></param>
+        /// <returns></returns>
+        private SvnTarget ScanCache(string includeName)
+        {
+            // Strip off the first job options.
+            var stub = $"{MCCampaign}JobOptions/";
+            if (!includeName.StartsWith(stub))
+            {
+                // We definately don't know how to look outside of the current campaign.
+                return null;
+            }
+            var rawIncludeFile = includeName.Substring(stub.Length-1);
+
+            // Now we have to see if there is a sub-directory in there. If there is, then our search is going to be a little more
+            // complex.
+            Func<string, bool> matchInclude = line => line.Contains(rawIncludeFile);
+            if (rawIncludeFile.Substring(1).Contains("/"))
+            {
+                var subDir = "/" + rawIncludeFile.Split('/')[1] + "/";
+                var restOfIt = rawIncludeFile.Substring(subDir.Length - 1);
+                matchInclude = line => line.Contains(subDir) && line.Contains(restOfIt);
+            }
+
+            // Now look for it in the list.
+            var cacheFile = GetCacheFileInfo();
+            var f = cacheFile.ReadLines()
+                .Where(l => matchInclude.Invoke(l))
+                .FirstOrDefault();
+
+            if (f == null)
+            {
+                return null;
+            }
+            return BuildTarget(new Uri(f));
+        }
+
+        /// <summary>
+        /// Basic info about an include
+        /// </summary>
+        private class IncludeInfo
+        {
+            public string includeName;
+        }
+
+        private static Regex _findInclude = new Regex(@"include\(['\""]([^'""]+)['""]\)");
+
+        /// <summary>
+        /// Inspect the line for a python include line.
+        /// </summary>
+        /// <param name="l"></param>
+        /// <returns></returns>
+        private static IncludeInfo ExtractIncludeInformation(string l)
+        {
+            // Skip commented out lines.
+            if (l.Trim().StartsWith("#"))
+            {
+                return null;
+            }
+
+            // Now look for a nice include line.
+            var m = _findInclude.Match(l);
+            return m.Success
+                ? new IncludeInfo() { includeName = m.Groups[1].Value }
+                : null;
+        }
     }
 }
