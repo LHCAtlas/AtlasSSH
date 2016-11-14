@@ -36,6 +36,9 @@ namespace PSAtlasDatasetCommands
         [Parameter(HelpMessage = "Should include files be expanded inline?", Mandatory = false)]
         public SwitchParameter ExpandIncludeFiles { get; set; }
 
+        [Parameter(HelpMessage = "Extract all include files individually to local directory rather than stdout", Mandatory = false)]
+        public PathInfo ExtractionPath { get; set; }
+
         public GetATLASMCJobOptions()
         {
             MCCampaign = "MC15";
@@ -72,14 +75,47 @@ namespace PSAtlasDatasetCommands
             }
             var ds = myMCFile[0];
 
-            IEnumerable<string> lines = GetSvnFileLines(BuildTarget(ds.Uri));
-
-            foreach (var line in lines)
+            // Write out the raw lines, or the files to the local directory, depending.
+            if (ExtractionPath == null)
             {
-                WriteObject(line);
+                IEnumerable<string> lines = GetSvnFileLines(BuildTarget(ds.Uri));
+
+                foreach (var line in lines)
+                {
+                    WriteObject(line);
+                }
+            } else
+            {
+                var files = GetSvnFiles(BuildTarget(ds.Uri), ExtractionPath);
+                foreach (var f in files)
+                {
+                    WriteObject(f);
+                }
             }
 
             base.ProcessRecord();
+        }
+
+        /// <summary>
+        /// Fetch the files, and if requested, all the include files as well.
+        /// </summary>
+        /// <param name="svnTarget"></param>
+        /// <param name="extractionPath"></param>
+        /// <returns></returns>
+        private IEnumerable<PathInfo> GetSvnFiles(SvnTarget svnTarget, PathInfo extractionPath)
+        {
+            // Build the location of this file.
+            var targetTempPath = Path.GetTempFileName();
+            //var args = new SvnExportArgs() { Overwrite = true };
+            //WriteVerbose($"Downloading svn file {ds.TargetName}");
+            //_client.Export(ds, targetTempPath, args);
+
+            //// Transfer process the lines
+            //var lines = new FileInfo(targetTempPath)
+            //    .ReadLines()
+            //    .SelectMany(l => ReplaceIncludeFiles(l, ExpandIncludeFiles));
+            //return lines;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -109,11 +145,18 @@ namespace PSAtlasDatasetCommands
         /// <returns></returns>
         private Collection<SvnListEventArgs> FetchListing(SvnTarget svnTarget, SvnListArgs args = null)
         {
-            args = args == null ? new SvnListArgs() : args;
-            var result = new Collection<SvnListEventArgs>();
-            WriteVerbose($"Fetching svn listing from {svnTarget.TargetName}");
-            _client.GetList(svnTarget, args, out result);
-            return result;
+            try
+            {
+                args = args == null ? new SvnListArgs() : args;
+                var result = new Collection<SvnListEventArgs>();
+                WriteVerbose($"Fetching svn listing from {svnTarget.TargetName}");
+                _client.GetList(svnTarget, args, out result);
+                return result;
+            } catch (Exception e)
+            {
+                WriteWarning($"Error occured accessing '{svnTarget.TargetName} - could it be username/password is wrong? Use TortoiseSVN to make sure it is cached.");
+                throw;
+            }
         }
 
         /// <summary>
