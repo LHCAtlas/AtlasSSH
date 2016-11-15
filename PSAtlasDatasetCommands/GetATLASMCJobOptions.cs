@@ -259,22 +259,19 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         private void ReloadCache()
         {
-            // Build the ls target.
-            var lsTargetCommon = MCJobSVNHelpers.BuildTarget("common", MCCampaign);
-            var lsTargetNonStandard = MCJobSVNHelpers.BuildTarget("nonStandard", MCCampaign);
+            var subdirs = new string[] { "common", "nonStandard", "higgscontrol", "susycontrol", "topcontrol"};
 
-            // Now do a recursve ls to get back everything.
+            // A list fo the files to access, one after the other
             var opt = new SvnListArgs() { Depth = SvnDepth.Infinity };
-            WriteVerbose($"Downloading SVN directory {lsTargetCommon.TargetName}");
-            var linesCommon = MCJobSVNHelpers.FetchListing(lsTargetCommon, opt);
-            WriteVerbose($"Downloading SVN directory {lsTargetNonStandard.TargetName}");
-            var linesNonStandard = MCJobSVNHelpers.FetchListing(lsTargetNonStandard, opt);
+            var linesCommon = subdirs
+                .Select(d => MCJobSVNHelpers.BuildTarget(d, MCCampaign))
+                .SelectMany(dl => MCJobSVNHelpers.FetchListing(dl, opt));
 
-            // Next, write out the cache
+            // Now, write it out.
             var cacheFile = GetCacheFileInfo();
             using (var writer = cacheFile.CreateText())
             {
-                foreach (var item in linesCommon.Concat(linesNonStandard))
+                foreach (var item in linesCommon)
                 {
                     writer.WriteLine(item.Uri.OriginalString);
                 }
