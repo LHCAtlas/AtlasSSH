@@ -99,23 +99,56 @@ namespace PSAtlasDatasetCommands
         /// <summary>
         /// Fetch the files, and if requested, all the include files as well.
         /// </summary>
-        /// <param name="svnTarget"></param>
+        /// <param name="ds"></param>
         /// <param name="extractionPath"></param>
         /// <returns></returns>
-        private IEnumerable<PathInfo> GetSvnFiles(SvnTarget svnTarget, PathInfo extractionPath)
+        private IEnumerable<FileInfo> GetSvnFiles(SvnTarget ds, PathInfo extractionPath)
         {
-            // Build the location of this file.
-            var targetTempPath = Path.GetTempFileName();
-            //var args = new SvnExportArgs() { Overwrite = true };
-            //WriteVerbose($"Downloading svn file {ds.TargetName}");
-            //_client.Export(ds, targetTempPath, args);
+            // Build the location of this file to write out.
+            var outfile = new FileInfo(Path.Combine(extractionPath.Path, ds.FileName));
 
-            //// Transfer process the lines
-            //var lines = new FileInfo(targetTempPath)
-            //    .ReadLines()
-            //    .SelectMany(l => ReplaceIncludeFiles(l, ExpandIncludeFiles));
-            //return lines;
-            throw new NotImplementedException();
+            var args = new SvnExportArgs() { Overwrite = true };
+            WriteVerbose($"Downloading svn file {ds.TargetName}");
+            _client.Export(ds, outfile.FullName, args);
+            yield return outfile;
+
+            // Next, we need to dip into all the levels down to see if we can't
+            // figure out if there are includes.
+            var includeFiles = outfile
+                .ReadLines()
+                .SelectMany(l => ExtractIncludedFiles(l, extractionPath));
+
+            foreach (var l in includeFiles)
+            {
+                yield return l;
+            }
+        }
+
+        /// <summary>
+        /// Extract any include files (and recurse) and return the file list.
+        /// </summary>
+        /// <param name="pythonLine"></param>
+        /// <param name="extractionPath"></param>
+        /// <returns></returns>
+        private IEnumerable<FileInfo> ExtractIncludedFiles(string pythonLine, PathInfo extractionPath)
+        {
+            var includeInfo = ExtractIncludeInformation(pythonLine);
+            if (includeInfo != null)
+            {
+                // Get the svn target.
+                var f = FindIncludeFile(includeInfo.includeName);
+                if (f == null)
+                {
+                    WriteWarning($"Unable to find and download include file {includeInfo.includeName}.");
+                }
+                else
+                {
+                    foreach (var includeFiles in GetSvnFiles(f, extractionPath))
+                    {
+                        yield return includeFiles;
+                    }
+                }
+            }
         }
 
         /// <summary>
