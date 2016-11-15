@@ -16,7 +16,7 @@
     <dependencies></dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\*.dll" target="" />
+    <file src="bin\x64\Release\*.dll" target="" />
     <file src="PSAtlasDatasetCommands.psd1" target="" />
   </files>
 </package>
