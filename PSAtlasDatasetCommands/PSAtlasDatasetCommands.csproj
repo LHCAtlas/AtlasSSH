@@ -89,6 +89,7 @@
   <ItemGroup>
     <Compile Include="AtlasJobSpec.cs" />
     <Compile Include="AtlasPandaTaskID.cs" />
+    <Compile Include="FindATLASMCJobOptions.cs" />
     <Compile Include="FindGRIDJob.cs" />
     <Compile Include="GetAMIDatasetInfo.cs" />
     <Compile Include="GetATLASMCJobOptions.cs" />
@@ -98,6 +99,7 @@
     <Compile Include="GetGRIDJobInfo.cs" />
     <Compile Include="InvokeGRIDJob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\MCJobSVNHelpers.cs" />
     <Compile Include="Utils\PSListener.cs" />
     <Compile Include="ValidateLocationAttribute.cs" />
   </ItemGroup>

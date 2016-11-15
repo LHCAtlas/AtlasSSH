@@ -1,4 +1,5 @@
-﻿using SharpSvn;
+﻿using PSAtlasDatasetCommands.Utils;
+using SharpSvn;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -44,11 +45,6 @@ namespace PSAtlasDatasetCommands
             MCCampaign = "MC15";
         }
 
-        /// <summary>
-        /// Client we will use for quick access
-        /// </summary>
-        public SvnClient _client = new SvnClient();
-
         protected override void ProcessRecord()
         {
             // Make sure this is a 6 digit number as a string.
@@ -58,7 +54,8 @@ namespace PSAtlasDatasetCommands
             // cached under.
 
             var DSIDDirectory = $"DSID{runID.Substring(0, 3)}xxx";
-            var dsidListTarget = FetchListing(BuildTarget($"share/{DSIDDirectory}"));
+            WriteVerbose($"Fetching svn listing from {DSIDDirectory}");
+            var dsidListTarget = MCJobSVNHelpers.FetchListing(MCJobSVNHelpers.BuildTarget($"share/{DSIDDirectory}", MCCampaign));
 
             var myMCFile = dsidListTarget
                 .Where(ads => ads.Name.Contains(runID))
@@ -107,9 +104,8 @@ namespace PSAtlasDatasetCommands
             // Build the location of this file to write out.
             var outfile = new FileInfo(Path.Combine(extractionPath.Path, ds.FileName));
 
-            var args = new SvnExportArgs() { Overwrite = true };
             WriteVerbose($"Downloading svn file {ds.TargetName}");
-            _client.Export(ds, outfile.FullName, args);
+            MCJobSVNHelpers.ExtractFile(ds, outfile);
             yield return outfile;
 
             // Next, we need to dip into all the levels down to see if we can't
@@ -160,9 +156,8 @@ namespace PSAtlasDatasetCommands
         {
             // Next, fetch the file down.
             var targetTempPath = Path.GetTempFileName();
-            var args = new SvnExportArgs() { Overwrite = true };
             WriteVerbose($"Downloading svn file {ds.TargetName}");
-            _client.Export(ds, targetTempPath, args);
+            MCJobSVNHelpers.ExtractFile(ds, new FileInfo(targetTempPath));
 
             // Transfer process the lines
             var lines = new FileInfo(targetTempPath)
@@ -171,46 +166,6 @@ namespace PSAtlasDatasetCommands
             return lines;
         }
 
-        /// <summary>
-        /// Returns a list of the contents of the directory
-        /// </summary>
-        /// <param name="svnTarget"></param>
-        /// <returns></returns>
-        private Collection<SvnListEventArgs> FetchListing(SvnTarget svnTarget, SvnListArgs args = null)
-        {
-            try
-            {
-                args = args == null ? new SvnListArgs() : args;
-                var result = new Collection<SvnListEventArgs>();
-                WriteVerbose($"Fetching svn listing from {svnTarget.TargetName}");
-                _client.GetList(svnTarget, args, out result);
-                return result;
-            } catch (Exception e)
-            {
-                WriteWarning($"Error occured accessing '{svnTarget.TargetName} - could it be username/password is wrong? Use TortoiseSVN to make sure it is cached.");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Build a target for a particular directory or file from the base given by the current
-        /// arguments.
-        /// </summary>
-        /// <param name="v"></param>
-        /// <returns></returns>
-        private SvnTarget BuildTarget(string path)
-        {
-            SvnTarget target;
-            var url = $"https://svn.cern.ch/reps/atlasoff/Generators/{MCCampaign}JobOptions/trunk/{path}";
-            if (!SvnTarget.TryParse(url, out target))
-            {
-                var err = new ArgumentException($"Unable to parse svn url {url}.");
-                WriteError(new ErrorRecord(err, "SVNUrlError", ErrorCategory.InvalidArgument, null));
-                throw err;
-            }
-
-            return target;
-        }
 
         /// <summary>
         /// Build the target from a uri.
@@ -305,13 +260,15 @@ namespace PSAtlasDatasetCommands
         private void ReloadCache()
         {
             // Build the ls target.
-            var lsTargetCommon = BuildTarget("common");
-            var lsTargetNonStandard = BuildTarget("nonStandard");
+            var lsTargetCommon = MCJobSVNHelpers.BuildTarget("common", MCCampaign);
+            var lsTargetNonStandard = MCJobSVNHelpers.BuildTarget("nonStandard", MCCampaign);
 
             // Now do a recursve ls to get back everything.
             var opt = new SvnListArgs() { Depth = SvnDepth.Infinity };
-            var linesCommon = FetchListing(lsTargetCommon, opt);
-            var linesNonStandard = FetchListing(lsTargetNonStandard, opt);
+            WriteVerbose($"Downloading SVN directory {lsTargetCommon.TargetName}");
+            var linesCommon = MCJobSVNHelpers.FetchListing(lsTargetCommon, opt);
+            WriteVerbose($"Downloading SVN directory {lsTargetNonStandard.TargetName}");
+            var linesNonStandard = MCJobSVNHelpers.FetchListing(lsTargetNonStandard, opt);
 
             // Next, write out the cache
             var cacheFile = GetCacheFileInfo();
