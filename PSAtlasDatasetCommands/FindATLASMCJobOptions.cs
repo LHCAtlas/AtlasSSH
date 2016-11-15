@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace PSAtlasDatasetCommands
@@ -19,8 +20,14 @@ namespace PSAtlasDatasetCommands
         /// <summary>
         /// The MC run number, if we want a specific run number
         /// </summary>
-        [Parameter(HelpMessage = "Run number to fetch", ValueFromPipeline = true, Mandatory = true, Position = 1)]
+        [Parameter(HelpMessage = "Run number to fetch", ValueFromPipeline = true, Mandatory = true, Position = 1, ParameterSetName = "ByRunNumber")]
         public int MCJobNumber;
+
+        /// <summary>
+        /// Search by name rather than run number
+        /// </summary>
+        [Parameter(HelpMessage = "Name (or partial name) of the dataset", ValueFromPipeline = true, Mandatory = true, Position = 1, ParameterSetName = "ByName")]
+        public string Name { get; set; }
 
         /// <summary>
         /// Get/Set the mc campaign.
@@ -111,17 +118,36 @@ namespace PSAtlasDatasetCommands
         protected override void ProcessRecord()
         {
             // Loop through the file, looking for what we need.
-            var jobText = MCJobNumber.ToString("D6");
+            var searchText = ParameterSetName == "ByRunNumber"
+                ? MCJobNumber.ToString("D6")
+                : Name;
 
             var matches = GetDatabaseFilename()
                 .ReadLines()
-                .Where(l => l.Contains(jobText))
-                .Select(l => new ATLASMCJobInfo() { RunNumber = MCJobNumber, FileName = l });
+                .Where(l => l.Contains(searchText))
+                .Select(l => new ATLASMCJobInfo() { RunNumber = ParseRunNumberFromName(l), FileName = l });
 
             foreach (var item in matches)
             {
                 WriteObject(item);
             }
+        }
+
+        /// <summary>
+        /// Match the run number in a MC filename
+        /// </summary>
+        private Regex _runMatch = new Regex(@"\.([0-9]+)\.");
+
+        /// <summary>
+        /// Pull the run number from the filename.
+        /// </summary>
+        /// <param name="l"></param>
+        /// <returns></returns>
+        private int ParseRunNumberFromName(string l)
+        {
+            var m = _runMatch.Match(l);
+            return m.Success == false ? 0
+                : int.Parse(m.Groups[1].Value);
         }
 
         /// <summary>
