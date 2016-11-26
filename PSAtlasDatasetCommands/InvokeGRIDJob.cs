@@ -36,6 +36,9 @@ namespace PSAtlasDatasetCommands
         [Parameter(Mandatory = true, HelpMessage = "Job name to apply to the dataset", Position = 2)]
         public int JobVersion { get; set; }
 
+        [Parameter(HelpMessage = "Wait for the job to be registered in Panda. This can take many minutes")]
+        public SwitchParameter WaitForPandaRegistration { get; set; }
+
         /// <summary>
         /// Load up the job requested. Fail, obviously, if we can't.
         /// </summary>
@@ -88,27 +91,29 @@ namespace PSAtlasDatasetCommands
                     connection
                         .SubmitJob(job, DatasetName, ds, DisplayStatus, failNow: () => Stopping);
 
-                    // Try to find the job again. If this fails, then things are really bad!
-                    var pandJobResult = Policy
-                        .Handle<InvalidOperationException>()
-                        .WaitAndRetry(new[]
-                        {
-                            TimeSpan.FromSeconds(30),
-                            TimeSpan.FromMinutes(1),
-                            TimeSpan.FromMinutes(2),
-                            TimeSpan.FromMinutes(2)
-                        }, (e, ts) => { WriteVerbose($"Failed to find the submitted panda job on bigpanda: {e.Message}"); })
-                        .ExecuteAndCapture(() => FindPandaJobForDS(ds));
-                    if (pandJobResult.Outcome != OutcomeType.Successful)
+                    // Try to find the job again if requested. The submission can take a very long time to show up in
+                    // big panda, so skip unless requested.
+                    if (WaitForPandaRegistration)
                     {
-                        throw pandJobResult.FinalException;
+                        var pandJobResult = Policy
+                            .Handle<InvalidOperationException>()
+                            .WaitAndRetryForever(nthRetry => TimeSpan.FromMinutes(1),
+                                                 (e, ts) => { WriteWarning($"Failed to find the submitted panda job on bigpanda: {e.Message}. Will wait one minute and try again."); })
+                            .ExecuteAndCapture(() => FindPandaJobForDS(ds));
+                        if (pandJobResult.Outcome != OutcomeType.Successful)
+                        {
+                            throw pandJobResult.FinalException;
+                        }
+                        pandaJob = pandJobResult.Result;
                     }
-                    pandaJob = pandJobResult.Result;
                 }
 
                 // Return a helper obj that contains the info about this job that can be used by other commands.
-                var r = new AtlasPandaTaskID() { ID = pandaJob.jeditaskid, Name = pandaJob.taskname };
-                WriteObject(r);
+                if (pandaJob != null)
+                {
+                    var r = new AtlasPandaTaskID() { ID = pandaJob.jeditaskid, Name = pandaJob.taskname };
+                    WriteObject(r);
+                }
             }
             finally
             {
