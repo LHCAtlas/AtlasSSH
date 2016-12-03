@@ -37,6 +37,11 @@ namespace AtlasWorkFlows.Utils
         /// <returns></returns>
         public static FileInfo[] GoodConfigFilesOfName(string filename)
         {
+            if(filename == null)
+            {
+                throw new ArgumentException("Parameter filename to GoodCOnfigFilesOfName can't be null.");
+            }
+
             var files = GetFilesSafely("./", filename)
                 .Concat(GetFilesSafely(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)), filename))
                 .Concat(GetFilesSafely(Path.Combine(getOneDriveFolderPath()), filename))
@@ -153,6 +158,8 @@ namespace AtlasWorkFlows.Utils
 
             var path3 = value3 as string;
             if (path3 != null && Directory.Exists(path3)) return path3;
+
+            throw new InvalidOperationException("Onedrive is not setup on this machine. I cannot determine the onedrive path.");
 
             return null;
         }
