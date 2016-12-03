@@ -69,7 +69,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="job"></param>
         /// <param name="datasetToStartWith"></param>
         /// <returns></returns>
-        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false)
         {
             // Get the status update protected.
             Action<string> update = statusUpdate != null ? 
@@ -86,11 +86,15 @@ namespace AtlasWorkFlows.Jobs
                 .FirstOrDefault()
                 .ThrowIfNull("Please create a windows generic credential with a target of CERN to allow access to kinit");
 
-            // Actually run the buld and submit.
-            var linuxLocation = string.Format("/tmp/{0}", resultingDataset);
-            return connection
-                .Apply(() => update("Removing old build directory"))
-                .ExecuteCommand("rm -rf " + linuxLocation)
+            // If this is the first time through with a single job, then setup a directory we can use.
+            if (!sameJobAsLastTime)
+            {
+                var linuxLocation = string.Format("/tmp/{0}", resultingDataset);
+                connection
+                    .Apply(() => update("Removing old build directory"))
+                    .ExecuteCommand("rm -rf " + linuxLocation);
+
+                connection
                 .Apply(() => update("Setting up panda"))
                 .ExecuteCommand("lsetup panda")
                 .Apply(() => update("Setting up release"))
@@ -100,7 +104,11 @@ namespace AtlasWorkFlows.Jobs
                 .Apply(job.Packages, (c, j) => c.Apply(() => update("Checking out package " + j.Name)).CheckoutPackage(j.Name, j.SCTag, failNow: failNow))
                 .Apply(job.Commands, (co, cm) => co.Apply(() => update("Running command " + cm.CommandLine)).ExecuteLinuxCommand(cm.CommandLine, failNow: failNow))
                 .Apply(() => update("Compiling release"))
-                .BuildWorkArea(failNow: failNow)
+                .BuildWorkArea(failNow: failNow);
+            }
+
+            // We should now be in the directory where everything is - so submit!
+            return connection
                 .Apply(() => update("Running submit command"))
                 .ExecuteLinuxCommand(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow);
         }

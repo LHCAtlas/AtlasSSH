@@ -40,9 +40,49 @@ namespace PSAtlasDatasetCommands
         public SwitchParameter WaitForPandaRegistration { get; set; }
 
         /// <summary>
-        /// Load up the job requested. Fail, obviously, if we can't.
+        /// Hold onto the connection
+        /// </summary>
+        private SSHConnection _connection = null;
+
+        /// <summary>
+        /// Hold onto the grid credentials
+        /// </summary>
+        private Credential _gridCredentials = null;
+
+        /// <summary>
+        /// Setup a few things for running. Much of what we need
+        /// is only lazy initalized.
         /// </summary>
         protected override void BeginProcessing()
+        {
+            // Setup for verbosity if we need it.
+            var listener = new PSListener(this);
+            Trace.Listeners.Add(listener);
+            try
+            {
+                // Get the grid credentials
+                _gridCredentials = new CredentialSet("GRID").Load().FirstOrDefault();
+                if (_gridCredentials == null)
+                {
+                    throw new ArgumentException("Please create a generic windows credential with the target 'GRID' with the username as the rucio grid username and the password to be used with voms proxy init");
+                }
+            } finally
+            {
+                Trace.Listeners.Remove(listener);
+            }
+        }
+
+        /// <summary>
+        /// Clean up what is needed.
+        /// </summary>
+        protected override void EndProcessing()
+        {
+        }
+
+        /// <summary>
+        /// Load up the job requested. Fail, obviously, if we can't.
+        /// </summary>
+        protected override void ProcessRecord()
         {
             // Setup for verbosity if we need it.
             var listener = new PSListener(this);
@@ -54,13 +94,7 @@ namespace PSAtlasDatasetCommands
 
                 // Get the expected resulting dataset name. Since this will be a personal
                 // dataset, we need to get the GRID info.
-
-                var gridCredentials = new CredentialSet("GRID").Load().FirstOrDefault();
-                if (gridCredentials == null)
-                {
-                    throw new ArgumentException("Please create a generic windows credential with the target 'GRID' with the username as the rucio grid username and the password to be used with voms proxy init");
-                }
-                string ds = job.ResultingDatasetName(DatasetName, gridCredentials);
+                string ds = job.ResultingDatasetName(DatasetName, _gridCredentials);
 
                 // See if there is already a job defined that will produce this
                 var pandaJob = (ds + "/").FindPandaJobWithTaskName();
@@ -70,16 +104,24 @@ namespace PSAtlasDatasetCommands
                     // Where are we going to be doing the submission on?
                     var sm = JobParser.GetSubmissionMachine();
 
+                    // Get the remove environment configured if it needs to be
+                    var firstJob = false;
+                    if (_connection == null)
+                    {
+                        firstJob = true;
+                        _connection = new SSHConnection(sm.MachineName, sm.Username);
+                        _connection
+                            .Apply(() => DisplayStatus("Setting up ATLAS"))
+                            .setupATLAS()
+                            .Apply(() => DisplayStatus("Setting up Rucio"))
+                            .setupRucio(_gridCredentials.Username)
+                            .Apply(() => DisplayStatus("Acquiring GRID credentials"))
+                            .VomsProxyInit("atlas", failNow: () => Stopping);
+                    }
+
                     // Check to see if the original dataset exists. We will use the location known as Local for doing the
                     // setup, I suppose.
-                    var connection = new SSHConnection(sm.MachineName, sm.Username);
-                    var files = connection
-                        .Apply(() => DisplayStatus("Setting up ATLAS"))
-                        .setupATLAS()
-                        .Apply(() => DisplayStatus("Setting up Rucio"))
-                        .setupRucio(gridCredentials.Username)
-                        .Apply(() => DisplayStatus("Acquiring GRID credentials"))
-                        .VomsProxyInit("atlas", failNow: () => Stopping)
+                    var files = _connection
                         .Apply(() => DisplayStatus("Checking dataset exists on the GRID"))
                         .FilelistFromGRID(DatasetName, failNow: () => Stopping);
                     if (files.Length == 0)
@@ -88,8 +130,8 @@ namespace PSAtlasDatasetCommands
                     }
 
                     // Submit the job
-                    connection
-                        .SubmitJob(job, DatasetName, ds, DisplayStatus, failNow: () => Stopping);
+                    _connection
+                        .SubmitJob(job, DatasetName, ds, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob);
 
                     // Try to find the job again if requested. The submission can take a very long time to show up in
                     // big panda, so skip unless requested.
@@ -114,8 +156,7 @@ namespace PSAtlasDatasetCommands
                     var r = new AtlasPandaTaskID() { ID = pandaJob.jeditaskid, Name = pandaJob.taskname };
                     WriteObject(r);
                 }
-            }
-            finally
+            } finally
             {
                 Trace.Listeners.Remove(listener);
             }

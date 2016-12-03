@@ -25,7 +25,7 @@ namespace PSAtlasDatasetCommands.Utils
         /// <param name="message"></param>
         public override void WriteLine(string message)
         {
-            _host.WriteVerbose(message);
+           //_host.WriteVerbose(message);
         }
     }
 
