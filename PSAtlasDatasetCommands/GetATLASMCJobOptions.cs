@@ -321,7 +321,7 @@ namespace PSAtlasDatasetCommands
 
             // Now look for it in the list.
             var cacheFile = GetCacheFileInfo();
-            var f = cacheFile.ReadLines()
+            var f = cacheFile.ReadLinesIfExists()
                 .Where(l => matchInclude.Invoke(l))
                 .FirstOrDefault();
 
