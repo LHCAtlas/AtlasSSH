@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A PowerShell module that adds commands that will fetch data from the GRID and run jobs on the grid. Read docs to find out how to configure properly: requires properly configured Linux endpoint to work.</description>
-    <releaseNotes>Added commands to fetch MC DSID info</releaseNotes>
+    <releaseNotes>Fix first-run bug when fetching MC files</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>ATLAS GRID CERN PowerShell</tags>
     <dependencies></dependencies>
