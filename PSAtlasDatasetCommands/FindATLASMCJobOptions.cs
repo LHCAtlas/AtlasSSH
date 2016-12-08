@@ -29,6 +29,9 @@ namespace PSAtlasDatasetCommands
         [Parameter(HelpMessage = "Name (or partial name) of the dataset", ValueFromPipeline = true, Mandatory = true, Position = 1, ParameterSetName = "ByName")]
         public string Name { get; set; }
 
+        [Parameter(HelpMessage = "List every run we know about", ParameterSetName = "All")]
+        public SwitchParameter All { get; set; }
+
         /// <summary>
         /// Get/Set the mc campaign.
         /// </summary>
@@ -117,14 +120,24 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void ProcessRecord()
         {
-            // Loop through the file, looking for what we need.
-            var searchText = ParameterSetName == "ByRunNumber"
-                ? MCJobNumber.ToString("D6")
-                : Name;
+            Func<string, bool> test = null;
+            if (ParameterSetName == "ByRunNumber")
+            {
+                test = txt => txt.Contains(MCJobNumber.ToString("D6"));
+            }
+            else if (ParameterSetName == "ByName")
+            {
+                test = txt => txt.Contains(Name);
+            }
+            else if (ParameterSetName == "All")
+            {
+                test = txt => true;
+            }
 
+            // Loop through the file, looking for what we need.
             var matches = GetDatabaseFilename()
                 .ReadLines()
-                .Where(l => l.Contains(searchText))
+                .Where(l => test(l))
                 .Select(l => new ATLASMCJobInfo() { RunNumber = ParseRunNumberFromName(l), FileName = l });
 
             foreach (var item in matches)
