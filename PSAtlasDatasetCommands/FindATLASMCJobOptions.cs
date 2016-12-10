@@ -90,7 +90,7 @@ namespace PSAtlasDatasetCommands
             pr.PercentComplete = 0;
             WriteProgress(pr);
 
-            var svnRootDir = MCJobSVNHelpers.BuildTarget("share", MCCampaign);
+            var svnRootDir = MCJobSVNHelpers.BuildTarget(".", MCCampaign);
             var listing = MCJobSVNHelpers.FetchListing(svnRootDir, new SvnListArgs() { Depth = SvnDepth.Infinity });
 
             pr.PercentComplete = 50;
