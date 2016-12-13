@@ -45,6 +45,21 @@ namespace AtlasWorkFlows.Jobs
     }
 
     /// <summary>
+    /// Holds a submit pattern that is good only for a match to a specific search string.
+    /// </summary>
+    public class SubmitPattern
+    {
+        public string RegEx { get; set; }
+
+        public Command SubmitCommand { get; set; }
+
+        internal SubmitPattern Clone()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
     /// Code release
     /// </summary>
     public class Release
@@ -69,6 +84,7 @@ namespace AtlasWorkFlows.Jobs
         public Package[] Packages { get; set; }
         public Command[] Commands { get; set; }
         public Submit SubmitCommand { get; set; }
+        public SubmitPattern[] SubmitPatternCommands { get; set; }
 
         /// <summary>
         /// Do a deep copy of the job.
@@ -84,6 +100,7 @@ namespace AtlasWorkFlows.Jobs
             r.Packages = Packages?.Select(p => p.Clone()).ToArray();
             r.Commands = Commands?.Select(c => c.Clone()).ToArray();
             r.SubmitCommand = SubmitCommand?.Clone();
+            r.SubmitPatternCommands = SubmitPatternCommands?.Select(sp => sp.Clone()).ToArray();
             return r;
         }
     }

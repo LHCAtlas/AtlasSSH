@@ -62,6 +62,24 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
+        public void GoodPatternSubmit()
+        {
+            var s = "submit_pattern(xAOD, ls dummymyfood)";
+            var c = JobParser.ParseSubmitPattern.Parse(s);
+            Assert.AreEqual("xAOD", c.RegEx);
+            Assert.AreEqual("ls dummymyfood", c.SubmitCommand.CommandLine);
+        }
+
+        [TestMethod]
+        public void GoodPatternSubmitQuoted()
+        {
+            var s = "submit_pattern(xAOD, \"ls dummymyfood\")";
+            var c = JobParser.ParseSubmitPattern.Parse(s);
+            Assert.AreEqual("xAOD", c.RegEx);
+            Assert.AreEqual("ls dummymyfood", c.SubmitCommand.CommandLine);
+        }
+
+        [TestMethod]
         public void GoodPackage()
         {
             var s = "package(pk,1234)";
@@ -141,6 +159,50 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
+        public void GoodJobWithPattern()
+        {
+            var s = "job(DiVert,22){release(Base,1234)package(DiVertAnalysis,1234)submit_pattern(joke, ls)}";
+            var j = JobParser.ParseJob.Parse(s);
+            Assert.IsNotNull(j.Commands);
+            Assert.AreEqual(0, j.Commands.Length);
+            Assert.AreEqual("DiVert", j.Name);
+            Assert.AreEqual(22, j.Version);
+            Assert.IsNotNull(j.Packages);
+            Assert.AreEqual(1, j.Packages.Length);
+            Assert.AreEqual("DiVertAnalysis", j.Packages[0].Name);
+            Assert.IsNotNull(j.Release);
+            Assert.AreEqual("Base,1234", j.Release.Name);
+            Assert.AreEqual(0, j.SubmitCommand.SubmitCommand.CommandLine.Length);
+            Assert.IsNotNull(j.SubmitPatternCommands);
+            Assert.AreEqual(1, j.SubmitPatternCommands.Length);
+            Assert.AreEqual("ls", j.SubmitPatternCommands[0].SubmitCommand.CommandLine);
+            Assert.AreEqual("joke", j.SubmitPatternCommands[0].RegEx);
+        }
+
+        [TestMethod]
+        public void GoodJobWith2Patterns()
+        {
+            var s = "job(DiVert,22){release(Base,1234)package(DiVertAnalysis,1234)submit_pattern(joke, ls)submit_pattern(myfoot, dude)}";
+            var j = JobParser.ParseJob.Parse(s);
+            Assert.IsNotNull(j.Commands);
+            Assert.AreEqual(0, j.Commands.Length);
+            Assert.AreEqual("DiVert", j.Name);
+            Assert.AreEqual(22, j.Version);
+            Assert.IsNotNull(j.Packages);
+            Assert.AreEqual(1, j.Packages.Length);
+            Assert.AreEqual("DiVertAnalysis", j.Packages[0].Name);
+            Assert.IsNotNull(j.Release);
+            Assert.AreEqual("Base,1234", j.Release.Name);
+            Assert.IsNotNull(j.SubmitCommand);
+            Assert.IsNotNull(j.SubmitPatternCommands);
+            Assert.AreEqual(2, j.SubmitPatternCommands.Length);
+            Assert.AreEqual("ls", j.SubmitPatternCommands[0].SubmitCommand.CommandLine);
+            Assert.AreEqual("joke", j.SubmitPatternCommands[0].RegEx);
+            Assert.AreEqual("dude", j.SubmitPatternCommands[1].SubmitCommand.CommandLine);
+            Assert.AreEqual("myfoot", j.SubmitPatternCommands[1].RegEx);
+        }
+
+        [TestMethod]
         public void GoodJobWithSpaces()
         {
             var s = "job(DiVert,22) { release(Base,1234) package(DiVertAnalysis,1234) submit(ls) }";
@@ -164,6 +226,14 @@ namespace AtlasWorkFlowsTest.Jobs
         {
             var s = "job(DiVert,22) { job release(Base,1234) package(DiVertAnalysis,1234) submit(ls) }";
             var j = JobParser.ParseJobFile.Parse(s);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Sprache.ParseException))]
+        public void BadJobWithSubmitAndPatternSubmits()
+        {
+            var s = "job(DiVert,22){release(Base,1234)package(DiVertAnalysis,1234)submit(ls)submit_pattern(myfoot, dude)}";
+            var j = JobParser.ParseJob.Parse(s);
         }
 
         [TestMethod]

@@ -84,7 +84,7 @@ namespace AtlasWorkFlows.Jobs
         /// </summary>
         public static Parser<Release> ParseRelease =
             ParseSingleAnyArg("release", n => new Release() { Name = n });
-            
+
         /// <summary>
         /// Parse a command line
         /// </summary>
@@ -97,6 +97,32 @@ namespace AtlasWorkFlows.Jobs
         public static Parser<Submit> ParseSubmit =
             ParseSingleAnyArg("submit", n => new Submit() { SubmitCommand = new Command() { CommandLine = n } });
 
+        public static Parser<SubmitPattern> ParseSubmitPattern =
+            from rid in Parse.String("submit_pattern").Token()
+            from args in ParseArgumentList
+            select SubmitPatternBuilder(args);
+
+        /// <summary>
+        /// From the parsed arguments, return a submit pattern. Throw if we find an error doing
+        /// the "sub" prase.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static SubmitPattern SubmitPatternBuilder(IEnumerable<string> args)
+        {
+            var r = args.ToArray();
+            if (r.Length != 2)
+            {
+                throw new ArgumentException($"Expected two arguments to submit_pattern, instead saw {r.Length}!");
+            }
+
+            return new SubmitPattern()
+            {
+                RegEx = r[0],
+                SubmitCommand = new Command() { CommandLine = r[1] }
+            };
+        }
+
         /// <summary>
         /// Grab whatever is surrounded by these guys
         /// </summary>
@@ -107,7 +133,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="open"></param>
         /// <param name="close"></param>
         /// <returns></returns>
-        public static Parser<T> ParseInterior<T, U1, U2> (this Parser<T> inside, Parser<U1> open, Parser<U2> close)
+        public static Parser<T> ParseInterior<T, U1, U2>(this Parser<T> inside, Parser<U1> open, Parser<U2> close)
         {
             return from o in open
                    from r in inside.Token()
@@ -115,8 +141,34 @@ namespace AtlasWorkFlows.Jobs
                    select r;
         }
 
+        private static Parser<string> ParseSingleQuotedArgument =
+            from open in Parse.Char('\'')
+            from identifier in Parse.CharExcept('\'').Many().Text()
+            from close in Parse.Char('\'')
+            select identifier;
+
+        private static Parser<string> ParseDoubleQuotedArgument =
+            from open in Parse.Char('\"')
+            from identifier in Parse.CharExcept('\"').Many().Text()
+            from close in Parse.Char('\"')
+            select identifier;
+
+        private static Parser<string> ParseUnquotedArgument =
+            from identifier in Parse.Identifier(Parse.LetterOrDigit, Parse.CharExcept(",)"))
+            select identifier.Trim();
+
+        /// <summary>
+        /// Parse any sort fo argument
+        /// </summary>
+        private static Parser<string> ParseArgument =
+            from identifier in ParseSingleQuotedArgument.Or(ParseDoubleQuotedArgument).Or(ParseUnquotedArgument)
+            select identifier;
+
+        //private static Parser<IEnumerable<string>> ParseArgumentList =
+        //    from args in Parse.Identifier(Parse.LetterOrDigit, Parse.LetterOrDigit.Or(Parse.Chars("-/."))).DelimitedBy(Parse.Char(',').Token()).ParseInterior(Parse.Char('('), Parse.Char(')'))
+        //    select args
         private static Parser<IEnumerable<string>> ParseArgumentList =
-            from args in Parse.Identifier(Parse.LetterOrDigit, Parse.LetterOrDigit.Or(Parse.Chars("-/."))).DelimitedBy(Parse.Char(',').Token()).ParseInterior(Parse.Char('('), Parse.Char(')'))
+            from args in ParseArgument.DelimitedBy(Parse.Char(',').Token()).ParseInterior(Parse.Char('('), Parse.Char(')'))
             select args;
 
         /// <summary>
@@ -146,7 +198,7 @@ namespace AtlasWorkFlows.Jobs
             }
 
             // Not good!!
-                throw new ArgumentException("package primitive needs two arguments: a name and a source control tag - though the second is optional if you want to check out the version associated with the release");
+            throw new ArgumentException("package primitive needs two arguments: a name and a source control tag - though the second is optional if you want to check out the version associated with the release");
         }
 
         /// <summary>
@@ -157,7 +209,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="mainParser"></param>
         /// <param name="converter"></param>
         /// <returns></returns>
-        private static Parser<T> ParseAs<T, U> (this Parser<U> mainParser, Func<U, T> converter)
+        private static Parser<T> ParseAs<T, U>(this Parser<U> mainParser, Func<U, T> converter)
         {
             return mainParser.Select(t => converter(t));
         }
@@ -179,7 +231,8 @@ namespace AtlasWorkFlows.Jobs
                     ParseRelease.ParseAs<Action<AtlasJob>, Release>(r => (AtlasJob j) => j.Release = r)
                     .Or(ParseCommand.ParseAs<Action<AtlasJob>, Command>(c => (AtlasJob j) => j.Commands = j.Commands.Append(c)))
                     .Or(ParsePackage.ParseAs<Action<AtlasJob>, Package>(p => (AtlasJob j) => j.Packages = j.Packages.Append(p)))
-                    .Or(ParseSubmit.ParseAs<Action<AtlasJob>,Submit>(s => (AtlasJob j) => j.SubmitCommand = s))
+                    .Or(ParseSubmit.ParseAs<Action<AtlasJob>, Submit>(s => (AtlasJob j) => j.SubmitCommand = s))
+                    .Or(ParseSubmitPattern.ParseAs<Action<AtlasJob>, SubmitPattern>(s => (AtlasJob j) => j.SubmitPatternCommands = j.SubmitPatternCommands.Append(s)))
                     .Or(CommentLine.ParseAs<Action<AtlasJob>, string>(r => (AtlasJob j) => { }))
                   ).Token().Many().ParseInterior(Parse.Char('{'), Parse.Char('}'))
               select AsJob(args, interior);
@@ -232,7 +285,7 @@ namespace AtlasWorkFlows.Jobs
             = from rid in (
                   ParseJob.ParseAs<Action<JobFile>, AtlasJob>(r => (JobFile f) => f.Jobs = f.Jobs.Append(r))
                   .Or(ParseSubmissionMachine.ParseAs<Action<JobFile>, SubmissionMachine>(r => (JobFile f) => f.machines = f.machines.Append(r)))
-                  .Or(CommentLine.ParseAs<Action<JobFile>, string> (line => (JobFile f) => { }))
+                  .Or(CommentLine.ParseAs<Action<JobFile>, string>(line => (JobFile f) => { }))
                   ).Token().XMany().End()
               select AsJobFile(rid);
 
@@ -256,11 +309,18 @@ namespace AtlasWorkFlows.Jobs
                 act(j);
             }
 
+            // Check for faulty semantics
+            if (j.SubmitCommand != null && !(j.SubmitPatternCommands == null || j.SubmitPatternCommands.Length == 0))
+            {
+                throw new ParseException($"Job {j.Name}, version {j.Version} has both a submit and submit_pattern - only one of the two are allowed.");
+            }
+
             // Make sure things that are null are no longer null.
             if (j.Commands == null) j.Commands = new Command[0];
             if (j.Packages == null) j.Packages = new Package[0];
             if (j.Release == null) j.Release = new Release() { Name = "" };
             if (j.SubmitCommand == null) j.SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "" } };
+            if (j.SubmitPatternCommands == null) j.SubmitPatternCommands = new SubmitPattern[0];
 
             return j;
         }
