@@ -11,7 +11,7 @@ namespace AtlasSSHTest
     /// <summary>
     /// Dummy class for testing
     /// </summary>
-    class dummySSHConnection : ISSHConnection
+    public class dummySSHConnection : ISSHConnection
     {
         private Dictionary<string, string> _responses = null;
 

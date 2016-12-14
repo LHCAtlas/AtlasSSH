@@ -82,6 +82,10 @@
     <Compile Include="Utils\ConfigTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AtlasSSHTest\AtlasSSHTest.csproj">
+      <Project>{10621A13-F805-4E14-A17C-F185473E52E1}</Project>
+      <Name>AtlasSSHTest</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AtlasSSH\AtlasSSH.csproj">
       <Project>{6bf4235b-b92f-40ea-b353-abb2f084f5cd}</Project>
       <Name>AtlasSSH</Name>

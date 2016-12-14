@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AtlasWorkFlows.Jobs
@@ -16,6 +17,18 @@ namespace AtlasWorkFlows.Jobs
     /// </summary>
     public static class JobUtils
     {
+
+        [Serializable]
+        public class GRIDSubmitException : Exception
+        {
+            public GRIDSubmitException() { }
+            public GRIDSubmitException(string message) : base(message) { }
+            public GRIDSubmitException(string message, Exception inner) : base(message, inner) { }
+            protected GRIDSubmitException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        }
+
         /// <summary>
         /// Append an item to the array. Not efficeint, but...
         /// </summary>
@@ -56,7 +69,7 @@ namespace AtlasWorkFlows.Jobs
             if (obj != null)
                 return obj;
 
-            throw new ArgumentException(message);
+            throw new GRIDSubmitException(message);
         }
 
         /// <summary>
@@ -68,23 +81,26 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="connection"></param>
         /// <param name="job"></param>
         /// <param name="datasetToStartWith"></param>
+        /// <param name="credSet">Set of credentials to load. Default to CERN</param>
         /// <returns></returns>
-        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false)
+        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false, string credSet = "CERN")
         {
             // Get the status update protected.
             Action<string> update = statusUpdate != null ? 
                 statusUpdate 
                 : s => { };
 
-            // Now prep everything for use below (preprocessing).
-            var submitCmd = job.SubmitCommand.SubmitCommand.CommandLine
+            // Figure out the proper submit command.
+            string submitCmd = (job.SubmitPatternCommands.Length > 0
+                ? MatchSubmitPattern(job.SubmitPatternCommands, inputDataset)
+                : job.SubmitCommand.SubmitCommand.CommandLine)
                 .Replace("*INPUTDS*", "{0}")
                 .Replace("*OUTPUTDS*", "{1}");
 
-            var cernCred = new CredentialSet("CERN")
+            var cernCred = new CredentialSet(credSet)
                 .Load()
                 .FirstOrDefault()
-                .ThrowIfNull("Please create a windows generic credential with a target of CERN to allow access to kinit");
+                .ThrowIfNull($"Please create a windows generic credential with a target of '{credSet}' to allow access to kinit");
 
             // If this is the first time through with a single job, then setup a directory we can use.
             if (!sameJobAsLastTime)
@@ -113,5 +129,24 @@ namespace AtlasWorkFlows.Jobs
                 .ExecuteLinuxCommand(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow);
         }
 
+        /// <summary>
+        /// Look at the list of possible patterns and find a match. There had better be one and only one.
+        /// </summary>
+        /// <param name="submitPatternCommands"></param>
+        /// <param name="inputDataset"></param>
+        /// <returns></returns>
+        private static string MatchSubmitPattern(SubmitPattern[] submitPatternCommands, string inputDataset)
+        {
+            var matched = from sc in submitPatternCommands
+                          let reg = Regex.Match(inputDataset, sc.RegEx)
+                          where reg.Success
+                          select sc;
+            var all = matched.ToArray();
+            if (all.Length != 1)
+            {
+                throw new GRIDSubmitException($"Dataset '{inputDataset}' does not match any patterns for job submission");
+            }
+            return all[0].SubmitCommand.CommandLine;
+        }
     }
 }
