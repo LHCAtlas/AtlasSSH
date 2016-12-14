@@ -119,7 +119,7 @@ namespace AtlasWorkFlows.Jobs
             return new SubmitPattern()
             {
                 RegEx = r[0],
-                SubmitCommand = new Command() { CommandLine = r[1] }
+                SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = r[1] } }
             };
         }
 

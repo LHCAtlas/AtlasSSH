@@ -146,7 +146,7 @@ namespace AtlasWorkFlows.Jobs
             {
                 throw new GRIDSubmitException($"Dataset '{inputDataset}' does not match any patterns for job submission");
             }
-            return all[0].SubmitCommand.CommandLine;
+            return all[0].SubmitCommand.SubmitCommand.CommandLine;
         }
     }
 }

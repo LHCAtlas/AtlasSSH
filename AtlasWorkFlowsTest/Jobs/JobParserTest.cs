@@ -67,7 +67,7 @@ namespace AtlasWorkFlowsTest.Jobs
             var s = "submit_pattern(xAOD, ls dummymyfood)";
             var c = JobParser.ParseSubmitPattern.Parse(s);
             Assert.AreEqual("xAOD", c.RegEx);
-            Assert.AreEqual("ls dummymyfood", c.SubmitCommand.CommandLine);
+            Assert.AreEqual("ls dummymyfood", c.SubmitCommand.SubmitCommand.CommandLine);
         }
 
         [TestMethod]
@@ -76,7 +76,7 @@ namespace AtlasWorkFlowsTest.Jobs
             var s = "submit_pattern(xAOD, \"ls dummymyfood\")";
             var c = JobParser.ParseSubmitPattern.Parse(s);
             Assert.AreEqual("xAOD", c.RegEx);
-            Assert.AreEqual("ls dummymyfood", c.SubmitCommand.CommandLine);
+            Assert.AreEqual("ls dummymyfood", c.SubmitCommand.SubmitCommand.CommandLine);
         }
 
         [TestMethod]
@@ -177,7 +177,7 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.AreEqual(0, j.SubmitCommand.SubmitCommand.CommandLine.Length);
             Assert.IsNotNull(j.SubmitPatternCommands);
             Assert.AreEqual(1, j.SubmitPatternCommands.Length);
-            Assert.AreEqual("ls", j.SubmitPatternCommands[0].SubmitCommand.CommandLine);
+            Assert.AreEqual("ls", j.SubmitPatternCommands[0].SubmitCommand.SubmitCommand.CommandLine);
             Assert.AreEqual("joke", j.SubmitPatternCommands[0].RegEx);
         }
 
@@ -198,9 +198,9 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.IsNotNull(j.SubmitCommand);
             Assert.IsNotNull(j.SubmitPatternCommands);
             Assert.AreEqual(2, j.SubmitPatternCommands.Length);
-            Assert.AreEqual("ls", j.SubmitPatternCommands[0].SubmitCommand.CommandLine);
+            Assert.AreEqual("ls", j.SubmitPatternCommands[0].SubmitCommand.SubmitCommand.CommandLine);
             Assert.AreEqual("joke", j.SubmitPatternCommands[0].RegEx);
-            Assert.AreEqual("dude", j.SubmitPatternCommands[1].SubmitCommand.CommandLine);
+            Assert.AreEqual("dude", j.SubmitPatternCommands[1].SubmitCommand.SubmitCommand.CommandLine);
             Assert.AreEqual("myfoot", j.SubmitPatternCommands[1].RegEx);
         }
 

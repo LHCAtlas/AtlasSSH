@@ -33,6 +33,36 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.AreNotEqual(h1, h2);
         }
 
+        [TestMethod]
+        public void HashDifferentForSubmitCommands()
+        {
+            var j = MakeSimpleJob();
+            var h1 = j.Hash();
+            j.SubmitCommand.SubmitCommand.CommandLine = "forkitover";
+            var h2 = j.Hash();
+            Assert.AreNotEqual(h1, h2);
+        }
+
+        [TestMethod]
+        public void HashDifferentForDifferentPatterns()
+        {
+            var j = MakePatternJob();
+            var h1 = j.Hash();
+            j.SubmitPatternCommands[0].RegEx = "anotheronebitesthedust";
+            var h2 = j.Hash();
+            Assert.AreNotEqual(h1, h2);
+        }
+
+        [TestMethod]
+        public void HashDifferentSubmitsInPatternNotAProblem()
+        {
+            var j = MakePatternJob();
+            var h1 = j.Hash();
+            j.SubmitCommand.SubmitCommand.CommandLine = "anotherone is crazy";
+            var h2 = j.Hash();
+            Assert.AreEqual(h1, h2);
+        }
+
         private static AtlasJob MakeSimpleJob()
         {
             return new AtlasJob()
@@ -53,8 +83,8 @@ namespace AtlasWorkFlowsTest.Jobs
             j.SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "neveruseorerror" } };
 
             j.SubmitPatternCommands = new SubmitPattern[2];
-            j.SubmitPatternCommands[0] = new SubmitPattern() { RegEx = "ds1", SubmitCommand = new Command() { CommandLine = "ds1_submit" } };
-            j.SubmitPatternCommands[1] = new SubmitPattern() { RegEx = "ds2", SubmitCommand = new Command() { CommandLine = "ds2_submit" } };
+            j.SubmitPatternCommands[0] = new SubmitPattern() { RegEx = "ds1", SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "ds1_submit" } } };
+            j.SubmitPatternCommands[1] = new SubmitPattern() { RegEx = "ds2", SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "ds2_submit" } } };
 
             return j;
         }

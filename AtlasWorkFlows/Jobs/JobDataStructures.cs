@@ -51,7 +51,7 @@ namespace AtlasWorkFlows.Jobs
     {
         public string RegEx { get; set; }
 
-        public Command SubmitCommand { get; set; }
+        public Submit SubmitCommand { get; set; }
 
         internal SubmitPattern Clone()
         {

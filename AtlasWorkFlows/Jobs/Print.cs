@@ -44,6 +44,12 @@ namespace AtlasWorkFlows.Jobs
             return bld;
         }
 
+        private static StringBuilder Print(this SubmitPattern p, StringBuilder bld)
+        {
+            bld.Append($"submit_pattern({p.RegEx}, {p.SubmitCommand.SubmitCommand})");
+            return bld;
+        }
+
         public static string Print(this Package r)
         {
             return r.Print(new StringBuilder()).ToString();
@@ -71,7 +77,17 @@ namespace AtlasWorkFlows.Jobs
                     p.Print(bld);
                 }
             }
-            if (r.SubmitCommand != null) r.SubmitCommand.Print(bld);
+            if (r.SubmitPatternCommands != null && r.SubmitPatternCommands.Length > 0)
+            {
+                foreach (var sc in r.SubmitPatternCommands.OrderBy(p => $"{p.RegEx}-{p.SubmitCommand.SubmitCommand}"))
+                {
+                    sc.Print(bld);
+                }
+            }
+            else
+            {
+                if (r.SubmitCommand != null) r.SubmitCommand.Print(bld);
+            }
             bld.Append("}");
             return bld;
         }
