@@ -182,7 +182,7 @@ namespace AtlasWorkFlows.Jobs
             }
         }
 
-        static Regex gTagFinder = new Regex(@"[_\.][a-z][0-9]+[_\.]");
+        static Regex gTagFinder = new Regex(@"([_\.]+|^)[a-z][0-9]+([_\.]+|$)");
 
         /// <summary>
         /// Attempt to remove a reconstuction tag.
@@ -194,7 +194,14 @@ namespace AtlasWorkFlows.Jobs
             var m = gTagFinder.Match(dsName);
             if (m.Success)
             {
-                return dsName.Replace(m.Groups[0].Value, ".");
+                var firstChar = m.Groups[0].Value[0];
+                var lastChar = m.Groups[0].Value[m.Groups[0].Length - 1];
+
+                var seperator = "._".Contains(firstChar) && "._".Contains(lastChar)
+                    ? ("._".Contains(firstChar) ? firstChar.ToString() : lastChar.ToString())
+                    : "";
+
+                return dsName.Replace(m.Groups[0].Value, seperator);
             }
             // No more tags to replace
             return dsName;
