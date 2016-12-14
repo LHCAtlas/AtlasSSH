@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>AtlasSSH</id>
-    <version>2.3.9</version>
+    <version>2.5.0</version>
     <title>Atlas SSH</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Dataset name generation updated to prevent collisions - old DS names won't work.</releaseNotes>
+    <releaseNotes>Another update to dataset names, also multi-pattern submission commands</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>GRID Atlas LHC CERN</tags>
   </metadata>
