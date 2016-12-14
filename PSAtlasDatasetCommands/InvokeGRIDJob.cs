@@ -115,11 +115,11 @@ namespace PSAtlasDatasetCommands
                         _connection = new SSHConnection(sm.MachineName, sm.Username);
                         _connection
                             .Apply(() => DisplayStatus("Setting up ATLAS"))
-                            .setupATLAS(dumpOnly:true)
+                            .setupATLAS(dumpOnly: WhatIf.IsPresent)
                             .Apply(() => DisplayStatus("Setting up Rucio"))
-                            .setupRucio(_gridCredentials.Username, dumpOnly: true)
+                            .setupRucio(_gridCredentials.Username, dumpOnly: WhatIf.IsPresent)
                             .Apply(() => DisplayStatus("Acquiring GRID credentials"))
-                            .VomsProxyInit("atlas", failNow: () => Stopping, dumpOnly:true);
+                            .VomsProxyInit("atlas", failNow: () => Stopping, dumpOnly: WhatIf.IsPresent);
                     }
 
                     // Check to see if the original dataset exists. We will use the location known as Local for doing the
