@@ -156,6 +156,8 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.AreEqual("Base,1234", j.Release.Name);
             Assert.IsNotNull(j.SubmitCommand);
             Assert.AreEqual("ls", j.SubmitCommand.SubmitCommand.CommandLine);
+            Assert.IsNotNull(j.SubmitPatternCommands);
+            Assert.AreEqual(0, j.SubmitPatternCommands.Length);
         }
 
         [TestMethod]
