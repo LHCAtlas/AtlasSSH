@@ -42,17 +42,10 @@ namespace PSAtlasDatasetCommands.Utils
         /// <returns></returns>
         public static Collection<SvnListEventArgs> FetchListing(SvnTarget svnTarget, SvnListArgs args = null)
         {
-            try
-            {
-                args = args == null ? new SvnListArgs() : args;
-                var result = new Collection<SvnListEventArgs>();
-                _client.Value.GetList(svnTarget, args, out result);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
+            args = args == null ? new SvnListArgs() : args;
+            var result = new Collection<SvnListEventArgs>();
+            _client.Value.GetList(svnTarget, args, out result);
+            return result;
         }
 
         /// <summary>

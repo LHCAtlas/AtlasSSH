@@ -160,13 +160,16 @@ namespace AtlasSSH
         /// <param name="output"></param>
         /// <param name="failNow">If this ever returns true, fail as fast as possible.</param>
         /// <returns></returns>
-        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null)
+        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false)
         {
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
-            _shell.Value.WriteLine(command);
-            DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth-30, command.Length)), secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
-            _shell.Value.ReadLine(); // Read back the end of line after the command is sent out.
-            DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow);
+            if (!dumpOnly)
+            {
+                _shell.Value.WriteLine(command);
+                DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)), secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
+                _shell.Value.ReadLine(); // Read back the end of line after the command is sent out.
+                DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow);
+            }
             return this;
         }
 

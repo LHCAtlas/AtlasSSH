@@ -86,14 +86,14 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="connection">The connection that will understand the setupATLAS command</param>
         /// <returns>A reconfigured SSH shell connection (same as what went in)</returns>
-        public static ISSHConnection setupATLAS(this ISSHConnection connection)
+        public static ISSHConnection setupATLAS(this ISSHConnection connection, bool dumpOnly = false)
         {
             bool foundalias = false;
             connection
-                .ExecuteCommand("setupATLAS")
-                .ExecuteCommand("alias", l => foundalias = foundalias || l.Contains("rcSetup"));
+                .ExecuteCommand("setupATLAS", dumpOnly: dumpOnly)
+                .ExecuteCommand("alias", l => foundalias = foundalias || l.Contains("rcSetup"), dumpOnly: dumpOnly);
 
-            if (!foundalias)
+            if (!foundalias && !dumpOnly)
             {
                 throw new LinuxConfigException("The setupATLAS command did not have the expected effect - rcSetup was not defined as an alias");
             }
@@ -107,15 +107,15 @@ namespace AtlasSSH
         /// <param name="connection">Connection on-which we will set everything up</param>
         /// <param name="rucioUsername">The user alias used on the grid</param>
         /// <returns>A shell on-which rucio has been setup (the same connection that went in)</returns>
-        public static ISSHConnection setupRucio(this ISSHConnection connection, string rucioUsername)
+        public static ISSHConnection setupRucio(this ISSHConnection connection, string rucioUsername, bool dumpOnly = false)
         {
             int hashCount = 0;
             connection
-                .ExecuteCommand(string.Format("export RUCIO_ACCOUNT={0}", rucioUsername))
-                .ExecuteCommand("localSetupRucioClients")
-                .ExecuteCommand("hash rucio", l => hashCount++);
+                .ExecuteCommand(string.Format("export RUCIO_ACCOUNT={0}", rucioUsername), dumpOnly: dumpOnly)
+                .ExecuteCommand("localSetupRucioClients", dumpOnly: dumpOnly)
+                .ExecuteCommand("hash rucio", l => hashCount++, dumpOnly: dumpOnly);
 
-            if (hashCount != 0)
+            if (hashCount != 0 && !dumpOnly)
             {
                 throw new LinuxConfigException("Unable to setup Rucio... did you forget to setup ATLAS first?");
             }
@@ -130,7 +130,7 @@ namespace AtlasSSH
         /// <param name="GRIDUsername">The username to use to fetch the password for the voms proxy file</param>
         /// <param name="voms">The name of the voms to connect to</param>
         /// <returns>Connection on which the grid is setup and ready to go</returns>
-        public static ISSHConnection VomsProxyInit(this ISSHConnection connection, string voms, Func<bool> failNow = null)
+        public static ISSHConnection VomsProxyInit(this ISSHConnection connection, string voms, Func<bool> failNow = null, bool dumpOnly = false)
         {
             // Get the GRID VOMS password
             var sclist = new CredentialSet("GRID");
@@ -151,14 +151,14 @@ namespace AtlasSSH
                         goodProxy = goodProxy || l.Contains("Your proxy is valid");
                         whatHappened.Add(l);
                     },
-                    secondsTimeout: 20, failNow: failNow
+                    secondsTimeout: 20, failNow: failNow, dumpOnly: dumpOnly
                     );
 
             // If we failed to get the proxy, then build an error message that can be understood. Since this
             // could be for a large range of reasons, we are going to pass back a lot of info to the user
             // so they can figure it out (not likely a program will be able to sort this out).
 
-            if (goodProxy == false)
+            if (goodProxy == false && !dumpOnly)
             {
                 var error = new StringBuilder();
                 error.AppendLine("Failed to get the proxy: ");
@@ -303,7 +303,7 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="datasetName"></param>
         /// <returns></returns>
-        public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow =null)
+        public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow =null, bool dumpOnly = false)
         {
             var fileNameList = new List<string>();
             var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +[^\|]+\| +[^\|]+\|");
@@ -327,10 +327,10 @@ namespace AtlasSSH
                     }
                 }
             },
-            failNow: failNow
+            failNow: failNow, dumpOnly: dumpOnly
             );
 
-            if (bad)
+            if (bad & !dumpOnly)
             {
                 throw new ArgumentException(string.Format("Dataset '{0}' does not exist - can't get its list of files.", datasetName));
             }
@@ -345,7 +345,7 @@ namespace AtlasSSH
         /// <param name="releaseName">Full release name (e.g. 'Base,2.3.30')</param>
         /// <param name="linuxLocation">Directory where the linux location can be found</param>
         /// <returns></returns>
-        public static ISSHConnection SetupRcRelease(this ISSHConnection connection, string linuxLocation, string releaseName)
+        public static ISSHConnection SetupRcRelease(this ISSHConnection connection, string linuxLocation, string releaseName, bool dumpOnly = false)
         {
             // Check the arguments for something dumb
             if (string.IsNullOrWhiteSpace(releaseName))
@@ -364,19 +364,19 @@ namespace AtlasSSH
             {
                 dirCreated = !dirCreated ? false : string.IsNullOrWhiteSpace(l);
                 dirAlreadyExists = dirAlreadyExists ? true : l.Contains("File exists");
-            });
+            }, dumpOnly: dumpOnly);
             if (dirAlreadyExists)
                 throw new LinuxMissingConfigurationException(string.Format("Release directory '{0}' already exists - we need a fresh start", linuxLocation));
             if (!dirCreated)
                 throw new LinuxMissingConfigurationException(string.Format("Unable to create release directory '{0}'.", linuxLocation));
 
             // Next, put our selves there
-            connection.ExecuteCommand(string.Format("cd {0}", linuxLocation));
+            connection.ExecuteCommand(string.Format("cd {0}", linuxLocation), dumpOnly: dumpOnly);
 
             // And then do the setup
             bool found = false;
-            connection.ExecuteCommand(string.Format("rcSetup {0}", releaseName), l => found = found ? true : l.Contains("Found ASG release with"));
-            if (!found)
+            connection.ExecuteCommand(string.Format("rcSetup {0}", releaseName), l => found = found ? true : l.Contains("Found ASG release with"), dumpOnly: dumpOnly);
+            if (!found && !dumpOnly)
                 throw new LinuxMissingConfigurationException(string.Format("Unable to find release '{0}'", releaseName));
 
             // Return the connection to make it a functional interface.
@@ -390,16 +390,16 @@ namespace AtlasSSH
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public static ISSHConnection Kinit (this ISSHConnection connection, string username, string password)
+        public static ISSHConnection Kinit (this ISSHConnection connection, string username, string password, bool dumpOnly = false)
         {
             var allStrings = new List<string>();
-            connection.ExecuteCommand(string.Format("echo {0} | kinit {1}", password, username), l => allStrings.Add(l));
+            connection.ExecuteCommand(string.Format("echo {0} | kinit {1}", password, username), l => allStrings.Add(l), dumpOnly: dumpOnly);
             var errorStrings = allStrings.Where(l => l.StartsWith("kinit:")).ToArray();
             if (errorStrings.Length > 0)
             {
                 throw new LinuxCommandErrorException(string.Format("Failed to execute kinit command: {0}", errorStrings[0]));
             }
-            if (!allStrings.Where(l => l.StartsWith("Password for")).Any())
+            if (!allStrings.Where(l => l.StartsWith("Password for")).Any() && !dumpOnly)
             {
                 throw new LinuxCommandErrorException(string.Format("Failed to execute kinit command: {0}", allStrings[0]));
             }
@@ -414,7 +414,7 @@ namespace AtlasSSH
         /// <param name="scPackagePath">The svn path to the package. Basically what you would hand to the rc checkout command. Nohting like "tags" or "trunk" is permitted.</param>
         /// <param name="scRevision">The revision number. A SVN revision number. If blank, then the version associated with the build is checked out.</param>
         /// <returns></returns>
-        public static ISSHConnection CheckoutPackage(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null)
+        public static ISSHConnection CheckoutPackage(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
         {
             // Has the user asked us to do something we won't do?
             if (scPackagePath.EndsWith("/tags"))
@@ -453,8 +453,8 @@ namespace AtlasSSH
             }
 
             var sawRevisionMessage = false;            
-            connection.ExecuteCommand(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow);
-            if (!sawRevisionMessage)
+            connection.ExecuteCommand(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
+            if (!sawRevisionMessage && !dumpOnly)
             {
                 throw new LinuxCommandErrorException(string.Format("Unable to check out svn package {0}.", scPackagePath));
             }
@@ -465,8 +465,8 @@ namespace AtlasSSH
                 var packageName = scPackagePath.Split('/').Last();
                 var checkoutName = fullPackagePath.Split('/').Last();
                 bool lineSeen = false;
-                connection.ExecuteCommand(string.Format("mv {0} {1}", checkoutName, packageName), l => lineSeen = true);
-                if (lineSeen)
+                connection.ExecuteCommand(string.Format("mv {0} {1}", checkoutName, packageName), l => lineSeen = true, dumpOnly: dumpOnly);
+                if (lineSeen && !dumpOnly)
                 {
                     throw new LinuxCommandErrorException("Unable to rename the downloaded trunk directory for package '" + scPackagePath + "'.");
                 }
@@ -480,16 +480,17 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="command"></param>
+        /// <param name="dumpOnly">If true, then only print out the commands</param>
         /// <returns></returns>
-        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection, string command, Action<string> processLine = null, Func<bool> failNow = null)
+        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection, string command, Action<string> processLine = null, Func<bool> failNow = null, bool dumpOnly = false)
         {
             string rtnValue = "";
             processLine = processLine == null ? l => { } : processLine; 
             connection
-                .ExecuteCommand(command, processLine, failNow: failNow)
-                .ExecuteCommand("echo $?", l => rtnValue = l);
+                .ExecuteCommand(command, processLine, failNow: failNow, dumpOnly: dumpOnly)
+                .ExecuteCommand("echo $?", l => rtnValue = l, dumpOnly: dumpOnly);
 
-            if (rtnValue != "0")
+            if (rtnValue != "0" && !dumpOnly)
             {
                 throw new LinuxCommandErrorException(string.Format("The remote command '{0}' return status error code '{1}'", command, rtnValue));
             }
@@ -501,15 +502,15 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="connection"></param>
         /// <returns></returns>
-        public static ISSHConnection BuildWorkArea(this ISSHConnection connection, Func<bool> failNow = null)
+        public static ISSHConnection BuildWorkArea(this ISSHConnection connection, Func<bool> failNow = null, bool dumpOnly = false)
         {
             string findPkgError = null;
             var buildLines = new List<string>();
             try
             {
                 return connection
-                    .ExecuteLinuxCommand("rc find_packages", l => findPkgError = l, failNow: failNow)
-                    .ExecuteLinuxCommand("rc compile", l => buildLines.Add(l), failNow: failNow);
+                    .ExecuteLinuxCommand("rc find_packages", l => findPkgError = l, failNow: failNow, dumpOnly: dumpOnly)
+                    .ExecuteLinuxCommand("rc compile", l => buildLines.Add(l), failNow: failNow, dumpOnly: dumpOnly);
             } catch (LinuxCommandErrorException lerr)
             {
                 if (buildLines.Count > 0)

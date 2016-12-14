@@ -66,17 +66,21 @@ namespace AtlasWorkFlows.Jobs
             }
 
             // Done. Combine into a single string and check length!
-            var dsNew = $"{scopeDSName}.{dsParts.AsSingleString(".")}.{job.Name}_v{job.Version}_{job.Hash()}_{originalHash}";
-            while ((dsNew + "_hist-output.root/").Length > 133)
+            bool shortEnough = false;
+            string dsNew = "";
+            while (!shortEnough)
             {
-                var oneLess = dsNew.RemoveATag();
-                if (oneLess == dsNew)
+                dsNew = $"{scopeDSName}.{dsParts.AsSingleString(".")}.{job.Name}_v{job.Version}_{job.Hash()}_{originalHash}";
+                shortEnough = (dsNew + "_hist-output.root/").Length <= 133;
+                if (!shortEnough)
                 {
-                    StringBuilder bld = new StringBuilder();
-                    bld.AppendFormat("Dataset '{0}' is more than 133 characters after accounting for EventLoop naming (from ds '{1}'). It needs to be made shorter", dsNew, originalDSName);
-                    throw new ArgumentException(bld.ToString());
+                    dsParts = dsParts.RemoveATag();
+                    if (dsParts.Count == 0) { 
+                        StringBuilder bld = new StringBuilder();
+                        bld.AppendFormat("Dataset '{0}' is more than 133 characters after accounting for EventLoop naming (from ds '{1}'). It needs to be made shorter", dsNew, originalDSName);
+                        throw new ArgumentException(bld.ToString());
+                    }
                 }
-                dsNew = oneLess;
             }
 
             Trace.WriteLine($"Job {job.Name} v{job.Version} run on dataset {sanitizedDSName} will be sent to the dataset {dsNew}.");
@@ -194,6 +198,26 @@ namespace AtlasWorkFlows.Jobs
             }
             // No more tags to replace
             return dsName;
+        }
+
+        /// <summary>
+        /// Remove a tag from a index, and return it.
+        /// </summary>
+        /// <param name="parts"></param>
+        /// <returns></returns>
+        private static List<string> RemoveATag (this List<string> parts)
+        {
+            var last = parts[parts.Count - 1].RemoveATag();
+            if (last != parts[parts.Count - 1])
+            {
+                return parts
+                    .Take(parts.Count - 1)
+                    .Concat(new string[] { last })
+                    .ToList();
+            }
+            return parts
+                .Take(parts.Count - 1)
+                .ToList();
         }
 
         /// <summary>

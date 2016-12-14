@@ -39,6 +39,9 @@ namespace PSAtlasDatasetCommands
         [Parameter(HelpMessage = "Wait for the job to be registered in Panda. This can take many minutes")]
         public SwitchParameter WaitForPandaRegistration { get; set; }
 
+        [Parameter(HelpMessage = "The final submit command will not be issued, but will be written to Host output instead. Everything else will be run.")]
+        public SwitchParameter WhatIf { get; set; }
+
         /// <summary>
         /// Hold onto the connection
         /// </summary>
@@ -112,26 +115,26 @@ namespace PSAtlasDatasetCommands
                         _connection = new SSHConnection(sm.MachineName, sm.Username);
                         _connection
                             .Apply(() => DisplayStatus("Setting up ATLAS"))
-                            .setupATLAS()
+                            .setupATLAS(dumpOnly:true)
                             .Apply(() => DisplayStatus("Setting up Rucio"))
-                            .setupRucio(_gridCredentials.Username)
+                            .setupRucio(_gridCredentials.Username, dumpOnly: true)
                             .Apply(() => DisplayStatus("Acquiring GRID credentials"))
-                            .VomsProxyInit("atlas", failNow: () => Stopping);
+                            .VomsProxyInit("atlas", failNow: () => Stopping, dumpOnly:true);
                     }
 
                     // Check to see if the original dataset exists. We will use the location known as Local for doing the
                     // setup, I suppose.
                     var files = _connection
                         .Apply(() => DisplayStatus("Checking dataset exists on the GRID"))
-                        .FilelistFromGRID(DatasetName, failNow: () => Stopping);
-                    if (files.Length == 0)
+                        .FilelistFromGRID(DatasetName, failNow: () => Stopping, dumpOnly: WhatIf.IsPresent);
+                    if (files.Length == 0 && !WhatIf.IsPresent)
                     {
                         throw new ArgumentException($"Unable to find dataset '{DatasetName}' on the grid!");
                     }
 
                     // Submit the job
                     _connection
-                        .SubmitJob(job, DatasetName, ds, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob);
+                        .SubmitJob(job, DatasetName, ds, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob, dumpOnly: WhatIf.IsPresent);
 
                     // Try to find the job again if requested. The submission can take a very long time to show up in
                     // big panda, so skip unless requested.

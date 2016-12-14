@@ -83,7 +83,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="datasetToStartWith"></param>
         /// <param name="credSet">Set of credentials to load. Default to CERN</param>
         /// <returns></returns>
-        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false, string credSet = "CERN")
+        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false, string credSet = "CERN", bool dumpOnly = false)
         {
             // Get the status update protected.
             Action<string> update = statusUpdate != null ? 
@@ -108,25 +108,25 @@ namespace AtlasWorkFlows.Jobs
                 var linuxLocation = string.Format("/tmp/{0}", resultingDataset);
                 connection
                     .Apply(() => update("Removing old build directory"))
-                    .ExecuteCommand("rm -rf " + linuxLocation);
+                    .ExecuteCommand("rm -rf " + linuxLocation, dumpOnly: dumpOnly);
 
                 connection
                 .Apply(() => update("Setting up panda"))
-                .ExecuteCommand("lsetup panda")
+                .ExecuteCommand("lsetup panda", dumpOnly: dumpOnly)
                 .Apply(() => update("Setting up release"))
-                .SetupRcRelease(linuxLocation, job.Release.Name)
+                .SetupRcRelease(linuxLocation, job.Release.Name, dumpOnly: dumpOnly)
                 .Apply(() => update("Getting CERN credentials"))
-                .Kinit(cernCred.Username, cernCred.Password)
-                .Apply(job.Packages, (c, j) => c.Apply(() => update("Checking out package " + j.Name)).CheckoutPackage(j.Name, j.SCTag, failNow: failNow))
-                .Apply(job.Commands, (co, cm) => co.Apply(() => update("Running command " + cm.CommandLine)).ExecuteLinuxCommand(cm.CommandLine, failNow: failNow))
+                .Kinit(cernCred.Username, cernCred.Password, dumpOnly: dumpOnly)
+                .Apply(job.Packages, (c, j) => c.Apply(() => update("Checking out package " + j.Name)).CheckoutPackage(j.Name, j.SCTag, failNow: failNow, dumpOnly: dumpOnly))
+                .Apply(job.Commands, (co, cm) => co.Apply(() => update("Running command " + cm.CommandLine)).ExecuteLinuxCommand(cm.CommandLine, failNow: failNow, dumpOnly: dumpOnly))
                 .Apply(() => update("Compiling release"))
-                .BuildWorkArea(failNow: failNow);
+                .BuildWorkArea(failNow: failNow, dumpOnly: dumpOnly);
             }
 
             // We should now be in the directory where everything is - so submit!
             return connection
                 .Apply(() => update("Running submit command"))
-                .ExecuteLinuxCommand(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow);
+                .ExecuteLinuxCommand(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow, dumpOnly: dumpOnly);
         }
 
         /// <summary>
