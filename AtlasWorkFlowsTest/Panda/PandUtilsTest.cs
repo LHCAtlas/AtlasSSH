@@ -18,6 +18,8 @@ namespace AtlasWorkFlowsTest.Panda
                 d.Delete(true);
         }
 
+        static string testingDSName = "user.gwatts.305588.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH125_mS5_lt5m.DiVertAnalysis_v10_35712B0E_E07C7B15/";
+
         [TestMethod]
         public void CacheHitAndMiss()
         {
@@ -26,7 +28,7 @@ namespace AtlasWorkFlowsTest.Panda
             Assert.IsTrue(!cacheDir.Exists || cacheDir.EnumerateFiles().Count() == 0);
 
             // Do a test.
-            var task = "user.emmat.mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.AOD.e3668_s2576_s2132_r6765_r6282__EXOT15_v3/".FindPandaJobWithTaskName();
+            var task = testingDSName.FindPandaJobWithTaskName();
             cacheDir.Refresh();
             Assert.IsTrue(cacheDir.Exists);
             Assert.AreEqual(1, cacheDir.EnumerateFiles().Count());
@@ -36,14 +38,14 @@ namespace AtlasWorkFlowsTest.Panda
             Console.WriteLine(f.FullName);
             Console.WriteLine(f.ReadLine(10));
 
-            var task1 = "user.emmat.mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.AOD.e3668_s2576_s2132_r6765_r6282__EXOT15_v3/".FindPandaJobWithTaskName();
+            var task1 = testingDSName.FindPandaJobWithTaskName();
         }
 
         [TestMethod]
         public void OnlineGetGoodDatasetName()
         {
             // Returns the job with an appropriate task name.
-            var task = "user.emmat.mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.AOD.e3668_s2576_s2132_r6765_r6282__EXOT15_v3/".FindPandaJobWithTaskName();
+            var task = testingDSName.FindPandaJobWithTaskName();
             Assert.IsNotNull(task);
         }
 
@@ -51,7 +53,7 @@ namespace AtlasWorkFlowsTest.Panda
         public void OnlineGetGoodDatasetNameAndDSInfo()
         {
             // Returns the job with an appropriate task name.
-            var task = "user.emmat.mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.AOD.e3668_s2576_s2132_r6765_r6282__EXOT15_v3/".FindPandaJobWithTaskName(true);
+            var task = testingDSName.FindPandaJobWithTaskName(true);
             Assert.IsNotNull(task.datasets);
             Assert.AreNotEqual(0, task.datasets.Count);
         }
@@ -64,10 +66,12 @@ namespace AtlasWorkFlowsTest.Panda
             Assert.IsNull(task);
         }
 
+        static int tastTestingID = 10192902;
+
         [TestMethod]
         public void OnlineGoodTaskID()
         {
-            var task = 6923254.FindPandaJobWithTaskName();
+            var task = tastTestingID.FindPandaJobWithTaskName();
             Assert.IsNotNull(task);
             Assert.AreEqual("done", task.status);
         }
@@ -75,7 +79,7 @@ namespace AtlasWorkFlowsTest.Panda
         [TestMethod]
         public void OnlineGoodTaskIDWithDS()
         {
-            var task = 6923254.FindPandaJobWithTaskName(true);
+            var task = tastTestingID.FindPandaJobWithTaskName(true);
             Assert.IsNotNull(task.datasets);
             Assert.AreNotEqual(0, task.datasets.Count);
         }
