@@ -25,7 +25,8 @@ namespace PSAtlasDatasetCommands.Utils
         /// <param name="message"></param>
         public override void WriteLine(string message)
         {
-           _host.WriteVerbose(message);
+            // Disabled till we can figure out how to better do this: http://stackoverflow.com/questions/41157349/how-to-avoid-writeverbose-writeobject-bad-thread
+            //_host.WriteVerbose(message);
         }
     }
 
