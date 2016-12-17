@@ -76,13 +76,6 @@ namespace PSAtlasDatasetCommands
         }
 
         /// <summary>
-        /// Clean up what is needed.
-        /// </summary>
-        protected override void EndProcessing()
-        {
-        }
-
-        /// <summary>
         /// Load up the job requested. Fail, obviously, if we can't.
         /// </summary>
         protected override void ProcessRecord()
