@@ -168,6 +168,50 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
         }
 
         [TestMethod]
+        public void getDSFileListInfoNoEventsBytes()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRucioListFiles("user.gwatts:user.gwatts.301295.EVNT.1")
+                );
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .FileInfoFromGRID("user.gwatts:user.gwatts.301295.EVNT.1");
+
+            foreach (var fname in r)
+            {
+                Console.WriteLine(fname);
+            }
+            Assert.AreEqual(10, r.Count);
+            Assert.AreEqual(2568, (int) r.Sum(i => i.size));
+            Assert.AreEqual(0, r.Sum(i => i.eventCount));
+        }
+
+        [TestMethod]
+        public void getDSFileListInfoNoEventsGBytes()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
+                );
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .FileInfoFromGRID("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282");
+
+            foreach (var fname in r)
+            {
+                Console.WriteLine($"{fname.size} - {fname.name}");
+            }
+            Assert.AreEqual(40, r.Count);
+            Assert.AreEqual(39*10000+5000, r.Sum(i => i.eventCount));
+            Assert.AreEqual((int)((4.4*39.5) * 1024), (int)r.Sum(i => i.size));
+        }
+
+        [TestMethod]
         public void getZeroDSFileList()
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()

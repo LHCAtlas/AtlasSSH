@@ -298,15 +298,51 @@ namespace AtlasSSH
         }
 
         /// <summary>
+        /// Info about a single file on the internet.
+        /// </summary>
+        public class GRIDFileInfo
+        {
+            /// <summary>
+            /// Fully qualified name of the file
+            /// </summary>
+            public string name;
+
+            /// <summary>
+            /// Size (in MB) of the file
+            /// </summary>
+            public double size;
+
+            /// <summary>
+            /// Number of events in the file
+            /// </summary>
+            public int eventCount;
+        }
+
+        /// <summary>
+        /// Returns the name of the files in a GRID dataset.
+        /// </summary>
+        /// <param name="connection">The already setup SSH connection</param>
+        /// <param name="datasetName">The dataset that we are to query</param>
+        /// <param name="failNow">Return true if long-running commands should quit right away</param>
+        /// <param name="dumpOnly">If we are to only test-run, but not actually run.</param>
+        /// <returns></returns>
+        public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            return connection.FileInfoFromGRID(datasetName, failNow, dumpOnly)
+                .Select(i => i.name)
+                .ToArray();
+        }
+
+        /// <summary>
         /// Returns the list of files associated with a dataset, as fetched from the grid.
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="datasetName"></param>
         /// <returns></returns>
-        public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow =null, bool dumpOnly = false)
+        public static List<GRIDFileInfo> FileInfoFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow =null, bool dumpOnly = false)
         {
-            var fileNameList = new List<string>();
-            var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +[^\|]+\| +[^\|]+\|");
+            var fileNameList = new List<GRIDFileInfo>();
+            var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +(?<fsize>[0-9\.]*) *(?<fsizeunits>[MGTB]*) *\| +(?<events>[0-9]*) +\|");
             bool bad = false;
             connection.ExecuteCommand(string.Format("rucio list-files {0}", datasetName), l =>
             {
@@ -322,7 +358,14 @@ namespace AtlasSSH
                         var fname = m.Groups["fname"].Value;
                         if (fname != "SCOPE:NAME")
                         {
-                            fileNameList.Add(fname);
+                            // Parse it all out
+                            var gi = new GRIDFileInfo()
+                            {
+                                name = fname,
+                                eventCount = m.Groups["events"].Value == "" ? 0 : int.Parse(m.Groups["events"].Value),
+                                size = ConvertToMB(m.Groups["fsize"].Value, m.Groups["fsizeunits"].Value)
+                            };
+                            fileNameList.Add(gi);
                         }
                     }
                 }
@@ -335,7 +378,36 @@ namespace AtlasSSH
                 throw new ArgumentException(string.Format("Dataset '{0}' does not exist - can't get its list of files.", datasetName));
             }
 
-            return fileNameList.ToArray();
+            return fileNameList;
+        }
+
+        /// <summary>
+        /// Convert a file size to MB
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="units"></param>
+        /// <returns></returns>
+        private static double ConvertToMB(string number, string units)
+        {
+            if (number == "")
+            {
+                return 0;
+            }
+            var n = double.Parse(number);
+            if (units == "")
+            {
+                return (n/1024/1024);
+            } else if (units == "MB")
+            {
+                return n;
+            } else if (units == "GB")
+            {
+                return (n * 1024);
+            } else if (units == "TB")
+            {
+                return (n * 1024 * 1024);
+            }
+            throw new InvalidOperationException($"Do not know how to convert {units} to MB in fetching dataset file info!");
         }
 
         /// <summary>
