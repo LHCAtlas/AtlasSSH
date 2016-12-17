@@ -95,6 +95,7 @@
     <Compile Include="GetATLASMCJobOptions.cs" />
     <Compile Include="GetGRIDDataLocations.cs" />
     <Compile Include="GetGRIDDataset.cs" />
+    <Compile Include="GetGRIDDatasetInfo.cs" />
     <Compile Include="GetGRIDJobSpec.cs" />
     <Compile Include="GetGRIDJobInfo.cs" />
     <Compile Include="InvokeGRIDJob.cs" />
