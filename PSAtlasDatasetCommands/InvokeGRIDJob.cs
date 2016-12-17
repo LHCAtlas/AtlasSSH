@@ -129,7 +129,7 @@ namespace PSAtlasDatasetCommands
                         .FilelistFromGRID(DatasetName, failNow: () => Stopping, dumpOnly: WhatIf.IsPresent);
                     if (files.Length == 0 && !WhatIf.IsPresent)
                     {
-                        throw new ArgumentException($"Unable to find dataset '{DatasetName}' on the grid!");
+                        throw new ArgumentException($"Dataset '{DatasetName}' has zero files - won't submit a job against it!");
                     }
 
                     // Submit the job
