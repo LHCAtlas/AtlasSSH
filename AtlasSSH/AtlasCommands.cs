@@ -300,6 +300,7 @@ namespace AtlasSSH
         /// <summary>
         /// Info about a single file on the internet.
         /// </summary>
+        [Serializable]
         public class GRIDFileInfo
         {
             /// <summary>
@@ -334,6 +335,11 @@ namespace AtlasSSH
         }
 
         /// <summary>
+        /// Store the data we get back.
+        /// </summary>
+        static Lazy<DiskCache> _GRIDFileInfoCache = new Lazy<DiskCache>(() => new DiskCache("GRIDFileInfoCache"));
+
+        /// <summary>
         /// Returns the list of files associated with a dataset, as fetched from the grid.
         /// </summary>
         /// <param name="connection"></param>
@@ -341,6 +347,14 @@ namespace AtlasSSH
         /// <returns></returns>
         public static List<GRIDFileInfo> FileInfoFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow =null, bool dumpOnly = false)
         {
+            // If we have a cache hit, then avoid the really slow lookup.
+            var c = _GRIDFileInfoCache.Value[datasetName] as GRIDFileInfo[];
+            if (c != null)
+            {
+                return c.ToList(); ;
+            }
+
+            // Run it in rucio and bring back our answers.
             var fileNameList = new List<GRIDFileInfo>();
             var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +(?<fsize>[0-9\.]*) *(?<fsizeunits>[MGTB]*) *\| +(?<events>[0-9]*) +\|");
             bool bad = false;
@@ -378,6 +392,7 @@ namespace AtlasSSH
                 throw new ArgumentException(string.Format("Dataset '{0}' does not exist - can't get its list of files.", datasetName));
             }
 
+            _GRIDFileInfoCache.Value[datasetName] = fileNameList.ToArray();
             return fileNameList;
         }
 

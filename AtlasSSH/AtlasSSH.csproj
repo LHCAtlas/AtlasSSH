@@ -44,6 +44,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -52,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AtlasCommands.cs" />
+    <Compile Include="DiskCache.cs" />
     <Compile Include="DataSetUtils.cs" />
     <Compile Include="ISSHConnection.cs" />
     <Compile Include="LineBuffer.cs" />

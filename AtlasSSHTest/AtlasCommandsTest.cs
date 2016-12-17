@@ -13,6 +13,12 @@ namespace AtlasSSHTest
     [TestClass]
     public class AtlasCommandsTest
     {
+        [TestInitialize]
+        public void InitCaches()
+        {
+            new DiskCache("GRIDFileInfoCache").Clear();
+        }
+
         [TestMethod]       
         public void setupATLAS()
         {

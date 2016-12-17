@@ -58,6 +58,10 @@ namespace PSAtlasDatasetCommands
             }
         }
 
+        /// <summary>
+        /// The PS output object
+        /// </summary>
+        [Serializable]
         public class PSGRIDDatasetInfo
         {
             public string DatasetName;
@@ -68,49 +72,63 @@ namespace PSAtlasDatasetCommands
         }
 
         /// <summary>
+        /// Cache results so we don't have to re-ping.
+        /// </summary>
+        private Lazy<DiskCache> _resultsCache = new Lazy<DiskCache>(() => new DiskCache("Get-GRIDDatasetInfo"));
+
+        /// <summary>
         /// Process a single dataset and fetch the info about it.
         /// </summary>
         protected override void ProcessRecord()
         {
-            // Setup for verbosity if we need it.
-            var listener = new PSListener(this);
-            Trace.Listeners.Add(listener);
-            try
+            var cHit = _resultsCache.Value[DatasetName] as PSGRIDDatasetInfo;
+            if (cHit != null)
             {
-                // Where are we going to be doing query on - we need a machine.
-                var sm = JobParser.GetSubmissionMachine();
-
-                // Get the remove environment configured if it needs to be
-                if (_connection == null)
-                {
-                    _connection = new SSHConnection(sm.MachineName, sm.Username);
-                    _connection
-                        .Apply(() => DisplayStatus("Setting up ATLAS"))
-                        .setupATLAS()
-                        .Apply(() => DisplayStatus("Setting up Rucio"))
-                        .setupRucio(_gridCredentials.Username)
-                        .Apply(() => DisplayStatus("Acquiring GRID credentials"))
-                        .VomsProxyInit("atlas", failNow: () => Stopping);
-                }
-
-                // Great - get the info on this dataset.
-                var fileInfo = _connection
-                    .Apply(() => DisplayStatus($"Checking for info on {DatasetName}."))
-                    .FileInfoFromGRID(DatasetName, failNow: () => Stopping);
-
-                // Next, build the resulting thingy.
-                var r = new PSGRIDDatasetInfo()
-                {
-                    DatasetName = DatasetName,
-                    nFiles = fileInfo.Count,
-                    TotalSizeMB = (int)fileInfo.Sum(fi => fi.size),
-                    FileInfo = fileInfo.ToArray()
-                };
-                WriteObject(r);
+                WriteObject(cHit);
             }
-            finally
+            else
             {
-                Trace.Listeners.Remove(listener);
+                // Setup for verbosity if we need it.
+                var listener = new PSListener(this);
+                Trace.Listeners.Add(listener);
+                try
+                {
+                    // Where are we going to be doing query on - we need a machine.
+                    var sm = JobParser.GetSubmissionMachine();
+
+                    // Get the remove environment configured if it needs to be
+                    if (_connection == null)
+                    {
+                        _connection = new SSHConnection(sm.MachineName, sm.Username);
+                        _connection
+                            .Apply(() => DisplayStatus("Setting up ATLAS"))
+                            .setupATLAS()
+                            .Apply(() => DisplayStatus("Setting up Rucio"))
+                            .setupRucio(_gridCredentials.Username)
+                            .Apply(() => DisplayStatus("Acquiring GRID credentials"))
+                            .VomsProxyInit("atlas", failNow: () => Stopping);
+                    }
+
+                    // Great - get the info on this dataset.
+                    var fileInfo = _connection
+                        .Apply(() => DisplayStatus($"Checking for info on {DatasetName}."))
+                        .FileInfoFromGRID(DatasetName, failNow: () => Stopping);
+
+                    // Next, build the resulting thingy.
+                    var r = new PSGRIDDatasetInfo()
+                    {
+                        DatasetName = DatasetName,
+                        nFiles = fileInfo.Count,
+                        TotalSizeMB = (int)fileInfo.Sum(fi => fi.size),
+                        FileInfo = fileInfo.ToArray()
+                    };
+                    _resultsCache.Value[DatasetName] = r;
+                    WriteObject(r);
+                }
+                finally
+                {
+                    Trace.Listeners.Remove(listener);
+                }
             }
         }
 
