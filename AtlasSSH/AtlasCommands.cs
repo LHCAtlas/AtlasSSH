@@ -337,7 +337,7 @@ namespace AtlasSSH
         /// <summary>
         /// Store the data we get back.
         /// </summary>
-        static Lazy<DiskCache> _GRIDFileInfoCache = new Lazy<DiskCache>(() => new DiskCache("GRIDFileInfoCache"));
+        static Lazy<DiskCacheTyped<GRIDFileInfo[]>> _GRIDFileInfoCache = new Lazy<DiskCacheTyped<GRIDFileInfo[]>>(() => new DiskCacheTyped<GRIDFileInfo[]>("GRIDFileInfoCache"));
 
         /// <summary>
         /// Returns the list of files associated with a dataset, as fetched from the grid.
