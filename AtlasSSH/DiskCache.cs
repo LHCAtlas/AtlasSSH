@@ -20,7 +20,7 @@ namespace AtlasSSH
         /// <param name="cacheDir"></param>
         public DiskCache (string name)
         {
-            _dir = new DirectoryInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), name));
+            _dir = new DirectoryInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), name));
             _name = name;
         }
 
@@ -188,7 +188,7 @@ namespace AtlasSSH
         /// <returns></returns>
         private FileInfo GetCacheFileName (string key)
         {
-            return new FileInfo(Path.Combine(_dir.FullName, key.Replace(":", "_"), ".binary"));
+            return new FileInfo(Path.Combine(_dir.FullName, key.Replace(":", "_") + ".binary"));
         }
 
         public override void Set(string key, object value, CacheItemPolicy policy, string regionName = null)

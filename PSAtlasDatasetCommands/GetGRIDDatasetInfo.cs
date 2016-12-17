@@ -74,7 +74,7 @@ namespace PSAtlasDatasetCommands
         /// <summary>
         /// Cache results so we don't have to re-ping.
         /// </summary>
-        private Lazy<DiskCache> _resultsCache = new Lazy<DiskCache>(() => new DiskCache("Get-GRIDDatasetInfo"));
+        private Lazy<DiskCacheTyped<PSGRIDDatasetInfo>> _resultsCache = new Lazy<DiskCacheTyped<PSGRIDDatasetInfo>>(() => new DiskCacheTyped<PSGRIDDatasetInfo>("Get-GRIDDatasetInfo"));
 
         /// <summary>
         /// Process a single dataset and fetch the info about it.

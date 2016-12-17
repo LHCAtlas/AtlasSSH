@@ -34,6 +34,10 @@
       <HintPath>..\packages\CredentialManagement.1.0.2\lib\net35\CredentialManagement.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Polly, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Polly.4.3.0\lib\net45\Polly.dll</HintPath>
       <Private>True</Private>
@@ -56,6 +60,7 @@
     <Compile Include="AtlasCommands.cs" />
     <Compile Include="DiskCache.cs" />
     <Compile Include="DataSetUtils.cs" />
+    <Compile Include="DiskCacheTyped.cs" />
     <Compile Include="ISSHConnection.cs" />
     <Compile Include="LineBuffer.cs" />
     <Compile Include="SSHConnection.cs" />
