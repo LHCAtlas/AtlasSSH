@@ -70,28 +70,41 @@ namespace PSAtlasDatasetCommands
             return _connection;
         }
 
+        private DiskCacheTyped<Dictionary<string, string>> _AMIInfoCache = new DiskCacheTyped<Dictionary<string, string>>("Get-AMIDatasetInfo");
+
         /// <summary>
         /// Get the informaiton for each dataset we are looking at.
         /// </summary>
         protected override void ProcessRecord()
         {
-            var c = GetConnection();
-
             // Clean up the name. If it has a Rucio scope on it, then we want to ignore that.
             var dsName = DatasetName.Contains(":") ? DatasetName.Substring(DatasetName.IndexOf(":") + 1) : DatasetName;
 
-            // Get the dump from the command, which is a set of dictionary pairings
-            var responses = new List<string>();
-            DisplayStatus($"Getting info for {dsName}");
-            c.ExecuteCommand($"ami show dataset info {dsName}", l => responses.Add(l));
+            // Check for a cache hit
+            var r = _AMIInfoCache[dsName];
+            if (r != null)
+            {
+                WriteObject(r);
+            }
+            else
+            {
 
-            // Parse everything into name-value pairs.
-            var dict = responses
-                .Select(l => l.Split(new[] { ':' }, 2))
-                .ToDictionary(l => l[0].Trim(), l => l[1].Trim());
+                var c = GetConnection();
 
-            this.WriteObject(dict);
-            base.ProcessRecord();
+                // Get the dump from the command, which is a set of dictionary pairings
+                var responses = new List<string>();
+                DisplayStatus($"Getting info for {dsName}");
+                c.ExecuteCommand($"ami show dataset info {dsName}", l => responses.Add(l));
+
+                // Parse everything into name-value pairs.
+                var dict = responses
+                    .Select(l => l.Split(new[] { ':' }, 2))
+                    .ToDictionary(l => l[0].Trim(), l => l[1].Trim());
+
+                // Cache and output the object
+                _AMIInfoCache[dsName] = dict;
+                this.WriteObject(dict);
+            }
         }
 
         /// <summary>
