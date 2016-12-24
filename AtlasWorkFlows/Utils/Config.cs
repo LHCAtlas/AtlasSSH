@@ -160,8 +160,6 @@ namespace AtlasWorkFlows.Utils
             if (path3 != null && Directory.Exists(path3)) return path3;
 
             throw new InvalidOperationException("Onedrive is not setup on this machine. I cannot determine the onedrive path.");
-
-            return null;
         }
     }
 }
