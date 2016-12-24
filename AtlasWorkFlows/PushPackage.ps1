@@ -15,6 +15,6 @@ if ($nuspec.Count -gt 0) {
 	Write-Verbose "Version $version is already on the myget server. Will not push."
 } else {
     rm .\*.nupkg
-	nuget pack .\AtlasWorkFlows.nuspec
+    nuget pack -IncludeReferencedProjects -Prop Configuration=Release .\AtlasWorkflows.csproj
 	nuget push .\AtlasWorkFlows.*.nupkg
 }
