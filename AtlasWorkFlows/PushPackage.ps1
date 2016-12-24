@@ -16,5 +16,5 @@ if ($nuspec.Count -gt 0) {
 } else {
     rm .\*.nupkg
     nuget pack -IncludeReferencedProjects -Prop Configuration=Release .\AtlasWorkflows.csproj
-	nuget push .\AtlasWorkFlows.*.nupkg
+	nuget push .\AtlasWorkFlows.*.nupkg -Source https://www.nuget.org
 }
