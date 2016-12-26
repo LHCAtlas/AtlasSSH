@@ -239,7 +239,7 @@ namespace AtlasSSH
 
             // Next, do the download
             response.Clear();
-            fileStatus?.Invoke("Starting GRID download...");
+            fileStatus?.Invoke($"Starting GRID download of {datasetName}...");
 
             Policy
                 .Handle<ClockSkewException>()
