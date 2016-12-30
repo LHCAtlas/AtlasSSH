@@ -119,9 +119,12 @@ namespace PSAtlasDatasetCommands
                 }
 
                 // Dump all the returned files out to whatever is next in the pipeline.
-                foreach (var ds in r)
+                using (var pl = listener.PauseListening())
                 {
-                    WriteObject(ds);
+                    foreach (var ds in r)
+                    {
+                        WriteObject(ds);
+                    }
                 }
             }
             finally

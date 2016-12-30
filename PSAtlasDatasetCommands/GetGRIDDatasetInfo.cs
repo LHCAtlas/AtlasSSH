@@ -123,7 +123,10 @@ namespace PSAtlasDatasetCommands
                         FileInfo = fileInfo.ToArray()
                     };
                     _resultsCache.Value[DatasetName] = r;
-                    WriteObject(r);
+                    using (var pp = listener.PauseListening())
+                    {
+                        WriteObject(r);
+                    }
                 }
                 finally
                 {

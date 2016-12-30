@@ -29,7 +29,10 @@ namespace PSAtlasDatasetCommands
                 var list = GRIDDatasetLocator.GetActiveLocations();
                 foreach (var l in list)
                 {
-                    WriteObject(l.Name);
+                    using (var pl = listener.PauseListening())
+                    {
+                        WriteObject(l.Name);
+                    }
                 }
             } finally
             {

@@ -150,7 +150,10 @@ namespace PSAtlasDatasetCommands
                 if (pandaJob != null)
                 {
                     var r = new AtlasPandaTaskID() { ID = pandaJob.jeditaskid, Name = pandaJob.taskname };
-                    WriteObject(r);
+                    using (var pp = listener.PauseListening())
+                    {
+                        WriteObject(r);
+                    }
                 }
             } finally
             {
