@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>PSAtlasDatasetCommands</id>
-    <version>2.6.4</version>
+    <version>2.7.0</version>
     <title>ATLAS Dataset Powershell Commands</title>
     <authors>Gordon Watts</authors>
     <owners>Gordon Watts</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A PowerShell module that adds commands that will fetch data from the GRID and run jobs on the grid. Read docs to find out how to configure properly: requires properly configured Linux endpoint to work.</description>
-    <releaseNotes>Added caching to Get-AMIDatasetInfo</releaseNotes>
+    <releaseNotes>Pretty print output of job spec, better handling of weird line returns from Linux (some low level changes), faster startup</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>ATLAS GRID CERN PowerShell</tags>
     <dependencies></dependencies>
