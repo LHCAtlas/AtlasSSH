@@ -112,8 +112,8 @@ namespace AtlasSSH
             int hashCount = 0;
             connection
                 .ExecuteCommand(string.Format("export RUCIO_ACCOUNT={0}", rucioUsername), dumpOnly: dumpOnly)
-                .ExecuteCommand("localSetupRucioClients", dumpOnly: dumpOnly)
-                .ExecuteCommand("hash rucio", l => hashCount++, dumpOnly: dumpOnly);
+                .ExecuteCommand("lsetup rucio", dumpOnly: dumpOnly)
+                .ExecuteCommand("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly);
 
             if (hashCount != 0 && !dumpOnly)
             {

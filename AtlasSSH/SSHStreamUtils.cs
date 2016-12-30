@@ -36,7 +36,7 @@ namespace AtlasSSH
 
             // Sometimes two lines are sent. No idea why.
             var r = shell.ReadLine(TimeSpan.FromMilliseconds(1));
-            if (r != null)
+            if (r != null && r.Length > 0)
             {
                 return r;
             }

@@ -9,16 +9,39 @@ namespace AtlasSSH
 {
     public class LineBuffer
     {
-        const string CrLf = "\r\n";
+        public const string CrLf = "\r\n";
 
         public LineBuffer(Action<string> actionOnLine = null)
         {
-            _actinoOnLine = actionOnLine;
+            if (actionOnLine != null)
+            {
+                _actionsOnLine.Add(actionOnLine);
+            }
         }
 
+        /// <summary>
+        /// The current text buffer
+        /// </summary>
         string _text = "";
-        private Action<string> _actinoOnLine;
 
+        /// <summary>
+        /// List of actions to perform when there is new line.
+        /// </summary>
+        private List<Action<string>> _actionsOnLine = new List<Action<string>>();
+
+        /// <summary>
+        /// Add a new action to our list of actions.
+        /// </summary>
+        /// <param name="act"></param>
+        public void AddAction (Action<string> act)
+        {
+            _actionsOnLine.Add(act);
+        }
+
+        /// <summary>
+        /// Add a new line.
+        /// </summary>
+        /// <param name="line"></param>
         public void Add(string line)
         {
             _text += line;
@@ -73,11 +96,13 @@ namespace AtlasSSH
         private void ActOnLine(string line)
         {
             Trace.WriteLine("ReturnedLine: " + line, "SSHConnection");
-            if (_actinoOnLine == null)
-                return;
+
             if (!stringsToSuppress.Any(s => line.Contains(s)))
             {
-                _actinoOnLine(line);
+                foreach (var a in _actionsOnLine)
+                {
+                    a(line);
+                }
             }
         }
     }
