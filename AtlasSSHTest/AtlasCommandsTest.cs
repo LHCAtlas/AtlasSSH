@@ -55,7 +55,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
             // Fails when we don't get right setup
             var s = new dummySSHConnection(new Dictionary<string, string>()
                 .AddsetupRucioResponses("bogus")
-                .AddEntry("localSetupRucioClients", "-bash: localSetupRucioClients: command not found")
+                .AddEntry("lsetup rucio", "-bash: lsetup rucio: command not found")
                 .AddEntry("hash rucio", "-bash: hash: rucio: not found")
                 );
 
