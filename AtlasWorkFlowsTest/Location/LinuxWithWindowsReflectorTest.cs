@@ -10,16 +10,20 @@ namespace AtlasWorkFlowsTest.Location
     [TestClass]
     public class LinuxWithWindowsReflectorTest
     {
-        [TestInitialize]
-        public void SetupConfig()
-        {
-            Locator._getLocations = () => utils.GetLocal(new DirectoryInfo(@"C:\"));
-        }
-
         [TestCleanup]
         public void CleanupConfig()
         {
+            // Reset where we get the locations from!
             Locator._getLocations = null;
+            Locator.ResetLocationCache();
+        }
+
+        [TestInitialize]
+        public void CleanConfigBeforeCall()
+        {
+            // Reset where we get the locations from!
+            Locator.ResetLocationCache();
+            Locator._getLocations = () => utils.GetLocal(new DirectoryInfo(@"C:\"));
         }
 
         [TestMethod]

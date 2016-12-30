@@ -13,6 +13,22 @@ namespace AtlasWorkFlowsTest.Location
     [TestClass]
     public class WindowsDatasetTest
     {
+        [TestCleanup]
+        public void CleanupConfig()
+        {
+            // Reset where we get the locations from!
+            Locator._getLocations = null;
+            Locator.ResetLocationCache();
+        }
+
+        [TestInitialize]
+        public void CleanConfigBeforeCall()
+        {
+            // Reset where we get the locations from!
+            Locator._getLocations = null;
+            Locator.ResetLocationCache();
+        }
+
         [TestMethod]
         public void GetFileListFromDir()
         {

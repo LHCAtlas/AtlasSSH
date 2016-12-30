@@ -12,10 +12,19 @@ namespace AtlasWorkFlowsTest.Location
     public class LocalMachineTest
     {
         [TestCleanup]
-        public void Cleanup()
+        public void CleanupConfig()
         {
-            Locator.SetLocationFilter(null);
-            Locator.DisableAllLocators(false);
+            // Reset where we get the locations from!
+            Locator._getLocations = null;
+            Locator.ResetLocationCache();
+        }
+
+        [TestInitialize]
+        public void CleanConfigBeforeCall()
+        {
+            // Reset where we get the locations from!
+            Locator._getLocations = null;
+            Locator.ResetLocationCache();
         }
 
         [TestMethod]
