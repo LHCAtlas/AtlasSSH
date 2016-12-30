@@ -20,7 +20,6 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         public ValidateLocationAttribute()
         {
-            _validLocations = GRIDDatasetLocator.GetActiveLocations().Select(loc => loc.Name).ToArray();
         }
 
         /// <summary>
@@ -35,14 +34,24 @@ namespace PSAtlasDatasetCommands
             {
                 throw new ValidationMetadataException("Argument is not a string.");
             }
-            if (!_validLocations.Contains(s))
+            if (!_validLocations.Value.Contains(s))
             {
-                var err = _validLocations.Aggregate(new StringBuilder(), (bld, loc) => bld.Append($" {loc}"));
+                var err = _validLocations.Value.Aggregate(new StringBuilder(), (bld, loc) => bld.Append($" {loc}"));
                 throw new ValidationMetadataException($"Illegal value for Location - possible values:{err.ToString()}");
             }
         }
 
-        public IList<string> ValidValues { get { return _validLocations; } }
-        private string[] _validLocations;
+        public IList<string> ValidValues { get { return _validLocations.Value; } }
+
+        /// <summary>
+        /// The list of valid location.
+        /// </summary>
+        /// <remarks>
+        /// Lazy so we determine it once. Also, can't put it in the ctor as that will cause
+        /// it to be created on a simple command completion operation in powershell!
+        /// Note: If the computer changes location after this has been initialized, it won't
+        ///       get updated!
+        /// </remarks>
+        private Lazy<string[]> _validLocations = new Lazy<string[]>(() => GRIDDatasetLocator.GetActiveLocations().Select(loc => loc.Name).ToArray());
     }
 }
