@@ -46,13 +46,6 @@ namespace PSAtlasDatasetCommands
         [ValidateLocation]
         public string Location { get; set; }
 
-        /// <summary>
-        /// If true, then when the destination is local, that will not be used.
-        /// Ignored unless used with --Location.
-        /// </summary>
-        [Parameter(HelpMessage = "Do use any other intermediate locations (only valid with --Location)")]
-        public SwitchParameter DoNotUseRelay { get; set; }
-
         [Parameter(HelpMessage = "Timeout in seconds between updates from the download. Defaults to 1 hour")]
         public int Timeout { get; set; }
 
@@ -61,7 +54,6 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         public GetGRIDDataset()
         {
-            DoNotUseRelay = false;
             Timeout = 3600;
         }
 
