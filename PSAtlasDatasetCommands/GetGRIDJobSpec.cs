@@ -21,6 +21,12 @@ namespace PSAtlasDatasetCommands
         public string JobVersion { get; set; }
 
         /// <summary>
+        /// Should we pretty print (false) or nice print (true)?
+        /// </summary>
+        [Parameter(HelpMessage = "Print out the form of the job definition used to calculate hashes")]
+        public SwitchParameter PrintCacheForm { get; set; }
+
+        /// <summary>
         /// Make sure we are properly setup
         /// </summary>
         public GetGRIDJobSpec()
@@ -47,7 +53,8 @@ namespace PSAtlasDatasetCommands
                 throw new ArgumentException(string.Format("Job '{0}' v{1} not found on system. Create .jobspec?", JobName, JobVersion));
             }
 
-            WriteObject(job.Print());
+            var str = job.Print(prettyPrint: !PrintCacheForm.IsPresent);
+            WriteObject(str);
         }
     }
 }

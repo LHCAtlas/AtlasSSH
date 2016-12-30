@@ -11,14 +11,18 @@ namespace AtlasWorkFlows.Jobs
     /// </summary>
     public static class PrintUtils
     {
-        public static string Print (this Release r)
+        public static string Print (this Release r, bool prettyPrint = false)
         {
-            return r.Print(new StringBuilder()).ToString();
+            return r.Print(new StringBuilder(), prettyPrint: prettyPrint).ToString();
         }
 
-        private static StringBuilder Print (this Release r, StringBuilder bld)
+        private static StringBuilder Print (this Release r, StringBuilder bld, bool prettyPrint = false)
         {
+            if (prettyPrint)
+                bld.Append("  ");
             bld.AppendFormat("release({0})", r.Name);
+            if (prettyPrint)
+                bld.AppendLine();
             return bld;
         }
 
@@ -33,60 +37,78 @@ namespace AtlasWorkFlows.Jobs
             return bld;
         }
 
-        public static string Print(this Submit r)
+        public static string Print(this Submit r, bool prettyPrint = false)
         {
-            return r.Print(new StringBuilder()).ToString();
+            return r.Print(new StringBuilder(), prettyPrint: prettyPrint).ToString();
         }
 
-        private static StringBuilder Print(this Submit r, StringBuilder bld)
+        private static StringBuilder Print(this Submit r, StringBuilder bld, bool prettyPrint = false)
         {
+            if (prettyPrint)
+                bld.Append("  ");
             bld.AppendFormat("submit({0})", r.SubmitCommand.CommandLine);
+            if (prettyPrint)
+                bld.AppendLine();
             return bld;
         }
 
-        private static StringBuilder Print(this SubmitPattern p, StringBuilder bld)
+        private static StringBuilder Print(this SubmitPattern p, StringBuilder bld, bool prettyPrint = false)
         {
+            if (prettyPrint)
+                bld.Append("  ");
             bld.Append($"submit_pattern({p.RegEx}, {p.SubmitCommand.SubmitCommand})");
+            if (prettyPrint)
+                bld.AppendLine();
             return bld;
         }
 
-        public static string Print(this Package r)
+        public static string Print(this Package r, bool prettyPrint = false)
         {
-            return r.Print(new StringBuilder()).ToString();
+            return r.Print(new StringBuilder(), prettyPrint: prettyPrint).ToString();
         }
 
-        private static StringBuilder Print(this Package r, StringBuilder bld)
+        private static StringBuilder Print(this Package r, StringBuilder bld, bool prettyPrint = false)
         {
+            if (prettyPrint)
+                bld.Append("  ");
             bld.AppendFormat("package({0},{1})", r.Name, r.SCTag);
+            if (prettyPrint)
+                bld.AppendLine();
             return bld;
         }
 
-        public static string Print(this AtlasJob r)
+        public static string Print(this AtlasJob r, bool prettyPrint = false)
         {
-            return r.Print(new StringBuilder()).ToString();
+            return r.Print(new StringBuilder(), prettyPrint: prettyPrint).ToString();
         }
 
-        private static StringBuilder Print(this AtlasJob r, StringBuilder bld)
+        private static StringBuilder Print(this AtlasJob r, StringBuilder bld, bool prettyPrint = false)
         {
+            if (prettyPrint && bld.Length > 0)
+                bld.AppendLine();
+
             bld.AppendFormat("job({0},{1}){{", r.Name, r.Version);
-            if (r.Release != null) r.Release.Print(bld);
+            if (prettyPrint)
+                bld.AppendLine();
+
+            if (r.Release != null) r.Release.Print(bld, prettyPrint: prettyPrint);
             if (r.Packages != null)
             {
                 foreach (var p in r.Packages.OrderBy(p => $"{p.Name}-{p.SCTag}"))
                 {
-                    p.Print(bld);
+                    p.Print(bld, prettyPrint: prettyPrint);
                 }
             }
             if (r.SubmitPatternCommands != null && r.SubmitPatternCommands.Length > 0)
             {
                 foreach (var sc in r.SubmitPatternCommands.OrderBy(p => $"{p.RegEx}-{p.SubmitCommand.SubmitCommand}"))
                 {
-                    sc.Print(bld);
+                    sc.Print(bld, prettyPrint: prettyPrint);
                 }
             }
             else
             {
-                if (r.SubmitCommand != null) r.SubmitCommand.Print(bld);
+                if (r.SubmitCommand != null) r.SubmitCommand.Print(bld, prettyPrint: prettyPrint);
             }
             bld.Append("}");
             return bld;
