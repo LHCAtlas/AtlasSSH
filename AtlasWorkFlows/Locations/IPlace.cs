@@ -55,7 +55,12 @@ namespace AtlasWorkFlows.Locations
         /// known at this location, return null.
         /// </summary>
         /// <param name="dsname"></param>
-        /// <returns></returns>
+        /// <returns>A list of the files that are part of the dataset</returns>
+        /// <remarks>
+        /// Any IPlace that retuns this list should return the same list. There can be only
+        /// one "true" set of files in a dataset. If there is a difference, it is a bug, and
+        /// results are not longer going to be... sensible!
+        /// </remarks>
         string[] GetListOfFilesForDataset(string dsname);
 
         /// <summary>
