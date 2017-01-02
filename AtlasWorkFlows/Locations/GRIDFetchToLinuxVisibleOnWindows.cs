@@ -23,7 +23,7 @@ namespace AtlasWorkFlows.Locations
         /// <param name="rootLinuxLocation"></param>
         public GRIDFetchToLinuxVisibleOnWindows(DirectoryInfo windowsFilesLocation, IFetchToRemoteLinuxDir fetcher, string rootLinuxLocation)
         {
-            _winDataset = new WindowsDataset(windowsFilesLocation);
+            _winDataset = new WindowsGRIDDSRepro(windowsFilesLocation);
             LinuxFetcher = fetcher;
             LinuxRootDSDirectory = rootLinuxLocation;
         }
@@ -31,7 +31,7 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// Track the files on the local disk.
         /// </summary>
-        private WindowsDataset _winDataset = null;
+        private WindowsGRIDDSRepro _winDataset = null;
 
         /// <summary>
         /// Methods to fetch the dataset from the GRID to some local LinuxDirectory.

@@ -12,7 +12,7 @@ namespace AtlasWorkFlows.Locations
     /// Represents a dataset on a windows share or local drive. The code here just deals
     /// with a dataset in the standard layout. Supports queries, etc.
     /// </summary>
-    class WindowsDataset
+    class WindowsGRIDDSRepro
     {
         /// <summary>
         /// This file is left behind to indicate a dataset hasn't been fully downloaded.
@@ -34,7 +34,7 @@ namespace AtlasWorkFlows.Locations
         /// directly to the windows file system.
         /// </summary>
         /// <param name="location"></param>
-        public WindowsDataset(DirectoryInfo location)
+        public WindowsGRIDDSRepro(DirectoryInfo location)
         {
             LocationOfLocalCache = location;
         }

@@ -29,19 +29,6 @@ namespace AtlasWorkFlows
               System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
-
-        [Serializable]
-        public class UnknownUriSchemeException : Exception
-        {
-            public UnknownUriSchemeException() { }
-            public UnknownUriSchemeException(string message) : base(message) { }
-            public UnknownUriSchemeException(string message, Exception inner) : base(message, inner) { }
-            protected UnknownUriSchemeException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
-
-
         [Serializable]
         public class NoLocalPlaceToCopyToException : Exception
         {

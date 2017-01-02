@@ -47,7 +47,7 @@ namespace AtlasWorkFlows.Locations
                 }
                 else
                 {
-                    var w = new WindowsDataset(d.Parent);
+                    var w = new WindowsGRIDDSRepro(d.Parent);
                     return new DSInfo()
                     {
                         Name = name,
@@ -73,9 +73,9 @@ namespace AtlasWorkFlows.Locations
                         }
                         var dsdir = new DirectoryInfo(Path.Combine(validLocalCache.FullName, dsinfo.Name.SantizeDSName()));
                         dsdir.Create();
-                        return LoadDatasetFromOtherSource(new WindowsDataset(dsdir.Parent), dsinfo, status, filter, l.Name, linuxFinder, props["LinuxTempLocation"], failNow, timeout);
+                        return LoadDatasetFromOtherSource(new WindowsGRIDDSRepro(dsdir.Parent), dsinfo, status, filter, l.Name, linuxFinder, props["LinuxTempLocation"], failNow, timeout);
                     }
-                    var w = new WindowsDataset(d.Parent);
+                    var w = new WindowsGRIDDSRepro(d.Parent);
                     var result = w.FindDSFiles(dsinfo.Name, filter);
                     if (result != null)
                     {
@@ -107,7 +107,7 @@ namespace AtlasWorkFlows.Locations
         /// <param name="status"></param>
         /// <param name="filter"></param>
         /// <returns></returns>
-        private static Uri[] LoadDatasetFromOtherSource(WindowsDataset dsLocalLocation,
+        private static Uri[] LoadDatasetFromOtherSource(WindowsGRIDDSRepro dsLocalLocation,
             DSInfo dsinfo,
             Action<string> status,
             Func<string[], string[]> filter, 
