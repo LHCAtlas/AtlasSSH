@@ -180,6 +180,82 @@ namespace AtlasWorkFlowsTest
             Assert.AreEqual("tev -> *LocalDisk", DummyPlace.CopyLogs[1]);
         }
 
+        [TestMethod]
+        public void CopyFromGRIDExample()
+        {
+            // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
+            var loc1 = new DummyPlace("LocalDisk") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("tev") { IsLocal = false, DataTier = 10, CanSourceACopy = true, NeedsConfirmationCopy = false };
+            var loc3 = new DummyPlace("tev-GRID") { IsLocal = false, DataTier = 100, CanSourceACopy = true, NeedsConfirmationCopy = false };
+
+            // The tev-GRID can copy only to tev
+            loc3.ExplicitlyNotAllowed.Add(loc1);
+            loc1.ExplicitlyNotAllowed.Add(loc3);
+
+            // loc1 can only source a copy
+            loc2.ExplicitlyNotAllowed.Add(loc1);
+
+            loc3.Add("ds1", "f1", "f2");
+            DatasetManager.ResetDSM(loc1, loc2, loc3);
+
+            var files = DatasetManager.ListOfFilesInDataset("ds1");
+            var localFiles = MakeFilesLocal(files);
+            Assert.AreEqual(2, localFiles.Length);
+
+            foreach (var c in DummyPlace.CopyLogs)
+            {
+                Console.WriteLine(c);
+            }
+            Assert.AreEqual(2, DummyPlace.CopyLogs.Count);
+            Assert.AreEqual("*tev-GRID -> tev", DummyPlace.CopyLogs[0]);
+            Assert.AreEqual("tev -> *LocalDisk", DummyPlace.CopyLogs[1]);
+        }
+
+        [TestMethod]
+        public void CopyFromGRIDWithTwoOptions()
+        {
+            // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
+            var loc1 = new DummyPlace("LocalDisk") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("tev") { IsLocal = false, DataTier = 10, CanSourceACopy = true, NeedsConfirmationCopy = false };
+            var loc3 = new DummyPlace("tev-GRID") { IsLocal = false, DataTier = 100, CanSourceACopy = true, NeedsConfirmationCopy = false };
+            var loc4 = new DummyPlace("cern") { IsLocal = false, DataTier = 10, CanSourceACopy = true, NeedsConfirmationCopy = false };
+            var loc5 = new DummyPlace("cern-GRID") { IsLocal = false, DataTier = 100, CanSourceACopy = true, NeedsConfirmationCopy = false };
+
+            // The tev-GRID can copy only to tev
+            loc3.ExplicitlyNotAllowed.Add(loc1);
+            loc3.ExplicitlyNotAllowed.Add(loc4);
+            loc3.ExplicitlyNotAllowed.Add(loc5);
+
+            // tev-CERN can copy only to cern
+            loc5.ExplicitlyNotAllowed.Add(loc1);
+            loc5.ExplicitlyNotAllowed.Add(loc2);
+            loc5.ExplicitlyNotAllowed.Add(loc3);
+
+            // loc1 can only access tev and cern
+            loc1.ExplicitlyNotAllowed.Add(loc3);
+            loc1.ExplicitlyNotAllowed.Add(loc5);
+
+            // loc1 can only source a copy
+            loc2.ExplicitlyNotAllowed.Add(loc1);
+            loc4.ExplicitlyNotAllowed.Add(loc1);
+
+            loc3.Add("ds1", "f1", "f2");
+            loc5.Add("ds1", "f1", "f2");
+            DatasetManager.ResetDSM(loc1, loc2, loc3, loc4, loc5);
+
+            var files = DatasetManager.ListOfFilesInDataset("ds1");
+            var localFiles = MakeFilesLocal(files);
+            Assert.AreEqual(2, localFiles.Length);
+
+            foreach (var c in DummyPlace.CopyLogs)
+            {
+                Console.WriteLine(c);
+            }
+            Assert.AreEqual(2, DummyPlace.CopyLogs.Count);
+            Assert.AreEqual("*tev-GRID -> tev", DummyPlace.CopyLogs[0]);
+            Assert.AreEqual("tev -> *LocalDisk", DummyPlace.CopyLogs[1]);
+        }
+
         #region Places
         class EmptyNonLocalPlace : IPlace
         {
