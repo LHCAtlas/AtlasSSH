@@ -39,6 +39,13 @@ namespace AtlasWorkFlows.Locations
         bool CanSourceCopy(IPlace destination);
 
         /// <summary>
+        /// Return the actual location of a file that can be used as input to another windows program.
+        /// </summary>
+        /// <param name="uris"></param>
+        /// <returns></returns>
+        IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris);
+
+        /// <summary>
         /// What data teir. The larger the number, the more we should try to stay away from it
         /// </summary>
         /// <remarks>
@@ -70,5 +77,20 @@ namespace AtlasWorkFlows.Locations
         /// Example use: for the local disk to prevent accidental copying of files to it
         /// </remarks>
         bool NeedsConfirmationCopy { get; }
+
+        /// <summary>
+        /// Return true if this place can get its hands on a particular file.
+        /// </summary>
+        /// <param name="u"></param>
+        /// <returns></returns>
+        bool HasFile(Uri u);
+
+        /// <summary>
+        /// Copy the URI's from the other place locally, by running the copy from this place.
+        /// </summary>
+        /// <param name="item2"></param>
+        /// <param name="uris"></param>
+        /// <remarks>All URI's are of the same dataest.</remarks>
+        void Copy(IPlace origin, Uri[] uris);
     }
 }

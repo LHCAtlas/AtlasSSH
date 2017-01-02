@@ -73,6 +73,7 @@
     <Compile Include="Locations\IFetchToRemoteLinuxDir.cs" />
     <Compile Include="Locations\LocalMachine.cs" />
     <Compile Include="Locations\Locator.cs" />
+    <Compile Include="Locations\Route.cs" />
     <Compile Include="Locations\WindowsDataset.cs" />
     <Compile Include="Panda\PandaDM.cs" />
     <Compile Include="Panda\PandaUtils.cs" />
