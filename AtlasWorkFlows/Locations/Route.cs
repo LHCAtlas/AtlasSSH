@@ -99,7 +99,11 @@ namespace AtlasWorkFlows.Locations
                     }
                     else
                     {
-                        pairing.Item2.Copy(pairing.Item1, uris);
+                        // Copying must be done by a single dataset at a time.
+                        foreach (var fileSet in uris.GroupBy(u => u.Authority))
+                        {
+                            pairing.Item2.Copy(pairing.Item1, fileSet.ToArray());
+                        }
                     }
                 }
                 else if (pairing.Item2 == null)

@@ -113,10 +113,39 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
+        public void CopyDatasetsWithSameFilenames()
+        {
+            var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
+            loc2.Add("ds1", "f1", "f2");
+            loc2.Add("ds2", "f1", "f2");
+            DatasetManager.ResetDSM(loc1, loc2);
+            var files = DatasetManager.ListOfFilesInDataset("ds1").Concat(DatasetManager.ListOfFilesInDataset("ds2")).ToArray();
+            var localFiles = DatasetManager.MakeFilesLocal(files);
+
+            Assert.AreEqual(4, localFiles.Length);
+            Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
+            Assert.AreEqual(@"c:\junk\f2.txt", localFiles[1].OriginalString);
+            Assert.AreEqual(@"c:\junk\f1.txt", localFiles[2].OriginalString);
+            Assert.AreEqual(@"c:\junk\f2.txt", localFiles[3].OriginalString);
+        }
+
+        [TestMethod]
         public void CopyToLocalFromMultipleDatasets()
         {
-            Assert.Inconclusive();
-            // Make sure we can copy from multiple datasets without messing up the internal copy.
+            var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
+            loc2.Add("ds1", "f1", "f2");
+            loc2.Add("ds2", "f3", "f4");
+            DatasetManager.ResetDSM(loc1, loc2);
+            var files = DatasetManager.ListOfFilesInDataset("ds1").Concat(DatasetManager.ListOfFilesInDataset("ds2")).ToArray();
+            var localFiles = DatasetManager.MakeFilesLocal(files);
+
+            Assert.AreEqual(4, localFiles.Length);
+            Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
+            Assert.AreEqual(@"c:\junk\f2.txt", localFiles[1].OriginalString);
+            Assert.AreEqual(@"c:\junk\f3.txt", localFiles[2].OriginalString);
+            Assert.AreEqual(@"c:\junk\f4.txt", localFiles[3].OriginalString);
         }
 
         #region Places
