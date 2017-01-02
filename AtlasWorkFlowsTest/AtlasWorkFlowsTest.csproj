@@ -62,6 +62,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="DatasetManagerTest.cs" />
     <Compile Include="GRIDDatasetLocatorTest.cs" />
     <Compile Include="Jobs\AtlasJobEnvrionmentTest.cs" />
     <Compile Include="Jobs\DatasetTest.cs" />

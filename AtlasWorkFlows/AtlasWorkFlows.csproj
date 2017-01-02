@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DatasetManager.cs" />
     <Compile Include="DSInfo.cs" />
     <Compile Include="GRIDDatasetLocator.cs" />
     <Compile Include="Jobs\AtlasJobEnvrionment.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="Jobs\Print.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Locations\FetchToRemoteLinuxDirInstance.cs" />
+    <Compile Include="Locations\IPlace.cs" />
     <Compile Include="Locations\LinuxFetcher.cs" />
     <Compile Include="Locations\LinuxWithWindowsReflector.cs" />
     <Compile Include="Locations\GRIDFetchToLinuxVisibleOnWindows.cs" />
@@ -78,6 +80,7 @@
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\Config.cs" />
     <Compile Include="Utils\DataSetUtils.cs" />
+    <Compile Include="Utils\Exceptions.cs" />
     <Compile Include="Utils\FileInfoUtils.cs" />
     <Compile Include="Utils\Hash.cs" />
     <Compile Include="Utils\IPLocationTests.cs" />
