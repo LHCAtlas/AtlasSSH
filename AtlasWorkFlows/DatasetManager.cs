@@ -3,6 +3,7 @@ using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -145,7 +146,8 @@ namespace AtlasWorkFlows
                 .Where(p => !p.NeedsConfirmationCopy)
                 .Where(p => !r.Contains(p))
                 .Where(p => r.LastPlace.CanSourceCopy(p) || p.CanSourceCopy(r.LastPlace))
-                .Select(p => new Route(r, p));
+                .Select(p => new Route(r, p))
+                .SelectMany(nr => FindStepsToLocal(nr));
         }
 
         /// <summary>

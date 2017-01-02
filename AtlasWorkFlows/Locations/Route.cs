@@ -12,8 +12,6 @@ namespace AtlasWorkFlows.Locations
     /// </summary>
     class Route
     {
-        public object Name { get; internal set; }
-
         /// <summary>
         /// A list of steps along the way, starting at the source and ending with the last one.
         /// </summary>
@@ -28,6 +26,14 @@ namespace AtlasWorkFlows.Locations
         /// Return the last destination in the route
         /// </summary>
         public IPlace LastPlace { get { return _steps.Last(); } }
+
+        /// <summary>
+        /// The name of a route is just a list of all its places.
+        /// </summary>
+        public string Name
+        {
+            get { return _steps.Select(p => p.Name).Aggregate((l, pn) => l + "-" + pn); }
+        }
 
         /// <summary>
         /// Returns true if a particualr step is already on this route.
@@ -95,14 +101,17 @@ namespace AtlasWorkFlows.Locations
                 {
                     if (pairing.Item1.CanSourceCopy(pairing.Item2))
                     {
-                        pairing.Item1.Copy(pairing.Item2, uris);
+                        foreach (var fileSet in uris.GroupBy(u => u.Authority))
+                        {
+                            pairing.Item1.CopyTo(pairing.Item2, fileSet.ToArray());
+                        }
                     }
                     else
                     {
                         // Copying must be done by a single dataset at a time.
                         foreach (var fileSet in uris.GroupBy(u => u.Authority))
                         {
-                            pairing.Item2.Copy(pairing.Item1, fileSet.ToArray());
+                            pairing.Item2.CopyFrom(pairing.Item1, fileSet.ToArray());
                         }
                     }
                 }

@@ -86,11 +86,20 @@ namespace AtlasWorkFlows.Locations
         bool HasFile(Uri u);
 
         /// <summary>
-        /// Copy the URI's from the other place locally, by running the copy from this place.
+        /// Copy the URI's to the other place, by running the copy from this place.
+        /// This is a push operation (pushing the data)
         /// </summary>
         /// <param name="item2"></param>
         /// <param name="uris"></param>
         /// <remarks>All URI's are of the same dataest.</remarks>
-        void Copy(IPlace origin, Uri[] uris);
+        void CopyTo(IPlace destination, Uri[] uris);
+
+        /// <summary>
+        /// Copy the URI's from the other location to this local location, running the copy
+        /// commands at this place. This is a pull operation (pulling the data).
+        /// </summary>
+        /// <param name="origin"></param>
+        /// <param name="uris"></param>
+        void CopyFrom(IPlace origin, Uri[] uris);
     }
 }

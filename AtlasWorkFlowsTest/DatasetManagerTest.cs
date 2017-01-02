@@ -68,6 +68,7 @@ namespace AtlasWorkFlowsTest
             Assert.AreEqual(2, localFiles.Length);
             Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
             Assert.AreEqual(@"c:\junk\f2.txt", localFiles[1].OriginalString);
+            Assert.AreEqual(0, DummyPlace.CopyLogs.Count);
         }
 
         [TestMethod]
@@ -98,6 +99,9 @@ namespace AtlasWorkFlowsTest
             Assert.AreEqual(2, localFiles.Length);
             Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
             Assert.AreEqual(@"c:\junk\f2.txt", localFiles[1].OriginalString);
+
+            Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
+            Assert.AreEqual("bogusNonLocal -> *bogusLocal", DummyPlace.CopyLogs[0]);
         }
 
         [TestMethod]
@@ -148,6 +152,34 @@ namespace AtlasWorkFlowsTest
             Assert.AreEqual(@"c:\junk\f4.txt", localFiles[3].OriginalString);
         }
 
+        [TestMethod]
+        public void CopyFromFireWalledPlace()
+        {
+            // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
+            var loc1 = new DummyPlace("LocalDisk") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("tev") { IsLocal = false, DataTier = 10, CanSourceACopy = true, NeedsConfirmationCopy = false };
+            var loc3 = new DummyPlace("CERN") { IsLocal = false, DataTier = 10, CanSourceACopy = true, NeedsConfirmationCopy = false };
+
+            loc1.ExplicitlyNotAllowed.Add(loc3);
+            loc2.ExplicitlyNotAllowed.Add(loc3);
+            loc2.ExplicitlyNotAllowed.Add(loc1);
+            loc3.ExplicitlyNotAllowed.Add(loc1);
+
+            loc3.Add("ds1", "f1", "f2");
+            DatasetManager.ResetDSM(loc1, loc2, loc3);
+            var files = DatasetManager.ListOfFilesInDataset("ds1");
+            var localFiles = MakeFilesLocal(files);
+            Assert.AreEqual(2, localFiles.Length);
+
+            foreach (var c in DummyPlace.CopyLogs)
+            {
+                Console.WriteLine(c);
+            }
+            Assert.AreEqual(2, DummyPlace.CopyLogs.Count);
+            Assert.AreEqual("*CERN -> tev", DummyPlace.CopyLogs[0]);
+            Assert.AreEqual("tev -> *LocalDisk", DummyPlace.CopyLogs[1]);
+        }
+
         #region Places
         class EmptyNonLocalPlace : IPlace
         {
@@ -169,6 +201,16 @@ namespace AtlasWorkFlowsTest
             }
 
             public void Copy(IPlace origin, Uri[] uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyFrom(IPlace origin, Uri[] uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyTo(IPlace destination, Uri[] uris)
             {
                 throw new NotImplementedException();
             }
@@ -205,7 +247,10 @@ namespace AtlasWorkFlowsTest
                 IsLocal = true;
                 NeedsConfirmationCopy = true;
                 CanSourceACopy = false;
+                CopyLogs = new List<string>();
             }
+
+            public static List<string> CopyLogs = new List<string>();
 
             private Dictionary<string, string[]> _dataset_list = new Dictionary<string, string[]>();
 
@@ -237,8 +282,17 @@ namespace AtlasWorkFlowsTest
 
             public bool CanSourceACopy { get; set; }
 
+            /// <summary>
+            /// Add a pairing and no matter CanSourceACopy this will return false.
+            /// </summary>
+            public HashSet<IPlace> ExplicitlyNotAllowed = new HashSet<IPlace>();
+
             public bool CanSourceCopy(IPlace destination)
             {
+                if (ExplicitlyNotAllowed.Contains(destination))
+                {
+                    return false;
+                }
                 return CanSourceACopy;
             }
 
@@ -278,9 +332,15 @@ namespace AtlasWorkFlowsTest
             /// </summary>
             /// <param name="origin"></param>
             /// <param name="uris"></param>
-            public void Copy(IPlace origin, Uri[] uris)
+            public void CopyFrom(IPlace origin, Uri[] uris)
             {
                 Assert.AreEqual(1, uris.Select(u => u.Authority).Distinct().Count(), "Number of different datasets");
+                CopyLogs.Add($"{origin.Name} -> *{Name}");
+            }
+            public void CopyTo(IPlace dest, Uri[] uris)
+            {
+                Assert.AreEqual(1, uris.Select(u => u.Authority).Distinct().Count(), "Number of different datasets");
+                CopyLogs.Add($"*{Name} -> {dest.Name}");
             }
         }
         #endregion
