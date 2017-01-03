@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AtlasWorkFlows.Utils;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -94,13 +95,27 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
-        /// Get the absolute file locations from the source dataset.
+        /// Get the absolute file locations from the source dataset. Throws if the file does not exist locally.
         /// </summary>
         /// <param name="uris"></param>
         /// <returns></returns>
         public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
         {
-            throw new NotImplementedException();
+            // Do it by dataset.
+            var dsGroups = (from u in uris
+                            let ds = u.Authority
+                            let fname = u.Segments.Last()
+                            group new { FileName = fname } by ds)
+                           .Throw(g => !_rootLocation.HasDS(g.Key), g => new DatasetDoesNotExistInThisReproException($"Dataset '{g.Key}' does not exists in repro {Name}"));
+
+            var fileUris = from dsFiles in dsGroups
+                           let flist = _rootLocation.FindDSFiles(dsFiles.Key, returnWhatWeHave: true)
+                           from u in dsFiles
+                           select new { matchedUri = flist.Where(fu => fu.Segments.Last() == u.FileName).FirstOrDefault(), OrigUri = u };
+
+            return fileUris
+                .Throw(o => o.matchedUri == null, o => new DatasetFileNotLocalException($"File {o.OrigUri} does not exist locally!"))
+                .Select(o => o.matchedUri);
         }
 
         /// <summary>
@@ -121,8 +136,8 @@ namespace AtlasWorkFlows.Locations
             {
                 throw new DatasetDoesNotExistInThisReproException($"The dataset '{ds}' does not exist in the local repository '{Name}'");
             }
-            var filename = u.Segments.Last();
 
+            var filename = u.Segments.Last();
             return _rootLocation.HasFile(ds, filename);
         }
     }

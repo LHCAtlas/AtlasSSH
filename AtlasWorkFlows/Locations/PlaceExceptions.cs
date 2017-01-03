@@ -31,4 +31,16 @@ namespace AtlasWorkFlows.Locations
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
+
+
+    [Serializable]
+    public class DatasetFileNotLocalException : Exception
+    {
+        public DatasetFileNotLocalException() { }
+        public DatasetFileNotLocalException(string message) : base(message) { }
+        public DatasetFileNotLocalException(string message, Exception inner) : base(message, inner) { }
+        protected DatasetFileNotLocalException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
 }

@@ -43,6 +43,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="uris"></param>
         /// <returns></returns>
+        /// <remarks>If the files is not in the local repro, or this repo is not lcoal and can't render a absolute file location for windows, then an exception is to be thrown.</remarks>
         IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris);
 
         /// <summary>

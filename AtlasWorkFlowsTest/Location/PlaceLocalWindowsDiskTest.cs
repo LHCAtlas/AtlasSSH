@@ -96,6 +96,56 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsNull(files);
         }
 
+        [TestMethod]
+        public void GetLocalPathsForDSFiles()
+        {
+            var repro = BuildRepro("ExistingFileInExistingDataset");
+            BuildDatset(repro, "ds1", "f1.root", "f2.root");
+            var place = new PlaceLocalWindowsDisk("test", repro);
+            var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") });
+            Assert.AreEqual(2, files.Count());
+            foreach (var f in files)
+            {
+                Assert.IsTrue(new FileInfo(f.LocalPath).Exists);
+            }
+        }
+
+        [TestMethod]
+        public void GetLocalPathsForPartialDSFiles()
+        {
+            var repro = BuildRepro("ExistingFileInExistingDataset");
+            BuildDatset(repro, "ds1", "f1.root", "f2.root");
+            var place = new PlaceLocalWindowsDisk("test", repro);
+            File.Delete($"{repro.FullName}\\ds1\\files\\f2.root");
+            var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds1/f1.root") });
+            Assert.AreEqual(1, files.Count());
+            foreach (var f in files)
+            {
+                Assert.IsTrue(new FileInfo(f.LocalPath).Exists);
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(DatasetFileNotLocalException))]
+        public void GetLocalPathsForMissingDSFiles()
+        {
+            var repro = BuildRepro("ExistingFileInExistingDataset");
+            BuildDatset(repro, "ds1", "f1.root", "f2.root");
+            var place = new PlaceLocalWindowsDisk("test", repro);
+            File.Delete($"{repro.FullName}\\ds1\\files\\f2.root");
+            var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds1/f2.root") }).ToArray();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(DatasetDoesNotExistInThisReproException))]
+        public void GetLocalPathsForMissingDS()
+        {
+            var repro = BuildRepro("ExistingFileInExistingDataset");
+            BuildDatset(repro, "ds1", "f1.root", "f2.root");
+            var place = new PlaceLocalWindowsDisk("test", repro);
+            var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds3/f2.root") }).ToArray();
+        }
+
         #region Setup Routines
         /// <summary>
         /// Build a repro at a particular location. Destory anything that was at that location previously.
