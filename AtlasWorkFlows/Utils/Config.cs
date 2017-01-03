@@ -19,7 +19,7 @@ namespace AtlasWorkFlows.Utils
         /// <returns></returns>
         public static Dictionary<string, Dictionary<string, string>> GetLocationConfigs()
         {
-            var goodFile = GoodConfigFilesOfName("AtlasSSHConfig.txt").FirstOrDefault();
+            var goodFile = GoodConfigFilesOfName("AtlasSSHConfig2.txt").FirstOrDefault();
 
             if (goodFile == null)
             {
