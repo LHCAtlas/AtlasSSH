@@ -101,7 +101,7 @@ namespace AtlasWorkFlowsTest
             Assert.AreEqual(@"c:\junk\f2.txt", localFiles[1].OriginalString);
 
             Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
-            Assert.AreEqual("bogusNonLocal -> *bogusLocal", DummyPlace.CopyLogs[0]);
+            Assert.AreEqual("bogusNonLocal -> *bogusLocal (2 files)", DummyPlace.CopyLogs[0]);
         }
 
         [TestMethod]
@@ -176,8 +176,8 @@ namespace AtlasWorkFlowsTest
                 Console.WriteLine(c);
             }
             Assert.AreEqual(2, DummyPlace.CopyLogs.Count);
-            Assert.AreEqual("*CERN -> tev", DummyPlace.CopyLogs[0]);
-            Assert.AreEqual("tev -> *LocalDisk", DummyPlace.CopyLogs[1]);
+            Assert.AreEqual("*CERN -> tev (2 files)", DummyPlace.CopyLogs[0]);
+            Assert.AreEqual("tev -> *LocalDisk (2 files)", DummyPlace.CopyLogs[1]);
         }
 
         [TestMethod]
@@ -207,8 +207,8 @@ namespace AtlasWorkFlowsTest
                 Console.WriteLine(c);
             }
             Assert.AreEqual(2, DummyPlace.CopyLogs.Count);
-            Assert.AreEqual("*tev-GRID -> tev", DummyPlace.CopyLogs[0]);
-            Assert.AreEqual("tev -> *LocalDisk", DummyPlace.CopyLogs[1]);
+            Assert.AreEqual("*tev-GRID -> tev (2 files)", DummyPlace.CopyLogs[0]);
+            Assert.AreEqual("tev -> *LocalDisk (2 files)", DummyPlace.CopyLogs[1]);
         }
 
         [TestMethod]
@@ -252,8 +252,8 @@ namespace AtlasWorkFlowsTest
                 Console.WriteLine(c);
             }
             Assert.AreEqual(2, DummyPlace.CopyLogs.Count);
-            Assert.AreEqual("*tev-GRID -> tev", DummyPlace.CopyLogs[0]);
-            Assert.AreEqual("tev -> *LocalDisk", DummyPlace.CopyLogs[1]);
+            Assert.AreEqual("*tev-GRID -> tev (2 files)", DummyPlace.CopyLogs[0]);
+            Assert.AreEqual("tev -> *LocalDisk (2 files)", DummyPlace.CopyLogs[1]);
         }
 
         #region Places
@@ -411,12 +411,12 @@ namespace AtlasWorkFlowsTest
             public void CopyFrom(IPlace origin, Uri[] uris)
             {
                 Assert.AreEqual(1, uris.Select(u => u.Authority).Distinct().Count(), "Number of different datasets");
-                CopyLogs.Add($"{origin.Name} -> *{Name}");
+                CopyLogs.Add($"{origin.Name} -> *{Name} ({uris.Length} files)");
             }
             public void CopyTo(IPlace dest, Uri[] uris)
             {
                 Assert.AreEqual(1, uris.Select(u => u.Authority).Distinct().Count(), "Number of different datasets");
-                CopyLogs.Add($"*{Name} -> {dest.Name}");
+                CopyLogs.Add($"*{Name} -> {dest.Name} ({uris.Length} files)");
             }
         }
         #endregion
