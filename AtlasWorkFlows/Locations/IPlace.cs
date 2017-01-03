@@ -80,10 +80,10 @@ namespace AtlasWorkFlows.Locations
         bool NeedsConfirmationCopy { get; }
 
         /// <summary>
-        /// Return true if this place can get its hands on a particular file.
+        /// Return true if this place can get its hands on a particular file. If the dataset does not exist in this location, this will also return false.
         /// </summary>
-        /// <param name="u"></param>
-        /// <returns></returns>
+        /// <param name="u">Uri of the dataset and filename we are interested in</param>
+        /// <returns>True if the file exists locally, false if not. Does not check for dataset existance or file membership.</returns>
         bool HasFile(Uri u);
 
         /// <summary>
