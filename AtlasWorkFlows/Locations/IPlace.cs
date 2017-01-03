@@ -62,7 +62,7 @@ namespace AtlasWorkFlows.Locations
         /// known at this location, return null.
         /// </summary>
         /// <param name="dsname"></param>
-        /// <returns>A list of the files that are part of the dataset</returns>
+        /// <returns>A list of the files that are part of the dataset. Null if the dataset is unkown to the repro</returns>
         /// <remarks>
         /// Any IPlace that retuns this list should return the same list. There can be only
         /// one "true" set of files in a dataset. If there is a difference, it is a bug, and

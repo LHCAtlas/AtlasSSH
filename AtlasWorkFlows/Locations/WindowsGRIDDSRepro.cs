@@ -40,10 +40,47 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
+        /// Do we have a particular file in this dataset?
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <param name="fname"></param>
+        /// <returns></returns>
+        public bool HasFile (string dsname, string fname)
+        {
+            // The layout is fixed. If the top level directory doesn't exist, then we assume
+            // that nothing good is going on.
+            var dinfo = BuildDSRootDirectory(dsname);
+            if (!dinfo.Exists)
+                return false;
+
+            var fullList = dinfo.EnumerateFiles("*.root.*", SearchOption.AllDirectories)
+                .Where(f => !f.FullName.EndsWith(".part"))
+                .Select(f => f.Name)
+                .Where(f => f == fname)
+                .FirstOrDefault();
+
+            return fullList != null;
+        }
+
+        /// <summary>
+        /// Does this dataset exist in this reposetory?
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        public bool HasDS(string dsname)
+        {
+            var dinfo = BuildDSRootDirectory(dsname);
+            return dinfo.Exists;
+        }
+
+        /// <summary>
         /// Return a list of URi's to the files that are part of this dataset.
         /// </summary>
         /// <param name="dsname">Dataset name</param>
         /// <returns></returns>
+        /// <remarks>
+        /// TODO: In the new placed based system, this code may be obsolete. At least all the filter code!
+        /// </remarks>
         public Uri[] FindDSFiles(string dsname, Func<string[], string[]> fileFilter = null, bool returnWhatWeHave = false)
         {
             // The layout is fixed. If the top level directory doesn't exist, then we assume

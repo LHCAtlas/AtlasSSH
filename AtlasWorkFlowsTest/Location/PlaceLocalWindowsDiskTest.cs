@@ -59,6 +59,43 @@ namespace AtlasWorkFlowsTest.Location
             place.HasFile(u);
         }
 
+        [TestMethod]
+        public void GetDSFileListForExistingDataset()
+        {
+            var repro = BuildRepro("ExistingFileInExistingDataset");
+            BuildDatset(repro, "ds1", "f1.root", "f2.root");
+            var place = new PlaceLocalWindowsDisk("test", repro);
+            var files = place.GetListOfFilesForDataset("ds1");
+            Assert.IsNotNull(files);
+            Assert.AreEqual(2, files.Length);
+            Assert.AreEqual("f1.root", files[0]);
+            Assert.AreEqual("f2.root", files[1]);
+        }
+
+        [TestMethod]
+        public void GetDSFileListForExistingDatasetButMissingOneFile()
+        {
+            var repro = BuildRepro("ExistingFileInExistingDataset");
+            BuildDatset(repro, "ds1", "f1.root", "f2.root");
+            File.Delete($"{repro.FullName}\\ds1\\files\\f1.root");
+            var place = new PlaceLocalWindowsDisk("test", repro);
+            var files = place.GetListOfFilesForDataset("ds1");
+            Assert.IsNotNull(files);
+            Assert.AreEqual(2, files.Length);
+            Assert.AreEqual("f1.root", files[0]);
+            Assert.AreEqual("f2.root", files[1]);
+        }
+
+        [TestMethod]
+        public void GetDSFileListForNonExistingDataset()
+        {
+            var repro = BuildRepro("ExistingFileInExistingDataset");
+            BuildDatset(repro, "ds1", "f1.root", "f2.root");
+            var place = new PlaceLocalWindowsDisk("test", repro);
+            var files = place.GetListOfFilesForDataset("ds2");
+            Assert.IsNull(files);
+        }
+
         #region Setup Routines
         /// <summary>
         /// Build a repro at a particular location. Destory anything that was at that location previously.
@@ -90,13 +127,18 @@ namespace AtlasWorkFlowsTest.Location
             dsDir.Create();
             var fileDir = new DirectoryInfo($"{dsDir.FullName}\\files");
             fileDir.Create();
-            foreach (var f in files)
+
+            using (var listingFileWr = File.CreateText(Path.Combine(dsDir.FullName, "aa_dataset_complete_file_list.txt")))
             {
-                var finfo = new FileInfo($"{fileDir.FullName}\\{f}");
-                using (var wr = finfo.CreateText())
+                foreach (var f in files)
                 {
-                    wr.WriteLine("hi");
-                    wr.Close();
+                    var finfo = new FileInfo($"{fileDir.FullName}\\{f}");
+                    using (var wr = finfo.CreateText())
+                    {
+                        wr.WriteLine("hi");
+                        wr.Close();
+                        listingFileWr.WriteLine(f);
+                    }
                 }
             }
         }

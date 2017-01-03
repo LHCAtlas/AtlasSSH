@@ -81,11 +81,16 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// Look to see if we know about the dataset in our library, and if so, fetch the file list.
         /// </summary>
-        /// <param name="dsname"></param>
-        /// <returns></returns>
+        /// <param name="dsname">Name of datest</param>
+        /// <returns>List of files, null if the dataset is not known.</returns>
         public string[] GetListOfFilesForDataset(string dsname)
         {
-            throw new NotImplementedException();
+            var files = _rootLocation.ListOfDSFiles(dsname);
+            if (files.Length == 0)
+            {
+                return null;
+            }
+            return files;
         }
 
         /// <summary>
@@ -99,7 +104,7 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
-        /// Do we have access to this specific file in this dataset?
+        /// Do we have access to this specific file in this dataset? If this dataset is not here, then we throw an exception.
         /// </summary>
         /// <param name="u">URI of the file in gridds:// format. It is assumed this file is part of the dataset</param>
         /// <returns>true if the file exists on the local disk. False otherwise</returns>
@@ -112,15 +117,13 @@ namespace AtlasWorkFlows.Locations
             }
 
             var ds = u.Authority;
+            if (!_rootLocation.HasDS(ds))
+            {
+                throw new DatasetDoesNotExistInThisReproException($"The dataset '{ds}' does not exist in the local repository '{Name}'");
+            }
             var filename = u.Segments.Last();
 
-            var fnames = _rootLocation.FindDSFiles(ds);
-            if (fnames == null)
-            {
-                throw new DatasetDoesNotExistInThisReproException($"Dataset '{ds}' does not exist in '{Name}'");
-            }
-
-            return fnames.Select(f => f.Segments.Last()).Any(fn => fn == filename);
+            return _rootLocation.HasFile(ds, filename);
         }
     }
 }
