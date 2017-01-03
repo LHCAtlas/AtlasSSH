@@ -4,6 +4,7 @@ using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,6 +37,18 @@ namespace AtlasWorkFlows
             public NoLocalPlaceToCopyToException(string message) : base(message) { }
             public NoLocalPlaceToCopyToException(string message, Exception inner) : base(message, inner) { }
             protected NoLocalPlaceToCopyToException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        }
+
+
+        [Serializable]
+        public class UnknownLocationTypeException : Exception
+        {
+            public UnknownLocationTypeException() { }
+            public UnknownLocationTypeException(string message) : base(message) { }
+            public UnknownLocationTypeException(string message, Exception inner) : base(message, inner) { }
+            protected UnknownLocationTypeException(
               System.Runtime.Serialization.SerializationInfo info,
               System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
@@ -114,7 +127,7 @@ namespace AtlasWorkFlows
 
             // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
             var routedFiles = goodFiles
-                .Select(u => new { Route = FindRouteTo(u, p => p == destination), File = u })
+                .Select(u => new { Route = FindRouteTo(u, p => p == destination, p => p == destination), File = u })
                 .GroupBy(info => info.Route.Name)
                 .ToArray();
 
@@ -131,8 +144,10 @@ namespace AtlasWorkFlows
         /// Find a route from a file to something local we are allowed to use.
         /// </summary>
         /// <param name="u"></param>
+        /// <param name="endCondition">The condition which says we have made it to where we want to go</param>
+        /// <param name="forceOk">Will make sure this particular place is considered in all of our searches no matter what</param>
         /// <returns>A route</returns>
-        private static Route FindRouteTo(Uri u, Func<IPlace, bool> endCondition)
+        private static Route FindRouteTo(Uri u, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk = null)
         {
             // First we need to find a source for this file.
             var sources = _places.Value
@@ -143,7 +158,7 @@ namespace AtlasWorkFlows
             // Now we have sources. We build a path for each, and select the path with the least number of steps.
             var bestRoute = sources
                 .Select(s => new Route(s))
-                .SelectMany(r => FindStepsTo(r, endCondition))
+                .SelectMany(r => FindStepsTo(r, endCondition, forceOk))
                 .OrderBy(r => r.Length)
                 .FirstOrDefault()
                 .ThrowIfNull(() => new NoLocalPlaceToCopyToException($"Unable to find a way to copy {u} locally. Could be you have to explicitly copy it to your local cache."));
@@ -156,9 +171,16 @@ namespace AtlasWorkFlows
         /// </summary>
         /// <param name="r"></param>
         /// <param name="endCondition"></param>
+        /// <param name="forceOk">If true is returned, will make sure that these places aren't taken off the list for consideration</param>
         /// <returns></returns>
-        private static IEnumerable<Route> FindStepsTo(Route r, Func<IPlace, bool> endCondition)
+        private static IEnumerable<Route> FindStepsTo(Route r, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk = null)
         {
+            // If nothing extra is going on, then don't force anything.
+            if (forceOk == null)
+            {
+                forceOk = p => false;
+            }
+
             // Stop the recursion if we've found a place we should be happy with!
             if (endCondition(r.LastPlace))
             {
@@ -168,7 +190,7 @@ namespace AtlasWorkFlows
             // Go through all the places. Don't allow repeats, and make sure
             // nothing is included that needs explicit permission.
             return _places.Value
-                .Where(p => !p.NeedsConfirmationCopy)
+                .Where(p => !p.NeedsConfirmationCopy || forceOk(p))
                 .Where(p => !r.Contains(p))
                 .Where(p => r.LastPlace.CanSourceCopy(p) || p.CanSourceCopy(r.LastPlace))
                 .Select(p => new Route(r, p))
@@ -191,6 +213,26 @@ namespace AtlasWorkFlows
         }
 
         /// <summary>
+        /// Return the place with an exact match for the given name. Null if it isn't found.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static IPlace FindLocation(string name)
+        {
+            return _places.Value
+                .Where(p => p.Name == name)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Return the list of locations that we are managing right now.
+        /// </summary>
+        public static string[] ValidLocations
+        {
+            get { return _places.Value.Select(p => p.Name).ToArray(); }
+        }
+
+        /// <summary>
         /// Keep a list of places. Only spin up if we need as it will involve some
         /// decent heavy-duty parsing of text files.
         /// </summary>
@@ -198,12 +240,55 @@ namespace AtlasWorkFlows
         private static Lazy<IPlace[]> _places = new Lazy<IPlace[]>(() => LoadPlaces());
 
         /// <summary>
-        /// Load places from the default place
+        /// Load places from the default text config file
         /// </summary>
         /// <returns></returns>
         private static IPlace[] LoadPlaces()
         {
-            throw new NotImplementedException();
+            var config = Config.GetLocationConfigs();
+            return config.Keys
+                .Select(placeName => ParseSingleConfig(config[placeName]))
+                .Where(p => p != null)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Given the dictionary of parameters, create a place.
+        /// </summary>
+        /// <param name="info"></param>
+        /// <returns></returns>
+        private static IPlace ParseSingleConfig(Dictionary<string, string> info)
+        {
+            var type = info["LocationType"];
+            if (type == "LocalWindowsFilesystem")
+            {
+                return CreateWindowsFilesystemPlace(info);
+            }
+
+            throw new UnknownLocationTypeException($"Location type {type} is not known as read from the configuration file.");
+        }
+
+        /// <summary>
+        /// Create a place that is a Windows filesystem.
+        /// </summary>
+        /// <param name="info"></param>
+        /// <returns></returns>
+        private static IPlace CreateWindowsFilesystemPlace(Dictionary<string, string> info)
+        {
+            // Look at the paths. And if we can't find something, then there is no location!
+            var goodPath = info["Paths"]
+                .Split(',')
+                .Select(n => n.Trim())
+                .Where(p => Directory.Exists(p))
+                .Select(p => new DirectoryInfo(p))
+                .FirstOrDefault();
+
+            if (goodPath == null)
+            {
+                return null;
+            }
+
+            return new PlaceLocalWindowsDisk(info["Name"], goodPath);
         }
     }
 }
