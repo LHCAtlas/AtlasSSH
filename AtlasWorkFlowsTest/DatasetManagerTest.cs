@@ -256,6 +256,34 @@ namespace AtlasWorkFlowsTest
             Assert.AreEqual("tev -> *LocalDisk (2 files)", DummyPlace.CopyLogs[1]);
         }
 
+        [TestMethod]
+        public void CopyFromLocalPlaceToLocalPlace()
+        {
+            var loc1 = new DummyPlace("l1") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("l2") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
+
+            loc1.Add("ds1", "f1", "f2");
+            DatasetManager.ResetDSM(loc1, loc2);
+            var f = DatasetManager.CopyFilesTo(loc2, DatasetManager.ListOfFilesInDataset("ds1"));
+            Assert.AreEqual(2, f.Length);
+            Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
+            Assert.AreEqual("*l1 -> l2 (2 files)", DummyPlace.CopyLogs[0]);
+        }
+
+        [TestMethod]
+        public void CopyFromNonLocalPlaceToNonLocalPlace()
+        {
+            var loc1 = new DummyPlace("l1") { IsLocal = false, NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("l2") { IsLocal = false, NeedsConfirmationCopy = false, CanSourceACopy = true };
+
+            loc1.Add("ds1", "f1", "f2");
+            DatasetManager.ResetDSM(loc1, loc2);
+            var f = DatasetManager.CopyFilesTo(loc2, DatasetManager.ListOfFilesInDataset("ds1"));
+            Assert.AreEqual(2, f.Length);
+            Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
+            Assert.AreEqual("*l1 -> l2 (2 files)", DummyPlace.CopyLogs[0]);
+        }
+
         #region Places
         class EmptyNonLocalPlace : IPlace
         {

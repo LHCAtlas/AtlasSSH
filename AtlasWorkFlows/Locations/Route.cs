@@ -117,8 +117,15 @@ namespace AtlasWorkFlows.Locations
                 }
                 else if (pairing.Item2 == null)
                 {
-                    // Last item in the guy
-                    return pairing.Item1.GetLocalFileLocations(uris);
+                    // Last item in the guy. We return non-local Uri's if that is all we can get.
+                    if (!pairing.Item1.IsLocal)
+                    {
+                        return datasetURIs;
+                    }
+                    else
+                    {
+                        return pairing.Item1.GetLocalFileLocations(uris);
+                    }
                 }
             }
 

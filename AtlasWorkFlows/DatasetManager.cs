@@ -76,7 +76,7 @@ namespace AtlasWorkFlows
 
             // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
             var routedFiles = goodFiles
-                .Select(u => new { Route = FindRouteToLocalFile(u), File = u })
+                .Select(u => new { Route = FindRouteTo(u, p => p.IsLocal), File = u })
                 .GroupBy(info => info.Route.Name)
                 .ToArray();
 
@@ -91,11 +91,48 @@ namespace AtlasWorkFlows
         }
 
         /// <summary>
+        /// Find a route to move files from some location to a particular destination.
+        /// </summary>
+        /// <param name="destination">The place we want to move everything to.</param>
+        /// <param name="files">List of gridds Uri's of the files that we should be moving</param>
+        /// <returns>List of local URI's if the <paramref name="destination"/> is local, otherwise the gridds type Uri's</returns>
+        public static Uri[] CopyFilesTo(IPlace destination, params Uri[] files)
+        {
+            // Simple checks
+            var goodFiles = files
+                .ThrowIfNull(() => new ArgumentNullException($"files can't be a null argument"))
+                .Throw(u => u.Scheme != "gridds", u => new UnknownUriSchemeException($"Can only deal with gridds:// uris - found: {u.OriginalString}"));
+
+            if (destination == null)
+            {
+                throw new ArgumentNullException("Can't have a null destination!");
+            }
+            if (!_places.Value.Contains(destination))
+            {
+                throw new ArgumentException($"Place {destination.Name} is not on our master list of places!");
+            }
+
+            // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
+            var routedFiles = goodFiles
+                .Select(u => new { Route = FindRouteTo(u, p => p == destination), File = u })
+                .GroupBy(info => info.Route.Name)
+                .ToArray();
+
+            // To do the files, we need to first fine a routing from wherever they are to the final location.
+            var resultUris = from rtGrouping in routedFiles
+                             let rt = rtGrouping.First().Route
+                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File))
+                             select uri;
+
+            return resultUris.ToArray();
+        }
+
+        /// <summary>
         /// Find a route from a file to something local we are allowed to use.
         /// </summary>
         /// <param name="u"></param>
         /// <returns>A route</returns>
-        private static Route FindRouteToLocalFile(Uri u)
+        private static Route FindRouteTo(Uri u, Func<IPlace, bool> endCondition)
         {
             // First we need to find a source for this file.
             var sources = _places.Value
@@ -103,10 +140,10 @@ namespace AtlasWorkFlows
                 .ToArray()
                 .Throw(places => places.Length == 0,  places => new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'."));
 
-            // Now we ahve sources. We build a path for each, and select the path with the least number of steps.
+            // Now we have sources. We build a path for each, and select the path with the least number of steps.
             var bestRoute = sources
                 .Select(s => new Route(s))
-                .SelectMany(r => FindStepsToLocal(r))
+                .SelectMany(r => FindStepsTo(r, endCondition))
                 .OrderBy(r => r.Length)
                 .FirstOrDefault()
                 .ThrowIfNull(() => new NoLocalPlaceToCopyToException($"Unable to find a way to copy {u} locally. Could be you have to explicitly copy it to your local cache."));
@@ -115,14 +152,15 @@ namespace AtlasWorkFlows
         }
 
         /// <summary>
-        /// Look through the places and explore all possibilities of getting the file to a local dude.
+        /// Build routes until some sort of end condition is met. No circular routes allowed.
         /// </summary>
         /// <param name="r"></param>
+        /// <param name="endCondition"></param>
         /// <returns></returns>
-        private static IEnumerable<Route> FindStepsToLocal(Route r)
+        private static IEnumerable<Route> FindStepsTo(Route r, Func<IPlace, bool> endCondition)
         {
             // Stop the recursion if we've found a place we should be happy with!
-            if (r.LastPlace.IsLocal)
+            if (endCondition(r.LastPlace))
             {
                 return new Route[] { r };
             }
@@ -134,13 +172,13 @@ namespace AtlasWorkFlows
                 .Where(p => !r.Contains(p))
                 .Where(p => r.LastPlace.CanSourceCopy(p) || p.CanSourceCopy(r.LastPlace))
                 .Select(p => new Route(r, p))
-                .SelectMany(nr => FindStepsToLocal(nr));
+                .SelectMany(nr => FindStepsTo(nr, endCondition));
         }
-
+        
         /// <summary>
-        /// Reset the IPlace list. Used only for testing, dangerous otherwise!
-        /// </summary>
-        /// <param name="places">List of places that we should use. If empty, then the default list will be used.</param>
+                 /// Reset the IPlace list. Used only for testing, dangerous otherwise!
+                 /// </summary>
+                 /// <param name="places">List of places that we should use. If empty, then the default list will be used.</param>
         public static void ResetDSM(params IPlace[] places)
         {
             if (places.Length == 0)
