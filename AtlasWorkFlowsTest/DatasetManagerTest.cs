@@ -310,7 +310,7 @@ namespace AtlasWorkFlowsTest
         /// <summary>
         /// A local place, with perhaps some datasets in it.
         /// </summary>
-        class DummyPlace : IPlace, IEnumerable<KeyValuePair<string, string[]>>
+        internal class DummyPlace : IPlace, IEnumerable<KeyValuePair<string, string[]>>
         {
             /// <summary>
             /// By default setup as a dummy local place

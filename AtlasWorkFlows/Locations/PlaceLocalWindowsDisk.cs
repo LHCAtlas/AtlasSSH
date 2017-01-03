@@ -66,7 +66,46 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         public void CopyFrom(IPlace origin, Uri[] uris)
         {
-            throw new NotImplementedException();
+            var other = (origin as PlaceLocalWindowsDisk)
+                .ThrowIfNull(() => new ArgumentException($"Can CopyFrom only another PlaceLocalWindowsDisk - '{origin.Name}' isn't - this is an internal error."));
+
+            // Do the copy by dataset, which is our primary way of storing things here.
+            var groupedByDS = uris.GroupBy(u => u.Authority);
+            foreach (var dsFileListing in groupedByDS)
+            {
+                if (!_rootLocation.HasDS(dsFileListing.Key))
+                {
+                    CopyDSInfoFrom(other, dsFileListing.Key);
+                }
+
+                // For each file we don't have, do the copy. Checking for existance shouldn't
+                // be necessary - it should have been done - but it is so cheap compared to the cost
+                // of copying a 2 GB file...
+                foreach (var f in dsFileListing)
+                {
+                    if (!HasFile(f))
+                    {
+                        var ourpath = new FileInfo(Path.Combine(_rootLocation.LocationOfDataset(f.Authority).FullName, "copied", f.Segments.Last()));
+                        if (!ourpath.Directory.Exists)
+                        {
+                            ourpath.Directory.Create();
+                        }
+                        var otherPath = new FileInfo(other.GetLocalFileLocations(new Uri[] { f }).First().LocalPath);
+                        otherPath.CopyTo(ourpath.FullName);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copy the dataset file listing from another location
+        /// </summary>
+        /// <param name="other"></param>
+        /// <param name="key"></param>
+        private void CopyDSInfoFrom(PlaceLocalWindowsDisk other, string dsName)
+        {
+            var filenames = other.GetListOfFilesForDataset(dsName);
+            _rootLocation.SaveListOfDSFiles(dsName, filenames);
         }
 
         /// <summary>
@@ -76,7 +115,11 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         public void CopyTo(IPlace destination, Uri[] uris)
         {
-            throw new NotImplementedException();
+            var other = (destination as PlaceLocalWindowsDisk)
+                .ThrowIfNull(() => new ArgumentException($"Can CopyFrom only another PlaceLocalWindowsDisk - '{destination.Name}' isn't - this is an internal error."));
+
+            // Well... since everything is symmtric...
+            other.CopyFrom(this, uris);
         }
 
         /// <summary>

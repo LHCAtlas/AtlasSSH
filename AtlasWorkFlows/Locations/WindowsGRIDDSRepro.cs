@@ -302,6 +302,11 @@ namespace AtlasWorkFlows.Locations
         public void SaveListOfDSFiles(string dsname, string[] filenames)
         {
             var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetFileList));
+            if (!f.Directory.Exists)
+            {
+                f.Directory.Create();
+            }
+
             using (var wr = f.CreateText())
             {
                 foreach (var fn in filenames)

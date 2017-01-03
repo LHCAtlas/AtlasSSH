@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static AtlasWorkFlowsTest.DatasetManagerTest;
 
 namespace AtlasWorkFlowsTest.Location
 {
@@ -144,6 +145,61 @@ namespace AtlasWorkFlowsTest.Location
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
             var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds3/f2.root") }).ToArray();
+        }
+
+        [TestMethod]
+        public void CanCopyFromAnotherLikeThis()
+        {
+            var repro1 = BuildRepro("repro1");
+            BuildDatset(repro1, "ds1", "f1.root", "f2.root");
+            var repro2 = BuildRepro("repro2");
+
+            var place1 = new PlaceLocalWindowsDisk("test1", repro1);
+            var place2 = new PlaceLocalWindowsDisk("test2", repro2);
+
+            Assert.IsTrue(place1.CanSourceCopy(place2));
+        }
+
+        [TestMethod]
+        public void CantCopyFromAnotherTypeOfRepro()
+        {
+            var repro1 = BuildRepro("repro1");
+            BuildDatset(repro1, "ds1", "f1.root", "f2.root");
+
+            var place1 = new PlaceLocalWindowsDisk("test1", repro1);
+            var place2 = new DummyPlace("dork");
+
+            Assert.IsFalse(place1.CanSourceCopy(place2));
+        }
+
+        [TestMethod]
+        public void CopyFrom()
+        {
+            var repro1 = BuildRepro("repro1");
+            BuildDatset(repro1, "ds1", "f1.root", "f2.root");
+            var repro2 = BuildRepro("repro2");
+
+            var place1 = new PlaceLocalWindowsDisk("test1", repro1);
+            var place2 = new PlaceLocalWindowsDisk("test2", repro2);
+
+            Assert.IsNull(place2.GetListOfFilesForDataset("ds1"));
+            place2.CopyFrom(place1, place1.GetListOfFilesForDataset("ds1").Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
+            Assert.AreEqual(2, place2.GetListOfFilesForDataset("ds1").Length);
+        }
+
+        [TestMethod]
+        public void CopyTo()
+        {
+            var repro1 = BuildRepro("repro1");
+            BuildDatset(repro1, "ds1", "f1.root", "f2.root");
+            var repro2 = BuildRepro("repro2");
+
+            var place1 = new PlaceLocalWindowsDisk("test1", repro1);
+            var place2 = new PlaceLocalWindowsDisk("test2", repro2);
+
+            Assert.IsNull(place2.GetListOfFilesForDataset("ds1"));
+            place1.CopyTo(place2, place1.GetListOfFilesForDataset("ds1").Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
+            Assert.AreEqual(2, place2.GetListOfFilesForDataset("ds1").Length);
         }
 
         #region Setup Routines
