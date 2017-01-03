@@ -1,5 +1,6 @@
 ﻿using AtlasWorkFlows;
 using AtlasWorkFlows.Jobs;
+using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Panda;
 using PSAtlasDatasetCommands.Utils;
 using System;
@@ -21,7 +22,7 @@ namespace PSAtlasDatasetCommands
         /// <summary>
         /// Get/Set the name of the dataset we are being asked to fetch.
         /// </summary>
-        [Parameter(Mandatory=true, HelpMessage="Rucio dataset name to fetch", ValueFromPipeline=true, Position=1, ParameterSetName = "dataset")]
+        [Parameter(Mandatory=true, HelpMessage="Rucio dataset name to copy", ValueFromPipeline=true, Position=1, ParameterSetName = "dataset")]
         public string DatasetName { get; set; }
 
         [Parameter(Mandatory =true, HelpMessage ="Rucio dataset name the job was run on", ParameterSetName ="job")]
@@ -40,9 +41,9 @@ namespace PSAtlasDatasetCommands
         public int nFiles { get; set; }
 
         /// <summary>
-        /// The location where we should download the dataset to.
+        /// The location where we should copy the dataset to.
         /// </summary>
-        [Parameter(HelpMessage="Location where the dataset should be downloaded to")]
+        [Parameter(HelpMessage="Location where the dataset should be copied to")]
         [ValidateLocation]
         public string Location { get; set; }
 
@@ -58,13 +59,6 @@ namespace PSAtlasDatasetCommands
         }
 
         /// <summary>
-        /// Initialize the context for making whatever connections we are going to need.
-        /// </summary>
-        protected override void BeginProcessing()
-        {
-        }
-
-        /// <summary>
         /// Fetch a particular dataset.
         /// </summary>
         protected override void ProcessRecord()
@@ -73,9 +67,6 @@ namespace PSAtlasDatasetCommands
             Trace.Listeners.Add(listener);
             try
             {
-                // First, deal with the file filter
-                Func<string[], string[]> filter = nFiles == 0 ? (Func<string[],string[]>) null : flist => flist.OrderBy(f => f).Take(nFiles).ToArray();
-
                 // Get the actual dataset name.
                 var dataset = DatasetName;
                 if (ParameterSetName == "job")
@@ -104,24 +95,37 @@ namespace PSAtlasDatasetCommands
                     dataset = containers.First();
                 }
 
-                // Now, how we pick up what we want will depend on if we are trying to download to a location.
-                Uri[] r = null;
-                if (!string.IsNullOrWhiteSpace(Location))
+                // Find all the members of this dataset.
+                var allFilesToCopy = DatasetManager.ListOfFilesInDataset(dataset);
+                if (nFiles != 0)
                 {
-                    using (var holder = GRIDDatasetLocator.SetLocationFilter(loc => false))
-                    {
-                        r = GRIDDatasetLocator.FetchDatasetUrisAtLocation(Location, dataset, fname => DisplayStatus(fname), fileFilter: filter, failNow: () => Stopping, timeoutDownloadSecs: Timeout);
-                    }
+                    allFilesToCopy = allFilesToCopy
+                        .OrderBy(u => u.AbsolutePath)
+                        .Take(nFiles)
+                        .ToArray();
                 }
-                else
+
+                // If we have a location, we want to do a copy. If we don't have a location, then we just
+                // want to get the files somewhere local.
+                var loc = string.IsNullOrWhiteSpace(Location)
+                    ? (IPlace)null
+                    : DatasetManager.FindLocation(Location);
+
+                if (loc == null && !string.IsNullOrWhiteSpace(Location))
                 {
-                    r = GRIDDatasetLocator.FetchDatasetUris(dataset, fname => DisplayStatus(fname), fileFilter: filter, failNow: () => Stopping, timeoutDownloadSecs: Timeout);
+                    var err = new ArgumentException($"Location {Location} is now known to us!");
+                    WriteError(new ErrorRecord(err, "NoSuchLocation", ErrorCategory.InvalidArgument, null));
+                    throw err;
                 }
+
+                var resultUris = loc == null
+                    ? DatasetManager.MakeFilesLocal(allFilesToCopy)
+                    : DatasetManager.CopyFilesTo(loc, allFilesToCopy);
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 using (var pl = listener.PauseListening())
                 {
-                    foreach (var ds in r)
+                    foreach (var ds in resultUris)
                     {
                         WriteObject(ds);
                     }
@@ -131,16 +135,6 @@ namespace PSAtlasDatasetCommands
             {
                 Trace.Listeners.Remove(listener);
             }
-        }
-
-        /// <summary>
-        /// Called to build a status object
-        /// </summary>
-        /// <param name="fname"></param>
-        private void DisplayStatus(string fname)
-        {
-            var pr = new ProgressRecord(1, "Downloading", fname);
-            WriteProgress(pr);
         }
 
         /// <summary>
