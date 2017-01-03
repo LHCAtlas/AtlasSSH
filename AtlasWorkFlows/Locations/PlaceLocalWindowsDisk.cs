@@ -134,7 +134,9 @@ namespace AtlasWorkFlows.Locations
             {
                 return null;
             }
-            return files;
+            return files
+                .Select(f => f.Contains(":") ? f.Substring(f.IndexOf(":")+1) : f)
+                .ToArray();
         }
 
         /// <summary>
@@ -177,7 +179,7 @@ namespace AtlasWorkFlows.Locations
             var ds = u.Authority;
             if (!_rootLocation.HasDS(ds))
             {
-                throw new DatasetDoesNotExistInThisReproException($"The dataset '{ds}' does not exist in the local repository '{Name}'");
+                return false;
             }
 
             var filename = u.Segments.Last();

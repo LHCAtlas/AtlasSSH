@@ -50,14 +50,13 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        [ExpectedException(typeof(DatasetDoesNotExistInThisReproException))]
         public void FileInNonExistingDataset()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
             var u = new Uri("gridds://ds2/f3.root");
-            place.HasFile(u);
+            Assert.IsFalse(place.HasFile(u));
         }
 
         [TestMethod]
@@ -202,6 +201,18 @@ namespace AtlasWorkFlowsTest.Location
             Assert.AreEqual(2, place2.GetListOfFilesForDataset("ds1").Length);
         }
 
+        [TestMethod]
+        public void FileNameColonsAreIgnored()
+        {
+            var repro = BuildRepro("repro");
+            BuildDatset(repro, "ds1", "f1.root", "f2.root");
+            AddNamespaceToDatasetText(repro, "ds1", "user.gwatts");
+            var place = new PlaceLocalWindowsDisk("test", repro);
+            var files = place.GetListOfFilesForDataset("ds1");
+            Assert.AreEqual("f1.root", files[0]);
+            Assert.AreEqual("f2.root", files[1]);
+        }
+
         #region Setup Routines
         /// <summary>
         /// Build a repro at a particular location. Destory anything that was at that location previously.
@@ -248,6 +259,41 @@ namespace AtlasWorkFlowsTest.Location
                 }
             }
         }
+
+        /// <summary>
+        /// Add a namespace to the text file for a dataset.
+        /// </summary>
+        /// <param name="repro"></param>
+        /// <param name="dsName"></param>
+        /// <param name="nameSpace"></param>
+        private void AddNamespaceToDatasetText(DirectoryInfo repro, string dsName, string nameSpace)
+        {
+            var dsDir = new DirectoryInfo($"{repro.FullName}\\{dsName}");
+
+            var infoFile = new FileInfo(Path.Combine(dsDir.FullName, "aa_dataset_complete_file_list.txt"));
+            var fnames = new List<string>();
+            using (var rdr = infoFile.OpenText())
+            {
+                while (true)
+                {
+                    var l = rdr.ReadLine();
+                    if (l == null)
+                    {
+                        break;
+                    }
+                    fnames.Add(l);
+                }
+            }
+
+            using (var listingFileWr = infoFile.CreateText())
+            {
+                foreach (var f in fnames)
+                {
+                    listingFileWr.WriteLine($"{nameSpace}:{f}");
+                }
+            }
+        }
+
         #endregion
     }
 }
