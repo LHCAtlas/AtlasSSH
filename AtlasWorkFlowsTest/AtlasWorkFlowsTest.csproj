@@ -75,7 +75,7 @@
     <Compile Include="Location\GRIDFetchToLinuxVisibleOnWindowsTest.cs" />
     <Compile Include="Location\LocatorTest.cs" />
     <Compile Include="Location\LocalMachineTest.cs" />
-    <Compile Include="Location\PlaceLinuxRemote.cs" />
+    <Compile Include="Location\PlaceLinuxRemoteTest.cs" />
     <Compile Include="Location\PlaceLocalWindowsDiskTest.cs" />
     <Compile Include="Location\WindowsGRIDDSReproTest.cs" />
     <Compile Include="Panda\PandUtilsTest.cs" />
@@ -100,6 +100,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="location_test_params.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

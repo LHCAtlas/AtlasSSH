@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AtlasWorkFlowsTest.Location
+namespace AtlasWorkFlows.Locations
 {
     /// <summary>
     /// This is a remote linux machine.
@@ -15,10 +15,21 @@ namespace AtlasWorkFlowsTest.Location
     /// </summary>
     class PlaceLinuxRemote : IPlace
     {
+        private string v;
+        private string _remote_name;
+        private string _remote_path;
+
         public PlaceLinuxRemote(string name)
         {
             DataTier = 50;
             Name = name;
+        }
+
+        public PlaceLinuxRemote(string v, string _remote_name, string _remote_path)
+        {
+            this.v = v;
+            this._remote_name = _remote_name;
+            this._remote_path = _remote_path;
         }
 
         /// <summary>
@@ -72,10 +83,11 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         /// <summary>
-        /// Look at our directory structure to get a listing of files for a particular dataset.
+        /// The full list of all files that belong to a particular dataset. This is regardless
+        /// of weather or not the files are in this repro.
         /// </summary>
-        /// <param name="dsname"></param>
-        /// <returns></returns>
+        /// <param name="dsname">Name of the dataset we are looking at</param>
+        /// <returns>List of the files in the dataset, or null if the dataset is not known in this repro</returns>
         public string[] GetListOfFilesForDataset(string dsname)
         {
             throw new NotImplementedException();
