@@ -1,6 +1,7 @@
 ﻿using AtlasSSH;
 using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
+using CredentialManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace AtlasWorkFlows.Locations
     /// - If the disks are availible on SAMBA, then create a WindowsLocal as well
     /// - If GRID can download here, then that should also create a new place.
     /// </summary>
-    class PlaceLinuxRemote : IPlace
+    class PlaceLinuxRemote : IPlace, ISCPTarget
     {
         private string _remote_name;
         private string _remote_path;
@@ -61,6 +62,16 @@ namespace AtlasWorkFlows.Locations
         public bool NeedsConfirmationCopy { get { return false; } }
 
         /// <summary>
+        /// The machine name for accessing this SCP end point.
+        /// </summary>
+        public string SCPMachineName { get { return _remote_name; } }
+
+        /// <summary>
+        /// The username for accessing this machine via SCP
+        /// </summary>
+        public string SCPUser { get { return _user_name; } }
+
+        /// <summary>
         /// We can start a copy from here to other places that have a SSH destination availible.
         /// </summary>
         /// <param name="destination"></param>
@@ -68,7 +79,7 @@ namespace AtlasWorkFlows.Locations
         public bool CanSourceCopy(IPlace destination)
         {
             var scpTarget = destination as ISCPTarget;
-            return !(scpTarget == null || !scpTarget.IsVisibleFrom(_remote_name));
+            return !(scpTarget == null || !scpTarget.SCPIsVisibleFrom(_remote_name));
         }
 
         /// <summary>
@@ -78,7 +89,60 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         public void CopyFrom(IPlace origin, Uri[] uris)
         {
-            throw new NotImplementedException();
+            // Make sure we have a target we can deal with for the copy.
+            var scpTarget = origin as ISCPTarget;
+            if (scpTarget == null)
+            {
+                throw new ArgumentException($"Place {origin.Name} is not an SCP target.");
+            }
+
+            // Do things a single dataset at a time.
+            foreach (var fsGroup in uris.GroupBy(u => u.Authority))
+            {
+                // Get the remote user, path, and password.
+                var remoteUser = scpTarget.SCPUser;
+                var remoteMachine = scpTarget.SCPMachineName;
+                var passwd = GetPasswordForHost(remoteMachine, remoteUser);
+
+                // Get the catalog over
+                var dsDirectory = scpTarget.GetSCPDatasetPath(fsGroup.Key);
+                var destDSLocation = $"{_remote_path}/{fsGroup.Key}";
+                _connection.Value.ExecuteCommand($"mkdir -p {destDSLocation}");
+                _connection.Value.ExecuteCommand($"echo {passwd} | scp {dsDirectory}/aa_dataset_complete_file_list.txt {destDSLocation}");
+
+                // The file path where we will store it all
+                var destLocation = $"{destDSLocation}/copied";
+                _connection.Value.ExecuteLinuxCommand($"mkdir -p {destLocation}");
+
+                // Next, queue up the copies, one at a time.
+                foreach (var f in fsGroup)
+                {
+                    var remoteLocation = scpTarget.GetSCPFilePath(f);
+                    _connection.Value.ExecuteLinuxCommand($"echo {passwd} | scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}/{f.Segments.Last()}");
+                }
+
+                // We have altered the files that exist in this dataset, so kill off the
+                // cache.
+                _filePaths.Remove(fsGroup.Key);
+            }
+        }
+
+        /// <summary>
+        /// Extract a password in the standard way.
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        private string GetPasswordForHost(string host, string username)
+        {
+            var sclist = new CredentialSet(host);
+            var passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
+            if (passwordInfo == null)
+            {
+                throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));
+            }
+
+            return passwordInfo.Password;
         }
 
         /// <summary>
@@ -88,7 +152,34 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         public void CopyTo(IPlace destination, Uri[] uris)
         {
-            throw new NotImplementedException();
+            // Make sure we have something we can deal with.
+            var scpTarget = destination as ISCPTarget;
+            if (scpTarget == null)
+            {
+                throw new ArgumentException($"Place {destination.Name} is not an SCP target.");
+            }
+
+            // Do things one dataset at a time.
+            foreach (var fsGroup in uris.GroupBy(u => u.Authority))
+            {
+                // Get the remote user, path, and password.
+                var remoteUser = scpTarget.SCPUser;
+                var remoteMachine = scpTarget.SCPMachineName;
+                var passwd = GetPasswordForHost(remoteMachine, remoteUser);
+
+                // Get the catalog over
+                scpTarget.CopyDataSetInfo(fsGroup.Key, GetListOfFilesForDataset(fsGroup.Key));
+
+                // The file path where we will store it all
+                var destLocation = scpTarget.GetPathToCopyFiles(fsGroup.Key);
+
+                // Next, queue up the copies, one at a time.
+                foreach (var f in fsGroup)
+                {
+                    var localFilePath = GetSCPFilePath(f);
+                    _connection.Value.ExecuteLinuxCommand($"echo {passwd} | scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}");
+                }
+            }
         }
 
         /// <summary>
@@ -168,6 +259,81 @@ namespace AtlasWorkFlows.Locations
                 .Select(f => f.Split('/').Last())
                 .Where(f => f == u.Segments.Last())
                 .Any();
+        }
+
+        /// <summary>
+        /// We only represent a node that is visible from everywhere.
+        /// </summary>
+        /// <param name="internetLocation"></param>
+        /// <returns></returns>
+        public bool SCPIsVisibleFrom(string internetLocation)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Get a path for a file.
+        /// </summary>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        public string GetSCPFilePath(Uri f)
+        {
+            var file = GetAbosluteLinuxFilePaths(f.Authority)
+                .Where(rf => rf.EndsWith("/" + f.Segments.Last()))
+                .FirstOrDefault();
+            if (file == null)
+            {
+                throw new ArgumentException($"Place {Name} was expected to have file {f}, but does not!");
+            }
+
+            return file;
+        }
+
+        /// <summary>
+        /// Return the Linux path to the dataset
+        /// </summary>
+        /// <param name="dsName"></param>
+        /// <returns></returns>
+        public string GetSCPDatasetPath(string dsName)
+        {
+            return $"{_remote_path}/{dsName}";
+        }
+
+        /// <summary>
+        /// Make this dataset known to us at the Linux repro
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="v"></param>
+        public void CopyDataSetInfo(string key, string[] v)
+        {
+            // Prep for running
+            var dsDir = $"{_remote_path}/{key}";
+            var infoFile = $"{dsDir}/aa_dataset_complete_file_list.txt";
+            _connection.Value.ExecuteLinuxCommand($"mkdir -p {dsDir}");
+            _connection.Value.ExecuteLinuxCommand($"rm -rf {infoFile}");
+
+            // Just add every file in.
+            foreach (var f in v)
+            {
+                _connection.Value.ExecuteLinuxCommand($"echo {f} >> {infoFile}");
+            }
+        }
+
+        /// <summary>
+        /// Return the path where files can be copied. It must be ready for that too.
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        public string GetPathToCopyFiles(string dsname)
+        {
+            // Get the location, and make sure it exists.
+            var copiedPath = $"{_remote_path}/{dsname}/copied";
+            _connection.Value.ExecuteLinuxCommand($"mkdir -p {copiedPath}");
+
+            // Assume we are going to update - so clear the internal cache.
+            _filePaths.Remove(dsname);
+
+            return copiedPath;
         }
     }
 }

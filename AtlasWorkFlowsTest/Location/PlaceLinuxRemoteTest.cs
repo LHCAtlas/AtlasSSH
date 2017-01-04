@@ -139,6 +139,71 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsFalse(p.CanSourceCopy(other));
         }
 
+        [TestMethod]
+        public void CopyTo()
+        {
+            CreateRepro();
+            CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var p2 = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path + "2");
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+        }
+
+        [TestMethod]
+        public void CopyFromToStep()
+        {
+            CreateRepro();
+            CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test1", _remote_name, _remote_username, _remote_path);
+            CreateRepro(_remote_path + "2");
+            var p2 = new PlaceLinuxRemote("test2", _remote_name, _remote_username, _remote_path + "2");
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList.Take(1).ToArray());
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsFalse(p2.HasFile(fileList[1]));
+
+            p1.CopyTo(p2, fileList.Skip(1).ToArray());
+            Assert.IsTrue(p2.HasFile(fileList[1]));
+        }
+
+        [TestMethod]
+        public void CopyFrom()
+        {
+            CreateRepro();
+            CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test1", _remote_name, _remote_username, _remote_path);
+            var p2 = new PlaceLinuxRemote("test2", _remote_name, _remote_username, _remote_path + "2");
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p2.CopyFrom(p1, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.AreEqual(2, p2.GetListOfFilesForDataset("ds1").Length);
+        }
+
+        [TestMethod]
+        public void CopyFromTwoStep()
+        {
+            CreateRepro();
+            CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test1", _remote_name, _remote_username, _remote_path);
+            CreateRepro(_remote_path + "2");
+            var p2 = new PlaceLinuxRemote("test2", _remote_name, _remote_username, _remote_path + "2");
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p2.CopyFrom(p1, fileList.Take(1).ToArray());
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsFalse(p2.HasFile(fileList[1]));
+
+            p2.CopyFrom(p1, fileList.Skip(1).ToArray());
+            Assert.IsTrue(p2.HasFile(fileList[1]));
+        }
+
         #region Helper Items
         private void CreateDS(string ds, params string[] filenames)
         {
@@ -172,17 +237,20 @@ namespace AtlasWorkFlowsTest.Location
         /// <summary>
         /// Create a fresh, clean, repro on the remote machine
         /// </summary>
-        private void CreateRepro()
+        private void CreateRepro(string remote_path = null)
         {
+            if (remote_path == null)
+                remote_path = _remote_path;
+
             // Make sure no one is debing a dick by accident.
-            Assert.AreNotEqual(".", _remote_path);
-            Assert.IsFalse(string.IsNullOrWhiteSpace(_remote_path));
-            Assert.IsFalse(_remote_path.Contains("*"));
+            Assert.AreNotEqual(".", remote_path);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(remote_path));
+            Assert.IsFalse(remote_path.Contains("*"));
 
             // Create the new repro
             _connection = new SSHConnection(_remote_name, _remote_username);
-            _connection.ExecuteLinuxCommand($"rm -rf {_remote_path}")
-                .ExecuteLinuxCommand($"mkdir -p {_remote_path}");
+            _connection.ExecuteLinuxCommand($"rm -rf {remote_path}")
+                .ExecuteLinuxCommand($"mkdir -p {remote_path}");
         }
 
         /// <summary>
@@ -256,9 +324,56 @@ namespace AtlasWorkFlowsTest.Location
             /// Teach the obj how to respond.
             /// </summary>
             public bool DoVisibility { get; set; }
-            public bool IsVisibleFrom(string internetLocation)
+
+            public string SCPMachineName
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+
+                set
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public string SCPUser
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+
+                set
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public bool SCPIsVisibleFrom(string internetLocation)
             {
                 return DoVisibility;
+            }
+
+            public string GetSCPFilePath(Uri f)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string GetSCPDatasetPath(string dsName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyDataSetInfo(string key, string[] v)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string GetPathToCopyFiles(string key)
+            {
+                throw new NotImplementedException();
             }
         }
         #endregion
