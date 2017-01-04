@@ -19,9 +19,17 @@ namespace AtlasWorkFlows.Locations
     /// </summary>
     class PlaceLinuxRemote : IPlace, ISCPTarget
     {
-        private string _remote_name;
+        /// <summary>
+        /// The remote host we are connected to
+        /// </summary>
+        public string RemoteHost { get; private set; }
+
         private string _remote_path;
-        private string _user_name;
+        
+        /// <summary>
+        /// Username that we use to access the remote host.
+        /// </summary>
+        public string RemoteUsername { get; private set; }
 
         /// <summary>
         /// Create a new repro located on a Linux machine.
@@ -33,12 +41,12 @@ namespace AtlasWorkFlows.Locations
         public PlaceLinuxRemote(string name, string remote_ipaddr, string username, string remote_path)
         {
             Name = name;
-            this._remote_name = remote_ipaddr;
+            this.RemoteHost = remote_ipaddr;
             this._remote_path = remote_path;
-            this._user_name = username;
+            this.RemoteUsername = username;
             DataTier = 50;
 
-            _connection = new Lazy<SSHConnection>(() => new SSHConnection(_remote_name, _user_name));
+            _connection = new Lazy<SSHConnection>(() => new SSHConnection(RemoteHost, RemoteUsername));
         }
 
         /// <summary>
@@ -64,12 +72,12 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// The machine name for accessing this SCP end point.
         /// </summary>
-        public string SCPMachineName { get { return _remote_name; } }
+        public string SCPMachineName { get { return RemoteHost; } }
 
         /// <summary>
         /// The username for accessing this machine via SCP
         /// </summary>
-        public string SCPUser { get { return _user_name; } }
+        public string SCPUser { get { return RemoteUsername; } }
 
         /// <summary>
         /// We can start a copy from here to other places that have a SSH destination availible.
@@ -79,7 +87,7 @@ namespace AtlasWorkFlows.Locations
         public bool CanSourceCopy(IPlace destination)
         {
             var scpTarget = destination as ISCPTarget;
-            return !(scpTarget == null || !scpTarget.SCPIsVisibleFrom(_remote_name));
+            return !(scpTarget == null || !scpTarget.SCPIsVisibleFrom(RemoteHost));
         }
 
         /// <summary>

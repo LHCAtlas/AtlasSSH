@@ -41,6 +41,17 @@ namespace AtlasSSH
 
 
     [Serializable]
+    public class DatasetDoesNotExistException : Exception
+    {
+        public DatasetDoesNotExistException() { }
+        public DatasetDoesNotExistException(string message) : base(message) { }
+        public DatasetDoesNotExistException(string message, Exception inner) : base(message, inner) { }
+        protected DatasetDoesNotExistException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    [Serializable]
     public class LinuxCommandErrorException : Exception
     {
         public LinuxCommandErrorException() { }
@@ -389,7 +400,7 @@ namespace AtlasSSH
 
             if (bad & !dumpOnly)
             {
-                throw new ArgumentException(string.Format("Dataset '{0}' does not exist - can't get its list of files.", datasetName));
+                throw new DatasetDoesNotExistException(string.Format("Dataset '{0}' does not exist - can't get its list of files.", datasetName));
             }
 
             _GRIDFileInfoCache.Value[datasetName] = fileNameList.ToArray();

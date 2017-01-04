@@ -1,12 +1,18 @@
-﻿using System;
+﻿using AtlasSSH;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static AtlasSSH.DiskCacheTypedHelpers;
 
 namespace AtlasWorkFlows.Locations
 {
-    // getting data from the GRID.
+    /// <summary>
+    /// We represent a GRID endpoint, that we can access via an ssh connection.
+    /// We are paired with a local Linux end point - basically a place where we can
+    /// copy files and store them.
+    /// </summary>
     class PlaceGRID : IPlace
     {
         private PlaceLinuxRemote _linuxRemote;
@@ -20,6 +26,25 @@ namespace AtlasWorkFlows.Locations
         {
             Name = name;
             _linuxRemote = linuxRemote;
+            _connection = new Lazy<ISSHConnection>(() => InitConnection(null));
+        }
+
+        /// <summary>
+        /// The connection to our remote end-point
+        /// </summary>
+        private Lazy<ISSHConnection> _connection;
+
+        private ISSHConnection InitConnection(Action<string> statusUpdater)
+        {
+            if (statusUpdater != null)
+                statusUpdater("Setting up GRID Environment");
+            var r = new SSHConnection(_linuxRemote.RemoteHost, _linuxRemote.RemoteUsername);
+            r
+                .setupATLAS()
+                .setupRucio(_linuxRemote.RemoteUsername)
+                .VomsProxyInit("atlas");
+
+            return r;
         }
 
         /// <summary>
@@ -82,9 +107,29 @@ namespace AtlasWorkFlows.Locations
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Get a list of files from the GRID for a dataset.
+        /// </summary>
+        /// <param name="dsname">Dataset name</param>
+        /// <returns>List of the files, with namespace removed.</returns>
+        /// <remarks>
+        /// Consider all datasets on the GRID frozen, so once they have been downloaded
+        /// we cache them locally.
+        /// </remarks>
         public string[] GetListOfFilesForDataset(string dsname)
         {
-            throw new NotImplementedException();
+            return NonNullCacheInDisk("PlaceGRIDDSCatalog", dsname, () =>
+            {
+                try
+                {
+                    return _connection.Value.FilelistFromGRID(dsname)
+                        .Select(f => f.Split(':').Last())
+                        .ToArray();
+                } catch (DatasetDoesNotExistException)
+                {
+                    return null;
+                }
+            });
         }
 
         /// <summary>
@@ -105,7 +150,11 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public bool HasFile(Uri u)
         {
-            throw new NotImplementedException();
+            // Get the list of files for the dataset and just look.
+            var files = GetListOfFilesForDataset(u.Authority);
+            return files == null
+                ? false
+                : files.Contains(u.Segments.Last());
         }
     }
 }

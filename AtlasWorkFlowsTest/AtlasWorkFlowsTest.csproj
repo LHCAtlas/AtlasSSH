@@ -76,6 +76,7 @@
     <Compile Include="Location\GRIDFetchToLinuxVisibleOnWindowsTest.cs" />
     <Compile Include="Location\LocatorTest.cs" />
     <Compile Include="Location\LocalMachineTest.cs" />
+    <Compile Include="Location\PlaceGRIDTest.cs" />
     <Compile Include="Location\PlaceLinuxRemoteTest.cs" />
     <Compile Include="Location\PlaceLocalWindowsDiskTest.cs" />
     <Compile Include="Location\WindowsGRIDDSReproTest.cs" />
