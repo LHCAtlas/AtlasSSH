@@ -37,4 +37,34 @@ namespace AtlasSSH
         }
 
     }
+
+    /// <summary>
+    /// Helper fuctions
+    /// </summary>
+    public static class DiskCacheTypedHelpers
+    {
+        /// <summary>
+        /// Return the cache value, or do the calculation.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="cacheName"></param>
+        /// <param name="key"></param>
+        /// <param name="calculateValue"></param>
+        /// <returns></returns>
+        public static T NonNullCacheInDisk<T>(string cacheName, string key, Func<T> calculateValue)
+            where T: class
+        {
+            var c = new DiskCacheTyped<T>(cacheName);
+            var r = c[key];
+            if (r == null)
+            {
+                r = calculateValue();
+                if (r != null)
+                {
+                    c[key] = r;
+                }
+            }
+            return r;
+        }
+    }
 }

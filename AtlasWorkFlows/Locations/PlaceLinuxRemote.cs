@@ -1,9 +1,12 @@
-﻿using AtlasWorkFlows.Locations;
+﻿using AtlasSSH;
+using AtlasWorkFlows.Locations;
+using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static AtlasSSH.DiskCacheTypedHelpers;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -15,21 +18,26 @@ namespace AtlasWorkFlows.Locations
     /// </summary>
     class PlaceLinuxRemote : IPlace
     {
-        private string v;
         private string _remote_name;
         private string _remote_path;
+        private string _user_name;
 
-        public PlaceLinuxRemote(string name)
+        /// <summary>
+        /// Create a new repro located on a Linux machine.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="remote_ipaddr"></param>
+        /// <param name="username"></param>
+        /// <param name="remote_path"></param>
+        public PlaceLinuxRemote(string name, string remote_ipaddr, string username, string remote_path)
         {
-            DataTier = 50;
             Name = name;
-        }
+            this._remote_name = remote_ipaddr;
+            this._remote_path = remote_path;
+            this._user_name = username;
+            DataTier = 50;
 
-        public PlaceLinuxRemote(string v, string _remote_name, string _remote_path)
-        {
-            this.v = v;
-            this._remote_name = _remote_name;
-            this._remote_path = _remote_path;
+            _connection = new Lazy<SSHConnection>(() => new SSHConnection(_remote_name, _user_name));
         }
 
         /// <summary>
@@ -83,6 +91,11 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
+        /// Track the connection to the remote computer. Once opened we keep it open.
+        /// </summary>
+        private Lazy<SSHConnection> _connection;
+
+        /// <summary>
         /// The full list of all files that belong to a particular dataset. This is regardless
         /// of weather or not the files are in this repro.
         /// </summary>
@@ -90,7 +103,21 @@ namespace AtlasWorkFlows.Locations
         /// <returns>List of the files in the dataset, or null if the dataset is not known in this repro</returns>
         public string[] GetListOfFilesForDataset(string dsname)
         {
-            throw new NotImplementedException();
+            // The list of files for a dataset can't change over time, so we can
+            // cache it locally.
+            return NonNullCacheInDisk("PlaceLinuxDatasetFileList", dsname, () =>
+            {
+                var files = new List<string>();
+                try
+                {
+                    _connection.Value.ExecuteLinuxCommand($"cat {_remote_path}/{dsname}/aa_dataset_complete_file_list.txt", l => files.Add(l));
+                } catch (LinuxCommandErrorException) when (files.Count > 0 && files[0].Contains("aa_dataset_complete_file_list.txt: No such file or directory"))
+                {
+                    // if there was an error accessing it, then it isn't there... Lets hope.
+                    return null;
+                }
+                return files.ToArray();
+            });
         }
 
         /// <summary>
@@ -104,13 +131,42 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
+        /// Track the locations of all the files for a particular dataset.
+        /// </summary>
+        private InMemoryObjectCache<string[]> _filePaths = new InMemoryObjectCache<string[]>();
+
+        /// <summary>
+        /// Fetch and return the full file paths of every file in the dataset.
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        private string[] GetAbosluteLinuxFilePaths(string dsname)
+        {
+            return _filePaths.GetOrCalc(dsname, () =>
+            {
+                var files = new List<string>();
+                _connection.Value.ExecuteLinuxCommand($"find {_remote_path}/{dsname} -print", l => files.Add(l));
+                return files.ToArray();
+            });
+        }
+
+        /// <summary>
         /// See if we have a particular file in our dataset
         /// </summary>
         /// <param name="u"></param>
         /// <returns></returns>
         public bool HasFile(Uri u)
         {
-            throw new NotImplementedException();
+            // Simpmle check.
+            if (u.Scheme != "gridds")
+            {
+                throw new UnknownUriSchemeException($"The uri '{u.OriginalString}' is not a gridds:// uri - can't map it to a file!");
+            }
+
+            return GetAbosluteLinuxFilePaths(u.Authority)
+                .Select(f => f.Split('/').Last())
+                .Where(f => f == u.Segments.Last())
+                .Any();
         }
     }
 }

@@ -87,6 +87,7 @@
     <Compile Include="Utils\Exceptions.cs" />
     <Compile Include="Utils\FileInfoUtils.cs" />
     <Compile Include="Utils\Hash.cs" />
+    <Compile Include="Utils\InMemoryObjectCache.cs" />
     <Compile Include="Utils\IPLocationTests.cs" />
   </ItemGroup>
   <ItemGroup>

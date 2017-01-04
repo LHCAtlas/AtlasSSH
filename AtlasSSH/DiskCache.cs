@@ -24,6 +24,19 @@ namespace AtlasSSH
             _name = name;
         }
 
+        /// <summary>
+        /// Generally for testing - remove all cache data.
+        /// </summary>
+        /// <param name="name">Name of the cache</param>
+        public static void RemoveCache(string name)
+        {
+            var dir = new DirectoryInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), name));
+            if (dir.Exists)
+            {
+                dir.Delete(true);
+            }
+        }
+
         public void Clear()
         {
             if (_dir.Exists)

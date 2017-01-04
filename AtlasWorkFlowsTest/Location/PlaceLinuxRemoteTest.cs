@@ -36,6 +36,9 @@ namespace AtlasWorkFlowsTest.Location
         [TestInitialize]
         public void TestSetup()
         {
+            // Clean out all caches.
+            DiskCache.RemoveCache("PlaceLinuxDatasetFileList");
+
             // Load parameters that we can use to access the test machine.
             var cFile = new FileInfo("location_test_params.txt");
             Assert.IsTrue(cFile.Exists, $"Unable to locate test file {cFile.FullName}");
@@ -48,12 +51,24 @@ namespace AtlasWorkFlowsTest.Location
             _remote_username = lrtInfo["LinuxUserName"];
         }
 
+        /// <summary>
+        /// Close down the ssh connection
+        /// </summary>
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            if (_connection != null)
+            {
+                _connection.Dispose();
+            }
+        }
+
         [TestMethod]
         public void GetReproDatasetFileListForBadDS()
         {
             CreateRepro();
             CreateDS("ds1", "f1.root", "f2.root");
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_path);
+            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
             var files = p.GetListOfFilesForDataset("ds2");
             Assert.IsNull(files);
         }
@@ -63,11 +78,40 @@ namespace AtlasWorkFlowsTest.Location
         {
             CreateRepro();
             CreateDS("ds1", "f1.root", "f2.root");
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_path);
-            var files = p.GetListOfFilesForDataset("ds");
+            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var files = p.GetListOfFilesForDataset("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual("f1.root", files[0]);
             Assert.AreEqual("f2.root", files[1]);
+        }
+
+        [TestMethod]
+        public void HasFileGoodFile()
+        {
+            CreateRepro();
+            CreateDS("ds1", "f1.root", "f2.root");
+            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            Assert.IsTrue(p.HasFile(new Uri("gridds://ds1/f1.root")));
+        }
+
+        [TestMethod]
+        public void HasFileMissingFileInGoodDataset()
+        {
+            CreateRepro();
+            CreateDS("ds1", "f1.root", "f2.root");
+            RemoveFileInDS("ds1", "f1.root");
+            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
+        }
+
+        [TestMethod]
+        public void HasFileMissingDataset()
+        {
+            CreateRepro();
+            CreateDS("ds1", "f1.root", "f2.root");
+            RemoveFileInDS("ds1", "f1.root");
+            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
         }
 
         #region Helper Items
@@ -86,6 +130,16 @@ namespace AtlasWorkFlowsTest.Location
                     .ExecuteLinuxCommand($"echo {f} >> {dsDir}/aa_dataset_complete_file_list.txt")
                     .ExecuteLinuxCommand($"echo hi > {dsFileDir}/{f}");                
             }
+        }
+
+        /// <summary>
+        /// Remove a file in a dataset
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        private void RemoveFileInDS(string dsname, string fname)
+        {
+            _connection.ExecuteLinuxCommand($"rm {_remote_path}/{dsname}/files/{fname}");
         }
 
         private static SSHConnection _connection = null;
