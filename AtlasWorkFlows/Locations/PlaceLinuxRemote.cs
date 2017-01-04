@@ -67,7 +67,8 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public bool CanSourceCopy(IPlace destination)
         {
-            throw new NotImplementedException();
+            var scpTarget = destination as ISCPTarget;
+            return !(scpTarget == null || !scpTarget.IsVisibleFrom(_remote_name));
         }
 
         /// <summary>
@@ -127,7 +128,7 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException($"The Linux dataset repository {Name} can't furnish local paths as it is on a remote machine!");
         }
 
         /// <summary>

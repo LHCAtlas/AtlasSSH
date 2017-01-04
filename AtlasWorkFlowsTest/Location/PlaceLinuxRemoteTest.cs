@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static AtlasWorkFlowsTest.DatasetManagerTest;
 
 namespace AtlasWorkFlowsTest.Location
 {
@@ -114,6 +115,30 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
         }
 
+        [TestMethod]
+        public void CanSourceCopyToISCPTarget()
+        {
+            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var other = new ScpTargetDummy() { DoVisibility = true };
+            Assert.IsTrue(p.CanSourceCopy(other));
+        }
+
+        [TestMethod]
+        public void CanNotSourceCopyToISCPTarget()
+        {
+            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var other = new ScpTargetDummy() { DoVisibility = false };
+            Assert.IsFalse(p.CanSourceCopy(other));
+        }
+
+        [TestMethod]
+        public void CanNotSourceCopyToNonISCPTarget()
+        {
+            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var other = new DummyPlace("testmeout");
+            Assert.IsFalse(p.CanSourceCopy(other));
+        }
+
         #region Helper Items
         private void CreateDS(string ds, params string[] filenames)
         {
@@ -158,6 +183,83 @@ namespace AtlasWorkFlowsTest.Location
             _connection = new SSHConnection(_remote_name, _remote_username);
             _connection.ExecuteLinuxCommand($"rm -rf {_remote_path}")
                 .ExecuteLinuxCommand($"mkdir -p {_remote_path}");
+        }
+
+        /// <summary>
+        /// Dummy that implements the target.
+        /// </summary>
+        class ScpTargetDummy : IPlace, ISCPTarget
+        {
+            public int DataTier
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public bool IsLocal
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public string Name
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public bool NeedsConfirmationCopy
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public bool CanSourceCopy(IPlace destination)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyFrom(IPlace origin, Uri[] uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyTo(IPlace destination, Uri[] uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string[] GetListOfFilesForDataset(string dsname)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool HasFile(Uri u)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// Teach the obj how to respond.
+            /// </summary>
+            public bool DoVisibility { get; set; }
+            public bool IsVisibleFrom(string internetLocation)
+            {
+                return DoVisibility;
+            }
         }
         #endregion
     }
