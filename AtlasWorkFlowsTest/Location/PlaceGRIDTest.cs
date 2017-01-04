@@ -22,7 +22,8 @@ namespace AtlasWorkFlowsTest.Location
         /// <summary>
         /// A good file that exists in the dataset.
         /// </summary>
-        private const string _good_dsfile = "DAOD_EXOT15.09201449._000001.pool.root.1";
+        private const string _good_dsfile_1 = "DAOD_EXOT15.09201449._000001.pool.root.1";
+        private const string _good_dsfile_2 = "DAOD_EXOT15.09201449._000002.pool.root.1";
 
         /// <summary>
         /// internet name of machine we will be accessing to run tests against.
@@ -80,7 +81,7 @@ namespace AtlasWorkFlowsTest.Location
             var files = grid_p.GetListOfFilesForDataset(_good_dsname);
             Assert.AreEqual(197, files.Length);
             // This might not be safe b.c. file order might not be idempotent, but try this for now.
-            Assert.AreEqual(_good_dsfile, files[0]);
+            Assert.AreEqual(_good_dsfile_1, files[0]);
         }
 
         [TestMethod]
@@ -97,7 +98,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var local_p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            Assert.IsTrue(grid_p.HasFile(new Uri($"gridds://{_good_dsname}/{_good_dsfile}")));
+            Assert.IsTrue(grid_p.HasFile(new Uri($"gridds://{_good_dsname}/{_good_dsfile_1}")));
         }
 
         [TestMethod]
@@ -112,7 +113,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var local_p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            Assert.IsFalse(grid_p.HasFile(new Uri($"gridds://{_good_dsname}_bogus/{_good_dsfile}")));
+            Assert.IsFalse(grid_p.HasFile(new Uri($"gridds://{_good_dsname}_bogus/{_good_dsfile_1}")));
         }
 
         [TestMethod]
@@ -131,8 +132,54 @@ namespace AtlasWorkFlowsTest.Location
             var grid_p = new PlaceGRID("test-GRID", local_p);
             Assert.IsFalse(grid_p.CanSourceCopy(local_p_other));
         }
- 
-        // Who can we copy to
-        // CopyTo Stuff
+
+        /// <summary>
+        /// Ignored because it will take way too long to run normally. But we should check it when debugging
+        /// things. :-)
+        /// </summary>
+        [TestMethod]
+        [Ignore]
+        public void CopyTwoFiles()
+        {
+            CreateRepro();
+            var local_p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var grid_p = new PlaceGRID("test-GRID", local_p);
+
+            var uris = new Uri[]
+            {
+                new Uri($"gridds://{_good_dsname}/{_good_dsfile_1}"),
+                new Uri($"gridds://{_good_dsname}/{_good_dsfile_2}"),
+            };
+
+            grid_p.CopyTo(local_p, uris);
+
+            var files = local_p.GetListOfFilesForDataset(_good_dsname);
+            Assert.AreEqual(197, files.Length);
+            Assert.IsTrue(local_p.HasFile(uris[0]));
+            Assert.IsTrue(local_p.HasFile(uris[1]));
+        }
+
+        #region helpers
+        /// <summary>
+        /// Create a fresh, clean, repro on the remote machine
+        /// </summary>
+        private void CreateRepro(string remote_path = null)
+        {
+            if (remote_path == null)
+                remote_path = _remote_path;
+
+            // Make sure no one is debing a dick by accident.
+            Assert.AreNotEqual(".", remote_path);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(remote_path));
+            Assert.IsFalse(remote_path.Contains("*"));
+
+            // Create the new repro
+            _connection = new SSHConnection(_remote_name, _remote_username);
+            _connection.ExecuteLinuxCommand($"rm -rf {remote_path}")
+                .ExecuteLinuxCommand($"mkdir -p {remote_path}");
+        }
+
+        #endregion
+
     }
 }

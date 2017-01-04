@@ -70,7 +70,7 @@ namespace AtlasWorkFlows.Locations
                 .ThrowIfNull(() => new ArgumentException($"Can CopyFrom only another PlaceLocalWindowsDisk - '{origin.Name}' isn't - this is an internal error."));
 
             // Do the copy by dataset, which is our primary way of storing things here.
-            var groupedByDS = uris.GroupBy(u => u.Authority);
+            var groupedByDS = uris.GroupBy(u => u.DatasetName());
             foreach (var dsFileListing in groupedByDS)
             {
                 if (!_rootLocation.HasDS(dsFileListing.Key))
@@ -85,7 +85,7 @@ namespace AtlasWorkFlows.Locations
                 {
                     if (!HasFile(f))
                     {
-                        var ourpath = new FileInfo(Path.Combine(_rootLocation.LocationOfDataset(f.Authority).FullName, "copied", f.Segments.Last()));
+                        var ourpath = new FileInfo(Path.Combine(_rootLocation.LocationOfDataset(f.DatasetName()).FullName, "copied", f.Segments.Last()));
                         if (!ourpath.Directory.Exists)
                         {
                             ourpath.Directory.Create();
@@ -148,7 +148,7 @@ namespace AtlasWorkFlows.Locations
         {
             // Do it by dataset.
             var dsGroups = (from u in uris
-                            let ds = u.Authority
+                            let ds = u.DatasetName()
                             let fname = u.Segments.Last()
                             group new { FileName = fname } by ds)
                            .Throw(g => !_rootLocation.HasDS(g.Key), g => new DatasetDoesNotExistInThisReproException($"Dataset '{g.Key}' does not exists in repro {Name}"));
@@ -176,7 +176,7 @@ namespace AtlasWorkFlows.Locations
                 throw new UnknownUriSchemeException($"Uri {u} does not have a gridds:// scheme!");
             }
 
-            var ds = u.Authority;
+            var ds = u.DatasetName();
             if (!_rootLocation.HasDS(ds))
             {
                 return false;

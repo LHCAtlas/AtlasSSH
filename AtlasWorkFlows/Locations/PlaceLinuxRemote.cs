@@ -105,7 +105,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Do things a single dataset at a time.
-            foreach (var fsGroup in uris.GroupBy(u => u.Authority))
+            foreach (var fsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // Get the remote user, path, and password.
                 var remoteUser = scpTarget.SCPUser;
@@ -125,6 +125,16 @@ namespace AtlasWorkFlows.Locations
                     _connection.Value.ExecuteLinuxCommand($"echo {passwd} | scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the dataset path
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        public string GetLinuxDatasetDirectoryPath(string dsname)
+        {
+            return $"{_remote_path}/{dsname}";
         }
 
         /// <summary>
@@ -160,7 +170,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Do things one dataset at a time.
-            foreach (var fsGroup in uris.GroupBy(u => u.Authority))
+            foreach (var fsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // Get the remote user, path, and password.
                 var remoteUser = scpTarget.SCPUser;
@@ -255,7 +265,7 @@ namespace AtlasWorkFlows.Locations
                 throw new UnknownUriSchemeException($"The uri '{u.OriginalString}' is not a gridds:// uri - can't map it to a file!");
             }
 
-            return GetAbosluteLinuxFilePaths(u.Authority)
+            return GetAbosluteLinuxFilePaths(u.DatasetName())
                 .Select(f => f.Split('/').Last())
                 .Where(f => f == u.Segments.Last())
                 .Any();
@@ -278,7 +288,7 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public string GetSCPFilePath(Uri f)
         {
-            var file = GetAbosluteLinuxFilePaths(f.Authority)
+            var file = GetAbosluteLinuxFilePaths(f.DatasetName())
                 .Where(rf => rf.EndsWith("/" + f.Segments.Last()))
                 .FirstOrDefault();
             if (file == null)
@@ -293,9 +303,14 @@ namespace AtlasWorkFlows.Locations
         /// Make this dataset known to us at the Linux repro
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="v"></param>
-        public void CopyDataSetInfo(string key, string[] v)
+        /// <param name="filesInDataset">List of files that are in this dataset.</param>
+        public void CopyDataSetInfo(string key, string[] filesInDataset)
         {
+            if (filesInDataset == null)
+            {
+                throw new ArgumentNullException("List of files for the dataset can't be null");
+            }
+
             // Prep for running
             var dsDir = $"{_remote_path}/{key}";
             var infoFile = $"{dsDir}/aa_dataset_complete_file_list.txt";
@@ -303,7 +318,7 @@ namespace AtlasWorkFlows.Locations
             _connection.Value.ExecuteLinuxCommand($"rm -rf {infoFile}");
 
             // Just add every file in.
-            foreach (var f in v)
+            foreach (var f in filesInDataset)
             {
                 _connection.Value.ExecuteLinuxCommand($"echo {f} >> {infoFile}");
             }

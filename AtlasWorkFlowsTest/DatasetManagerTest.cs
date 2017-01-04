@@ -444,10 +444,10 @@ namespace AtlasWorkFlowsTest
             public bool HasFile(Uri u)
             {
                 // Make sure the file is contained in one of our datasets
-                if (!_dataset_list.ContainsKey(u.Authority))
+                if (!_dataset_list.ContainsKey(u.DatasetName()))
                     return false;
 
-                return _dataset_list[u.Authority].Any(fname => fname == u.Segments.Last());
+                return _dataset_list[u.DatasetName()].Any(fname => fname == u.Segments.Last());
             }
 
             /// <summary>
@@ -457,12 +457,12 @@ namespace AtlasWorkFlowsTest
             /// <param name="uris"></param>
             public void CopyFrom(IPlace origin, Uri[] uris)
             {
-                Assert.AreEqual(1, uris.Select(u => u.Authority).Distinct().Count(), "Number of different datasets");
+                Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"{origin.Name} -> *{Name} ({uris.Length} files)");
             }
             public void CopyTo(IPlace dest, Uri[] uris)
             {
-                Assert.AreEqual(1, uris.Select(u => u.Authority).Distinct().Count(), "Number of different datasets");
+                Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"*{Name} -> {dest.Name} ({uris.Length} files)");
             }
 
