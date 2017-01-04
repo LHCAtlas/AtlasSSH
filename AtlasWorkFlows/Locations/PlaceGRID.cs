@@ -1,4 +1,5 @@
 ﻿using AtlasSSH;
+using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -104,7 +105,25 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         public void CopyTo(IPlace destination, Uri[] uris)
         {
-            throw new NotImplementedException();
+            if (destination != _linuxRemote)
+            {
+                throw new ArgumentException($"Place {destination.Name} is not the correct partner for {Name}. Was expecting place {_linuxRemote.Name}.");
+            }
+
+            // Look at all the files from each dataset.
+            foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
+            {
+                // First, move the catalog over
+                var catalog = GetListOfFilesForDataset(dsGroup.Key)
+                    .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
+                _linuxRemote.CopyDataSetInfo(dsGroup.Key, catalog);
+
+                // Next, run the download into the directory in the linux area where
+                // everything should happen.
+                var remoteLocation = _linuxRemote.GetLinuxDatasetDirectoryPath(dsGroup.Key);
+                var filesList = dsGroup.Select(u => u.Segments.Last()).ToArray();
+                _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray());
+            }
         }
 
         /// <summary>
@@ -151,7 +170,7 @@ namespace AtlasWorkFlows.Locations
         public bool HasFile(Uri u)
         {
             // Get the list of files for the dataset and just look.
-            var files = GetListOfFilesForDataset(u.Authority);
+            var files = GetListOfFilesForDataset(u.DatasetName());
             return files == null
                 ? false
                 : files.Contains(u.Segments.Last());
