@@ -218,7 +218,8 @@ namespace AtlasWorkFlows.Locations
                     // if there was an error accessing it, then it isn't there... Lets hope.
                     return null;
                 }
-                return files.ToArray();
+
+                return files.Select(f => f.Split(':').Last()).ToArray();
             });
         }
 

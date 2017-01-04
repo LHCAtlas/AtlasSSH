@@ -247,7 +247,7 @@ namespace AtlasWorkFlows
         {
             var config = Config.GetLocationConfigs();
             return config.Keys
-                .Select(placeName => ParseSingleConfig(config[placeName]))
+                .SelectMany(placeName => ParseSingleConfig(config[placeName]))
                 .Where(p => p != null)
                 .ToArray();
         }
@@ -257,15 +257,48 @@ namespace AtlasWorkFlows
         /// </summary>
         /// <param name="info"></param>
         /// <returns></returns>
-        private static IPlace ParseSingleConfig(Dictionary<string, string> info)
+        private static IEnumerable<IPlace> ParseSingleConfig(Dictionary<string, string> info)
         {
             var type = info["LocationType"];
             if (type == "LocalWindowsFilesystem")
             {
-                return CreateWindowsFilesystemPlace(info);
+                yield return CreateWindowsFilesystemPlace(info);
             }
+            else if (type == "LinuxWithLocalAndGRID")
+            {
+                // First, do the linux remote
+                var name = info["Name"];
+                var p_linux = CreateLinuxFilesystemPlace($"{name}-linux", info);
+                yield return p_linux;
+                // Next, the grid
+                var p_grid = new PlaceGRID($"{name}-GRID", p_linux);
+                yield return p_grid;
+                // Next, the local if that is "ok" to create.
+                var localVisible = info.ContainsKey("WindowsAccessibleDNSEndString")
+                    ? info["WindowsAccessibleDNSEndString"].Split(',').Select(s => IPLocationTests.FindLocalIpName().EndsWith(s.Trim())).Any(t => t)
+                    : true;
+                if (localVisible)
+                {
+                    yield return CreateWindowsFilesystemPlace(info);
+                }
+            } else
+            {
+                throw new UnknownLocationTypeException($"Location type {type} is not known as read from the configuration file.");
+            }
+        }
 
-            throw new UnknownLocationTypeException($"Location type {type} is not known as read from the configuration file.");
+        /// <summary>
+        /// Create a new linux remote
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="info"></param>
+        /// <returns></returns>
+        private static PlaceLinuxRemote CreateLinuxFilesystemPlace(string name, Dictionary<string, string> info)
+        {
+            return new PlaceLinuxRemote(name,
+                info["LinuxHost"],
+                info["LinuxUserName"],
+                info["LinuxPath"]);
         }
 
         /// <summary>
@@ -276,7 +309,7 @@ namespace AtlasWorkFlows
         private static IPlace CreateWindowsFilesystemPlace(Dictionary<string, string> info)
         {
             // Look at the paths. And if we can't find something, then there is no location!
-            var goodPath = info["Paths"]
+            var goodPath = info["WindowsPaths"]
                 .Split(',')
                 .Select(n => n.Trim())
                 .Where(p => Directory.Exists(p))
