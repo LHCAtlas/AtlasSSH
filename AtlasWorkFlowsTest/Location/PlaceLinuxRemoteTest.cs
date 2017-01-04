@@ -154,7 +154,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        public void CopyFromToStep()
+        public void CopyToTwoStep()
         {
             CreateRepro();
             CreateDS("ds1", "f1.root", "f2.root");
@@ -357,11 +357,6 @@ namespace AtlasWorkFlowsTest.Location
             }
 
             public string GetSCPFilePath(Uri f)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string GetSCPDatasetPath(string dsName)
             {
                 throw new NotImplementedException();
             }

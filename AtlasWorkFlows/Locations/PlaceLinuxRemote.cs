@@ -105,25 +105,17 @@ namespace AtlasWorkFlows.Locations
                 var passwd = GetPasswordForHost(remoteMachine, remoteUser);
 
                 // Get the catalog over
-                var dsDirectory = scpTarget.GetSCPDatasetPath(fsGroup.Key);
-                var destDSLocation = $"{_remote_path}/{fsGroup.Key}";
-                _connection.Value.ExecuteCommand($"mkdir -p {destDSLocation}");
-                _connection.Value.ExecuteCommand($"echo {passwd} | scp {dsDirectory}/aa_dataset_complete_file_list.txt {destDSLocation}");
+                scpTarget.CopyDataSetInfo(fsGroup.Key, GetListOfFilesForDataset(fsGroup.Key));
 
                 // The file path where we will store it all
-                var destLocation = $"{destDSLocation}/copied";
-                _connection.Value.ExecuteLinuxCommand($"mkdir -p {destLocation}");
+                var destLocation = GetPathToCopyFiles(fsGroup.Key);
 
                 // Next, queue up the copies, one at a time.
                 foreach (var f in fsGroup)
                 {
                     var remoteLocation = scpTarget.GetSCPFilePath(f);
-                    _connection.Value.ExecuteLinuxCommand($"echo {passwd} | scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}/{f.Segments.Last()}");
+                    _connection.Value.ExecuteLinuxCommand($"echo {passwd} | scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}");
                 }
-
-                // We have altered the files that exist in this dataset, so kill off the
-                // cache.
-                _filePaths.Remove(fsGroup.Key);
             }
         }
 
@@ -287,16 +279,6 @@ namespace AtlasWorkFlows.Locations
             }
 
             return file;
-        }
-
-        /// <summary>
-        /// Return the Linux path to the dataset
-        /// </summary>
-        /// <param name="dsName"></param>
-        /// <returns></returns>
-        public string GetSCPDatasetPath(string dsName)
-        {
-            return $"{_remote_path}/{dsName}";
         }
 
         /// <summary>
