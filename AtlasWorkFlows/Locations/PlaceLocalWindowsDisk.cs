@@ -105,7 +105,7 @@ namespace AtlasWorkFlows.Locations
         private void CopyDSInfoFrom(PlaceLocalWindowsDisk other, string dsName)
         {
             var filenames = other.GetListOfFilesForDataset(dsName);
-            _rootLocation.SaveListOfDSFiles(dsName, filenames);
+            CopyDataSetInfo(dsName, filenames);
         }
 
         /// <summary>
@@ -184,6 +184,16 @@ namespace AtlasWorkFlows.Locations
 
             var filename = u.Segments.Last();
             return _rootLocation.HasFile(ds, filename);
+        }
+
+        /// <summary>
+        /// Copy files over
+        /// </summary>
+        /// <param name="dsName"></param>
+        /// <param name="files"></param>
+        public void CopyDataSetInfo(string dsName, string[] files)
+        {
+            _rootLocation.SaveListOfDSFiles(dsName, files);
         }
     }
 }

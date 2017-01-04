@@ -39,13 +39,6 @@ namespace AtlasWorkFlows.Utils
         string GetSCPFilePath(Uri f);
 
         /// <summary>
-        /// Copy the full info for this dataset into the repro
-        /// </summary>
-        /// <param name="dsName">Dataset name</param>
-        /// <param name="files">List of files in the dataset</param>
-        void CopyDataSetInfo(string dsName, string[] files);
-
-        /// <summary>
         /// Absolute path where files for this dataset should be deposited.
         /// This path must exist! :-)
         /// </summary>

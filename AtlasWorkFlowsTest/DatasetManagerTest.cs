@@ -323,6 +323,11 @@ namespace AtlasWorkFlowsTest
                 throw new NotImplementedException();
             }
 
+            public void CopyDataSetInfo(string dsName, string[] files)
+            {
+                throw new NotImplementedException();
+            }
+
             public void CopyFrom(IPlace origin, Uri[] uris)
             {
                 throw new NotImplementedException();
@@ -459,6 +464,11 @@ namespace AtlasWorkFlowsTest
             {
                 Assert.AreEqual(1, uris.Select(u => u.Authority).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"*{Name} -> {dest.Name} ({uris.Length} files)");
+            }
+
+            public void CopyDataSetInfo(string dsName, string[] files)
+            {
+                throw new NotImplementedException();
             }
         }
         #endregion

@@ -72,6 +72,13 @@ namespace AtlasWorkFlows.Locations
         string[] GetListOfFilesForDataset(string dsname);
 
         /// <summary>
+        /// Copy the full info for this dataset into the repro
+        /// </summary>
+        /// <param name="dsName">Dataset name</param>
+        /// <param name="files">List of files in the dataset</param>
+        void CopyDataSetInfo(string dsName, string[] files);
+
+        /// <summary>
         /// The user must explicitly request this site as a destination that things are to be copied or cached to.
         /// </summary>
         /// <remarks>
