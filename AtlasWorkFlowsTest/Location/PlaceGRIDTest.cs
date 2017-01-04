@@ -115,6 +115,23 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsFalse(grid_p.HasFile(new Uri($"gridds://{_good_dsname}_bogus/{_good_dsfile}")));
         }
 
+        [TestMethod]
+        public void CanCopyToProperLocation()
+        {
+            var local_p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var grid_p = new PlaceGRID("test-GRID", local_p);
+            Assert.IsTrue(grid_p.CanSourceCopy(local_p));
+        }
+
+        [TestMethod]
+        public void CanNotCopyToProperLocation()
+        {
+            var local_p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var local_p_other = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var grid_p = new PlaceGRID("test-GRID", local_p);
+            Assert.IsFalse(grid_p.CanSourceCopy(local_p_other));
+        }
+ 
         // Who can we copy to
         // CopyTo Stuff
     }
