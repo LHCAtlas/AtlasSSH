@@ -74,6 +74,7 @@
     <Compile Include="Locations\LocalMachine.cs" />
     <Compile Include="Locations\Locator.cs" />
     <Compile Include="Locations\PlaceExceptions.cs" />
+    <Compile Include="Locations\PlaceGRID.cs" />
     <Compile Include="Locations\PlaceLinuxRemote.cs" />
     <Compile Include="Locations\PlaceLocalWindowsDisk.cs" />
     <Compile Include="Locations\Route.cs" />
