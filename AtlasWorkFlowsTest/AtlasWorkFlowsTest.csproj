@@ -79,6 +79,7 @@
     <Compile Include="Location\PlaceGRIDTest.cs" />
     <Compile Include="Location\PlaceLinuxRemoteTest.cs" />
     <Compile Include="Location\PlaceLocalWindowsDiskTest.cs" />
+    <Compile Include="Location\UtilsForBuildingLinuxDatasets.cs" />
     <Compile Include="Location\WindowsGRIDDSReproTest.cs" />
     <Compile Include="Panda\PandUtilsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

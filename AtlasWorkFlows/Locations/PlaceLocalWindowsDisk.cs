@@ -70,9 +70,50 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         public void CopyFrom(IPlace origin, Uri[] uris)
         {
-            var other = (origin as PlaceLocalWindowsDisk)
-                .ThrowIfNull(() => new ArgumentException($"Can CopyFrom only another PlaceLocalWindowsDisk - '{origin.Name}' isn't - this is an internal error."));
+            if (origin is PlaceLocalWindowsDisk)
+            {
+                CopyFromLocalDisk(uris, origin as PlaceLocalWindowsDisk);
+            }
+            else if (origin is ISCPTarget)
+            {
+                CopyFromSCPTarget(origin, uris);
+            }
+            else
+            {
+                throw new ArgumentException($"Can CopyFrom only another PlaceLocalWindowsDisk or PlaceLinuxRemote - '{origin.Name}' isn't either - this is an internal error.");
+            }
+        }
 
+        /// <summary>
+        /// Copy vis SCP from the remote target.
+        /// </summary>
+        /// <param name="iSCPTarget"></param>
+        /// <param name="uris"></param>
+        private void CopyFromSCPTarget(IPlace origin, Uri[] uris)
+        {
+            foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
+            {
+                // Move the catalog over.
+                var files = origin.GetListOfFilesForDataset(dsGroup.Key);
+                CopyDataSetInfo(dsGroup.Key, files);
+
+                // Now, do the files via SCP.
+                var ourpath = new DirectoryInfo(Path.Combine(_rootLocation.LocationOfDataset(dsGroup.Key).FullName, "copied"));
+                if (!ourpath.Exists)
+                {
+                    ourpath.Create();
+                }
+                (origin as ISCPTarget).CopyFromRemoteToLocal(dsGroup.Key, uris.Select(u => u.DatasetFilename()).ToArray(), ourpath);
+            }
+        }
+
+        /// <summary>
+        /// Copy files from another local disk to this local disk.
+        /// </summary>
+        /// <param name="uris"></param>
+        /// <param name="other"></param>
+        private void CopyFromLocalDisk(Uri[] uris, PlaceLocalWindowsDisk other)
+        {
             // Do the copy by dataset, which is our primary way of storing things here.
             var groupedByDS = uris.GroupBy(u => u.DatasetName());
             foreach (var dsFileListing in groupedByDS)
@@ -102,6 +143,47 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
+        /// Copy the data to the other location.
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="uris"></param>
+        public void CopyTo(IPlace destination, Uri[] uris)
+        {
+            if (destination is PlaceLocalWindowsDisk)
+            {
+                // It is symmetric when both have windows paths, so lets just do it the other way around.
+                (destination as PlaceLocalWindowsDisk).CopyFrom(this, uris);
+            }
+            else if (destination is ISCPTarget)
+            {
+                CopyToSCPTarget(destination, uris);
+            }
+            else
+            {
+                throw new ArgumentException($"Can CopyTo only another PlaceLocalWindowsDisk or PlaceLinuxRemote - '{destination.Name}' isn't either - this is an internal error.");
+            }
+        }
+
+        /// <summary>
+        /// Copy via SCP to the remote machine!
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="uris"></param>
+        private void CopyToSCPTarget(IPlace destination, Uri[] uris)
+        {
+            foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
+            {
+                // Move the catalog over.
+                var files = GetListOfFilesForDataset(dsGroup.Key);
+                destination.CopyDataSetInfo(dsGroup.Key, files);
+
+                // Now, do the files via SCP.
+                var localFiles = GetLocalFileLocations(uris);
+                (destination as ISCPTarget).CopyFromLocalToRemote(dsGroup.Key, localFiles.Select(u => new FileInfo(u.LocalPath)));
+            }
+        }
+
+        /// <summary>
         /// Copy the dataset file listing from another location
         /// </summary>
         /// <param name="other"></param>
@@ -110,20 +192,6 @@ namespace AtlasWorkFlows.Locations
         {
             var filenames = other.GetListOfFilesForDataset(dsName);
             CopyDataSetInfo(dsName, filenames);
-        }
-
-        /// <summary>
-        /// Copy the data to the other location.
-        /// </summary>
-        /// <param name="destination"></param>
-        /// <param name="uris"></param>
-        public void CopyTo(IPlace destination, Uri[] uris)
-        {
-            var other = (destination as PlaceLocalWindowsDisk)
-                .ThrowIfNull(() => new ArgumentException($"Can CopyFrom only another PlaceLocalWindowsDisk - '{destination.Name}' isn't - this is an internal error."));
-
-            // Well... since everything is symmtric...
-            other.CopyFrom(this, uris);
         }
 
         /// <summary>

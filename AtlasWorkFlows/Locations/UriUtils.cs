@@ -26,5 +26,20 @@ namespace AtlasWorkFlows.Locations
 
             return uri.OriginalString.Substring(endOfScheme + 2, endOfAuthority - endOfScheme-2);
         }
+
+        /// <summary>
+        /// Return the dataset filename in this uri.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        public static string DatasetFilename(this Uri uri)
+        {
+            if (uri.Scheme != "gridds")
+            {
+                throw new UnknownUriSchemeException($"Expected a gridds Uri, but got a {uri.Scheme} one instead.");
+            }
+
+            return uri.Segments.Last();
+        }
     }
 }

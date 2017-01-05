@@ -238,7 +238,7 @@ namespace AtlasSSH
         public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
             _scpError = null;
-            System.EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
+            EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
             if (statusUpdate != null)
             {
                 _scp.Value.Downloading += updateStatus;
@@ -257,6 +257,70 @@ namespace AtlasSSH
                 if (statusUpdate != null)
                 {
                     _scp.Value.Downloading -= updateStatus;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copy a single file locally.
+        /// </summary>
+        /// <param name="lx"></param>
+        /// <param name="ourpath"></param>
+        public ISSHConnection CopyRemoteFileLocally(string lx, DirectoryInfo ourpath, Action<string> statusUpdate = null)
+        {
+            _scpError = null;
+            EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
+            if (statusUpdate != null)
+            {
+                _scp.Value.Downloading += updateStatus;
+            }
+            try
+            {
+                var lxFname = lx.Split('/').Last();
+                _scp.Value.Download(lx, new FileInfo(Path.Combine(ourpath.FullName, lxFname)));
+                if (_scpError != null)
+                {
+                    throw _scpError;
+                }
+                return this;
+            }
+            finally
+            {
+                if (statusUpdate != null)
+                {
+                    _scp.Value.Downloading -= updateStatus;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Copy a file from the local directory up into the cloud
+        /// </summary>
+        /// <param name="localFile"></param>
+        /// <param name="linuxPath"></param>
+        public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null)
+        {
+            _scpError = null;
+            EventHandler<Renci.SshNet.Common.ScpUploadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
+            if (statusUpdate != null)
+            {
+                _scp.Value.Uploading += updateStatus;
+            }
+            try
+            {
+                _scp.Value.Upload(localFile, linuxPath);
+                if (_scpError != null)
+                {
+                    throw _scpError;
+                }
+                return this;
+            }
+            finally
+            {
+                if (statusUpdate != null)
+                {
+                    _scp.Value.Uploading -= updateStatus;
                 }
             }
         }

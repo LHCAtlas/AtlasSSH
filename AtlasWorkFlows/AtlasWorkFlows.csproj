@@ -91,7 +91,7 @@
     <Compile Include="Utils\Hash.cs" />
     <Compile Include="Utils\InMemoryObjectCache.cs" />
     <Compile Include="Utils\IPLocationTests.cs" />
-    <Compile Include="Utils\ISCPTarget.cs" />
+    <Compile Include="Locations\ISCPTarget.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AtlasSSH\AtlasSSH.csproj">

@@ -1,4 +1,5 @@
-﻿using AtlasWorkFlows.Locations;
+﻿using AtlasSSH;
+using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -17,6 +18,23 @@ namespace AtlasWorkFlowsTest.Location
     [TestClass]
     public class PlaceLocalWindowsDiskTest
     {
+        UtilsForBuildingLinuxDatasets _ssh = null;
+
+        [TestInitialize]
+        public void TestSetup()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets();
+        }
+
+        /// <summary>
+        /// Close down the ssh connection
+        /// </summary>
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            _ssh.TestCleanup();
+        }
+
         [TestMethod]
         public void ExistingFileInExistingDataset()
         {
@@ -209,6 +227,44 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsNull(place2.GetListOfFilesForDataset("ds1"));
             place2.CopyFrom(place1, place1.GetListOfFilesForDataset("ds1").Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
             Assert.AreEqual(2, place2.GetListOfFilesForDataset("ds1").Length);
+        }
+
+        [TestMethod]
+        public void CopyFromSCPTarget()
+        {
+            // Build remote dataset up on linux
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var place1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+
+            var repro1 = BuildRepro("repro2");
+            var place2 = new PlaceLocalWindowsDisk("test1", repro1);
+
+            var uris = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            place2.CopyFrom(place1, uris);
+            var files = place2.GetListOfFilesForDataset("ds1");
+            Assert.AreEqual(2, files.Length);
+            Assert.IsTrue(place2.HasFile(uris[0]));
+            Assert.IsTrue(place2.HasFile(uris[1]));
+        }
+
+        [TestMethod]
+        public void CopyToSCPTarget()
+        {
+            // Build remote dataset up on linux
+            _ssh.CreateRepro();
+            var place1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+
+            var repro1 = BuildRepro("repro2");
+            BuildDatset(repro1, "ds1", "f1.root", "f2.root");
+            var place2 = new PlaceLocalWindowsDisk("test1", repro1);
+
+            var uris = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            place2.CopyTo(place1, uris);
+            var files = place1.GetListOfFilesForDataset("ds1");
+            Assert.AreEqual(2, files.Length);
+            Assert.IsTrue(place1.HasFile(uris[0]));
+            Assert.IsTrue(place1.HasFile(uris[1]));
         }
 
         [TestMethod]
@@ -425,6 +481,16 @@ namespace AtlasWorkFlowsTest.Location
             public bool SCPIsVisibleFrom(string internetLocation)
             {
                 return ReturnSCPIsVisibleFrom;
+            }
+
+            public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files)
+            {
+                throw new NotImplementedException();
             }
         }
         #endregion

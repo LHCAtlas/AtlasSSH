@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static AtlasSSH.DiskCacheTypedHelpers;
+using System.IO;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -340,6 +341,47 @@ namespace AtlasWorkFlows.Locations
             _filePaths.Remove(dsname);
 
             return copiedPath;
+        }
+
+        /// <summary>
+        /// Copy files from here down.
+        /// </summary>
+        /// <param name="files"></param>
+        /// <param name="ourpath"></param>
+        /// <remarks>
+        /// Use our scp connection to do this.
+        /// </remarks>
+        public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath)
+        {
+            // Turn them into linux file locations by doing matching. The files should be identical.
+            var linuxLocations = GetAbosluteLinuxFilePaths(dsName);
+            var linuxFiles = files
+                .Select(f => linuxLocations.Where(lx => lx.EndsWith("/" + f)).FirstOrDefault())
+                .Throw<string>(s => s == null, s => new DatasetFileNotLocalException($"File '{s}' is not in place {Name}, so we can't copy it locally!"));
+
+            foreach(var lx in linuxFiles)
+            {
+                _connection.Value.CopyRemoteFileLocally(lx, ourpath);
+            }
+        }
+
+        /// <summary>
+        /// Copy a file from a local location to a remote location via SCP.
+        /// </summary>
+        /// <param name="dsName"></param>
+        /// <param name="files"></param>
+        public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files)
+        {
+            // The the dest direction setup
+            var lxlocation = GetLinuxDatasetDirectoryPath(dsName);
+            var copiedLocation = $"{lxlocation}/copied";
+            _connection.Value.ExecuteLinuxCommand($"mkdir -p {copiedLocation}");
+
+            // Now copy the files
+            foreach (var f in files)
+            {
+                _connection.Value.CopyLocalFileRemotely(f, $"{copiedLocation}/{f.Name}");
+            }
         }
     }
 }

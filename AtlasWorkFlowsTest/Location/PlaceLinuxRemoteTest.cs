@@ -34,6 +34,11 @@ namespace AtlasWorkFlowsTest.Location
         /// </summary>
         public string _remote_username;
 
+        /// <summary>
+        /// The connection to the remote computer where we build and destroy datasets.
+        /// </summary>
+        private static SSHConnection _connection = null;
+
         [TestInitialize]
         public void TestSetup()
         {
@@ -232,8 +237,6 @@ namespace AtlasWorkFlowsTest.Location
             _connection.ExecuteLinuxCommand($"rm {_remote_path}/{dsname}/files/{fname}");
         }
 
-        private static SSHConnection _connection = null;
-
         /// <summary>
         /// Create a fresh, clean, repro on the remote machine
         /// </summary>
@@ -367,6 +370,16 @@ namespace AtlasWorkFlowsTest.Location
             }
 
             public string GetPathToCopyFiles(string key)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files)
             {
                 throw new NotImplementedException();
             }
