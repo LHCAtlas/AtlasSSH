@@ -243,14 +243,20 @@ namespace AtlasWorkFlows.Locations
         /// Fetch and return the full file paths of every file in the dataset.
         /// </summary>
         /// <param name="dsname"></param>
-        /// <returns></returns>
+        /// <returns>List of all Linux paths for files in the dataset. Returns the empty array if the dataset does not exist on the server.</returns>
         private string[] GetAbosluteLinuxFilePaths(string dsname)
         {
             return _filePaths.GetOrCalc(dsname, () =>
             {
-                var files = new List<string>();
-                _connection.Value.ExecuteLinuxCommand($"find {_remote_path}/{dsname} -print", l => files.Add(l));
-                return files.ToArray();
+                try
+                {
+                    var files = new List<string>();
+                    _connection.Value.ExecuteLinuxCommand($"find {_remote_path}/{dsname} -print", l => files.Add(l));
+                    return files.ToArray();
+                } catch (LinuxCommandErrorException e) when (e.Message.Contains("return status error"))
+                {
+                    return new string[0];
+                }
             });
         }
 

@@ -84,7 +84,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             _ssh.RemoveFileInDS("ds1", "f1.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
-            Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
+            Assert.IsFalse(p.HasFile(new Uri("gridds://ds2/f1.root")));
         }
 
         [TestMethod]
