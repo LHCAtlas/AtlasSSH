@@ -123,6 +123,7 @@ namespace AtlasWorkFlows.Locations
                 var remoteLocation = _linuxRemote.GetLinuxDatasetDirectoryPath(dsGroup.Key);
                 var filesList = dsGroup.Select(u => u.Segments.Last()).ToArray();
                 _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray());
+                _linuxRemote.DatasetFilesChanged(dsGroup.Key);
             }
         }
 

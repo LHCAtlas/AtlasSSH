@@ -240,6 +240,16 @@ namespace AtlasWorkFlows.Locations
         private InMemoryObjectCache<string[]> _filePaths = new InMemoryObjectCache<string[]>();
 
         /// <summary>
+        /// Someone has messed up our directory file for a dataset. We should uncache them as we will
+        /// need to re-look at them.
+        /// </summary>
+        /// <param name="dsName"></param>
+        internal void DatasetFilesChanged(string dsName)
+        {
+            _filePaths.Remove(dsName);
+        }
+
+        /// <summary>
         /// Fetch and return the full file paths of every file in the dataset.
         /// </summary>
         /// <param name="dsname"></param>
