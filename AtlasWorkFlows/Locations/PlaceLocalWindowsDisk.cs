@@ -48,14 +48,18 @@ namespace AtlasWorkFlows.Locations
         private WindowsGRIDDSRepro _rootLocation;
 
         /// <summary>
-        /// We can copy files from this other location?
+        /// We can copy files from other locations.
         /// </summary>
         /// <param name="destination">The destination we need to copy from</param>
-        /// <returns></returns>
+        /// <returns>true if a copy can be sourced from here or to here</returns>
+        /// <remarks>
+        /// We know how to do direct disk copies and also SCP's from visible machines.
+        /// </remarks>
         public bool CanSourceCopy(IPlace destination)
         {
             // As long as it is another active location
-            return destination is PlaceLocalWindowsDisk;
+            return destination is PlaceLocalWindowsDisk
+                || ((destination is ISCPTarget) && ((ISCPTarget)destination).SCPIsVisibleFrom(IPLocationTests.FindLocalIpName()));
         }
 
         /// <summary>

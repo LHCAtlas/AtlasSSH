@@ -1,4 +1,5 @@
 ﻿using AtlasWorkFlows.Locations;
+using AtlasWorkFlows.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -172,6 +173,30 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void CanCopyFromAlwaysVisibleSCP()
+        {
+            var repro1 = BuildRepro("repro1");
+            BuildDatset(repro1, "ds1", "f1.root", "f2.root");
+
+            var place1 = new PlaceLocalWindowsDisk("test1", repro1);
+            var place2 = new SCPPlaceCanCopyTestJig() { ReturnSCPIsVisibleFrom = true };
+
+            Assert.IsTrue(place1.CanSourceCopy(place2));
+        }
+
+        [TestMethod]
+        public void CanCopyFromNeverVisibleSCP()
+        {
+            var repro1 = BuildRepro("repro1");
+            BuildDatset(repro1, "ds1", "f1.root", "f2.root");
+
+            var place1 = new PlaceLocalWindowsDisk("test1", repro1);
+            var place2 = new SCPPlaceCanCopyTestJig() { ReturnSCPIsVisibleFrom = false };
+
+            Assert.IsFalse(place1.CanSourceCopy(place2));
+        }
+
+        [TestMethod]
         public void CopyFrom()
         {
             var repro1 = BuildRepro("repro1");
@@ -294,6 +319,114 @@ namespace AtlasWorkFlowsTest.Location
             }
         }
 
+        class SCPPlaceCanCopyTestJig : IPlace, ISCPTarget
+        {
+            public SCPPlaceCanCopyTestJig ()
+            {
+                ReturnForCanSourceCopy = false;
+                ReturnSCPIsVisibleFrom = false;
+            }
+
+            public int DataTier
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public bool IsLocal
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public string Name
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public bool NeedsConfirmationCopy
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public string SCPMachineName
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public string SCPUser
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public bool ReturnForCanSourceCopy { get; set; }
+            public bool CanSourceCopy(IPlace destination)
+            {
+                return ReturnForCanSourceCopy;
+            }
+
+            public void CopyDataSetInfo(string dsName, string[] files)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyFrom(IPlace origin, Uri[] uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyTo(IPlace destination, Uri[] uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string[] GetListOfFilesForDataset(string dsname)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string GetPathToCopyFiles(string dsName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string GetSCPFilePath(Uri f)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool HasFile(Uri u)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool ReturnSCPIsVisibleFrom { get; set; }
+            public bool SCPIsVisibleFrom(string internetLocation)
+            {
+                return ReturnSCPIsVisibleFrom;
+            }
+        }
         #endregion
     }
 }
