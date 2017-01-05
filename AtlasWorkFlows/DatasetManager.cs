@@ -194,7 +194,7 @@ namespace AtlasWorkFlows
                 .Where(p => !r.Contains(p))
                 .Where(p => r.LastPlace.CanSourceCopy(p) || p.CanSourceCopy(r.LastPlace))
                 .Select(p => new Route(r, p))
-                .SelectMany(nr => FindStepsTo(nr, endCondition));
+                .SelectMany(nr => FindStepsTo(nr, endCondition, forceOk));
         }
         
         /// <summary>

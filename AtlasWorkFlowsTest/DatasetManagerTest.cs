@@ -212,6 +212,37 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
+        public void CopyToFromGRIDWithConfirmation()
+        {
+            // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
+            var loc1 = new DummyPlace("LocalDisk") { IsLocal = true, NeedsConfirmationCopy = true, CanSourceACopy = true };
+            var loc2 = new DummyPlace("tev") { IsLocal = false, DataTier = 10, CanSourceACopy = true, NeedsConfirmationCopy = false };
+            var loc3 = new DummyPlace("tev-GRID") { IsLocal = false, DataTier = 100, CanSourceACopy = true, NeedsConfirmationCopy = false };
+
+            // The tev-GRID can copy only to tev
+            loc3.ExplicitlyNotAllowed.Add(loc1);
+            loc1.ExplicitlyNotAllowed.Add(loc3);
+
+            // loc1 can only source a copy
+            loc2.ExplicitlyNotAllowed.Add(loc1);
+
+            loc3.Add("ds1", "f1", "f2");
+            DatasetManager.ResetDSM(loc1, loc2, loc3);
+
+            var files = DatasetManager.ListOfFilesInDataset("ds1");
+            var localFiles = DatasetManager.CopyFilesTo(loc1, files);
+            Assert.AreEqual(2, localFiles.Length);
+
+            foreach (var c in DummyPlace.CopyLogs)
+            {
+                Console.WriteLine(c);
+            }
+            Assert.AreEqual(2, DummyPlace.CopyLogs.Count);
+            Assert.AreEqual("*tev-GRID -> tev (2 files)", DummyPlace.CopyLogs[0]);
+            Assert.AreEqual("tev -> *LocalDisk (2 files)", DummyPlace.CopyLogs[1]);
+        }
+
+        [TestMethod]
         public void CopyFromGRIDWithTwoOptions()
         {
             // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
