@@ -19,42 +19,12 @@ namespace AtlasWorkFlowsTest.Location
     [TestClass]
     public class PlaceLinuxRemoteTest
     {
-        /// <summary>
-        /// internet name of machine we will be accessing to run tests against.
-        /// </summary>
-        public string _remote_name;
-
-        /// <summary>
-        /// Absolute path on that machine of where the repro is to be put.
-        /// </summary>
-        public string _remote_path;
-
-        /// <summary>
-        /// Username we should use to access the remote fellow.
-        /// </summary>
-        public string _remote_username;
-
-        /// <summary>
-        /// The connection to the remote computer where we build and destroy datasets.
-        /// </summary>
-        private static SSHConnection _connection = null;
+        UtilsForBuildingLinuxDatasets _ssh = null;
 
         [TestInitialize]
         public void TestSetup()
         {
-            // Clean out all caches.
-            DiskCache.RemoveCache("PlaceLinuxDatasetFileList");
-
-            // Load parameters that we can use to access the test machine.
-            var cFile = new FileInfo("location_test_params.txt");
-            Assert.IsTrue(cFile.Exists, $"Unable to locate test file {cFile.FullName}");
-            var p = Config.ParseConfigFile(cFile);
-            Assert.IsTrue(p.ContainsKey("LinuxRemoteTest"), "Unable to find machine info in LinuxRemoteTest");
-            var lrtInfo = p["LinuxRemoteTest"];
-
-            _remote_name = lrtInfo["LinuxHost"];
-            _remote_path = lrtInfo["LinuxPath"];
-            _remote_username = lrtInfo["LinuxUserName"];
+            _ssh = new UtilsForBuildingLinuxDatasets();
         }
 
         /// <summary>
@@ -63,18 +33,15 @@ namespace AtlasWorkFlowsTest.Location
         [TestCleanup]
         public void TestCleanup()
         {
-            if (_connection != null)
-            {
-                _connection.Dispose();
-            }
+            _ssh.TestCleanup();
         }
 
         [TestMethod]
         public void GetReproDatasetFileListForBadDS()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
             var files = p.GetListOfFilesForDataset("ds2");
             Assert.IsNull(files);
         }
@@ -82,9 +49,9 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void GetReproDatasetFileList()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
             var files = p.GetListOfFilesForDataset("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual("f1.root", files[0]);
@@ -94,36 +61,36 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void HasFileGoodFile()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
             Assert.IsTrue(p.HasFile(new Uri("gridds://ds1/f1.root")));
         }
 
         [TestMethod]
         public void HasFileMissingFileInGoodDataset()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            RemoveFileInDS("ds1", "f1.root");
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            _ssh.RemoveFileInDS("ds1", "f1.root");
+            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
             Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
         }
 
         [TestMethod]
         public void HasFileMissingDataset()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            RemoveFileInDS("ds1", "f1.root");
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            _ssh.RemoveFileInDS("ds1", "f1.root");
+            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
             Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
         }
 
         [TestMethod]
         public void CanSourceCopyToISCPTarget()
         {
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
             var other = new ScpTargetDummy() { DoVisibility = true };
             Assert.IsTrue(p.CanSourceCopy(other));
         }
@@ -131,7 +98,7 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CanNotSourceCopyToISCPTarget()
         {
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
             var other = new ScpTargetDummy() { DoVisibility = false };
             Assert.IsFalse(p.CanSourceCopy(other));
         }
@@ -139,7 +106,7 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CanNotSourceCopyToNonISCPTarget()
         {
-            var p = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
+            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
             var other = new DummyPlace("testmeout");
             Assert.IsFalse(p.CanSourceCopy(other));
         }
@@ -147,10 +114,10 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CopyTo()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            var p1 = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path);
-            var p2 = new PlaceLinuxRemote("test", _remote_name, _remote_username, _remote_path + "2");
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p2 = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath + "2");
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p1.CopyTo(p2, fileList);
@@ -161,11 +128,11 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CopyToTwoStep()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            var p1 = new PlaceLinuxRemote("test1", _remote_name, _remote_username, _remote_path);
-            CreateRepro(_remote_path + "2");
-            var p2 = new PlaceLinuxRemote("test2", _remote_name, _remote_username, _remote_path + "2");
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            _ssh.CreateRepro(_ssh.RemotePath + "2");
+            var p2 = new PlaceLinuxRemote("test2", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath + "2");
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p1.CopyTo(p2, fileList.Take(1).ToArray());
@@ -179,10 +146,10 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CopyFrom()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            var p1 = new PlaceLinuxRemote("test1", _remote_name, _remote_username, _remote_path);
-            var p2 = new PlaceLinuxRemote("test2", _remote_name, _remote_username, _remote_path + "2");
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p2 = new PlaceLinuxRemote("test2", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath + "2");
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p2.CopyFrom(p1, fileList);
@@ -194,11 +161,11 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CopyFromTwoStep()
         {
-            CreateRepro();
-            CreateDS("ds1", "f1.root", "f2.root");
-            var p1 = new PlaceLinuxRemote("test1", _remote_name, _remote_username, _remote_path);
-            CreateRepro(_remote_path + "2");
-            var p2 = new PlaceLinuxRemote("test2", _remote_name, _remote_username, _remote_path + "2");
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            _ssh.CreateRepro(_ssh.RemotePath + "2");
+            var p2 = new PlaceLinuxRemote("test2", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath + "2");
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p2.CopyFrom(p1, fileList.Take(1).ToArray());
@@ -210,51 +177,6 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         #region Helper Items
-        private void CreateDS(string ds, params string[] filenames)
-        {
-            var dsDir = $"{_remote_path}/{ds}";
-            var dsFileDir = $"{dsDir}/files";
-
-            // Create the directories.
-            _connection.ExecuteLinuxCommand($"mkdir -p {dsFileDir}");
-
-            // For the files create them and add them to the whole thing.
-            foreach (var f in filenames)
-            {
-                _connection
-                    .ExecuteLinuxCommand($"echo {f} >> {dsDir}/aa_dataset_complete_file_list.txt")
-                    .ExecuteLinuxCommand($"echo hi > {dsFileDir}/{f}");                
-            }
-        }
-
-        /// <summary>
-        /// Remove a file in a dataset
-        /// </summary>
-        /// <param name="v1"></param>
-        /// <param name="v2"></param>
-        private void RemoveFileInDS(string dsname, string fname)
-        {
-            _connection.ExecuteLinuxCommand($"rm {_remote_path}/{dsname}/files/{fname}");
-        }
-
-        /// <summary>
-        /// Create a fresh, clean, repro on the remote machine
-        /// </summary>
-        private void CreateRepro(string remote_path = null)
-        {
-            if (remote_path == null)
-                remote_path = _remote_path;
-
-            // Make sure no one is debing a dick by accident.
-            Assert.AreNotEqual(".", remote_path);
-            Assert.IsFalse(string.IsNullOrWhiteSpace(remote_path));
-            Assert.IsFalse(remote_path.Contains("*"));
-
-            // Create the new repro
-            _connection = new SSHConnection(_remote_name, _remote_username);
-            _connection.ExecuteLinuxCommand($"rm -rf {remote_path}")
-                .ExecuteLinuxCommand($"mkdir -p {remote_path}");
-        }
 
         /// <summary>
         /// Dummy that implements the target.

@@ -31,6 +31,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             // Clean out all caches.
             DiskCache.RemoveCache("PlaceLinuxDatasetFileList");
+            DiskCache.RemoveCache("PlaceGRIDDSCatalog");
 
             // Load parameters that we can use to access the test machine.
             var cFile = new FileInfo("location_test_params.txt");
