@@ -107,6 +107,30 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        public void DoubleSSH()
+        {
+            var infoOutter = util.GetUsernameAndPassword();
+            var infoInner = util.GetUsernameAndPassword("CERNSSHTest");
+            string hostInner = null;
+            string hostOutter = null;
+            using (var s = new SSHConnection(infoOutter.Item1, infoOutter.Item2))
+            {
+                using (var subShell = s.SSHTo(infoInner.Item1, infoInner.Item2))
+                {
+                    s.ExecuteCommand("echo $HOSTNAME", output: l => hostInner = l);
+                }
+                s.ExecuteCommand("echo $HOSTNAME", output: l => hostOutter = l);
+            }
+
+            Console.WriteLine($"Inner host: {hostInner}");
+            Console.WriteLine($"Outter host: {hostOutter}");
+
+            Assert.AreNotEqual(hostInner, hostOutter, "Expect the host names of the two machines to be different");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(hostInner));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(hostOutter));
+        }
+
+        [TestMethod]
         public void copyRemoteDirectoryLocal()
         {
             var info = util.GetUsernameAndPassword();

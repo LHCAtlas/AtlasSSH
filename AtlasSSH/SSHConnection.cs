@@ -68,20 +68,31 @@ namespace AtlasSSH
 
             // And create a shell stream. Initialize to find the prompt so we can figure out, later, when
             // a task has finished.
-            _shell = new Lazy<ShellStream>(() => {
+            _shell = new Lazy<ShellStream>(() =>
+            {
                 var s = _client.Value.CreateShellStream("Commands", TerminalWidth, 200, 132, 80, 240 * 200);
-                s.WaitTillPromptText();
-                s.WriteLine("# this initialization");
-                DumpTillFind(s, "# this initialization");
-                //s.ReadLine(); // Get past the "new-line" that is at the end of the printed comment above
-                _prompt = s.ReadRemainingText(1000);
-                if (_prompt == null || _prompt.Length == 0)
-                {
-                    throw new LinuxCommandErrorException("Did not find the shell prompt! I will not be able to properly interact with this shell!");
-                }
-                Trace.WriteLine("Initialization: prompt=" + _prompt, "SSHConnection");
+                _prompt = ExtractPromptText(s);
                 return s;
             });
+        }
+
+        /// <summary>
+        /// Waits until there is some sort of prompt text, and extracts it.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        private string ExtractPromptText(ShellStream s)
+        {
+            s.WaitTillPromptText();
+            s.WriteLine("# this initialization");
+            DumpTillFind(s, "# this initialization");
+            var prompt = s.ReadRemainingText(1000);
+            if (prompt == null || prompt.Length == 0)
+            {
+                throw new LinuxCommandErrorException("Did not find the shell prompt! I will not be able to properly interact with this shell!");
+            }
+            Trace.WriteLine("Initialization: prompt=" + prompt, "SSHConnection");
+            return prompt;
         }
 
         /// <summary>
@@ -218,51 +229,105 @@ namespace AtlasSSH
         /// <param name="command"></param>
         /// <param name="output"></param>
         /// <param name="failNow">If this ever returns true, fail as fast as possible.</param>
+        /// <param name="dumpOnly">If true, print to the Trace machnism all commands, but do not execute them.</param>
+        /// <param name="refreshTimeout">If true, reset the the timeout counter every time some new input shows up.</param>
+        /// <param name="WaitForCommandResult">If false don't attempt to get the output from the command.</param>
         /// <returns></returns>
-        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null)
+        public ISSHConnection ExecuteCommand(string command, 
+            Action<string> output = null,
+            int secondsTimeout = 60*60, bool refreshTimeout = false,
+            Func<bool> failNow = null,
+            bool dumpOnly = false,
+            Dictionary<string, string> seeAndRespond = null,
+            bool WaitForCommandResult = true)
         {
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             if (!dumpOnly)
             {
                 _shell.Value.WriteLine(command);
                 DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)), crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
-                DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
+                if (WaitForCommandResult)
+                {
+                    DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
+                }
             }
             return this;
         }
 
-#if false
-        // Dead code, but it might be useful sometime.
         /// <summary>
-        /// Run a command. Scan the input for text and when we see it, send response strings.
+        /// Track the context for the ssh sub-shell we are in.
         /// </summary>
-        /// <param name="command">The command to start things off</param>
-        /// <param name="seeAndRespond">When we see a bit of text (a Regex), then respond with another bit of text.</param>
-        /// <param name="output">Called with each output line we read back</param>
-        /// <returns></returns>
-        public SSHConnection ExecuteCommandWithInput(string command, Dictionary<string, string> seeAndRespond, Action<string> output = null)
+        private class SSHSubShellContext : IDisposable
         {
-            // Run the command
-            Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
-            _shell.Value.WriteLine(command);
-            DumpTillFind(_shell.Value, command); // The command is (normally) repeated back to us...
-            _shell.Value.ReadLine(); // And the new line at the end of the command.
+            private SSHConnection _connection;
+            private string _oldPrompt;
 
-            // Now, we don't know what order things will come back in, so...
-            var actions = seeAndRespond
-                .Select(p => new ExpectAction(p.Key, s =>
-                {
-                    if (output != null)
-                        output(s);
-                    _shell.Value.WriteLine(p.Value);
-                }))
-                .ToArray();
+            /// <summary>
+            /// Initi with context info
+            /// </summary>
+            /// <param name="prompt"></param>
+            /// <param name="sSHConnection"></param>
+            public SSHSubShellContext(string prompt, SSHConnection sSHConnection)
+            {
+                this._oldPrompt = prompt;
+                this._connection = sSHConnection;
+            }
 
-            _shell.Value.Expect(TimeSpan.FromSeconds(5), actions);
-            DumpTillFind(_shell.Value, _prompt, output);
-            return this;
+            /// <summary>
+            /// Restore everything
+            /// </summary>
+            public void Dispose()
+            {
+                // Put the prompt back first, so that we come back properly.
+                _connection._prompt = _oldPrompt;
+                _connection.ExecuteCommand("exit");
+            }
         }
-#endif
+
+        /// <summary>
+        /// Ssh to another machine. This implies we have to deal with a new prompt.
+        /// </summary>
+        /// <param name="host">host of remote machine to ssh to</param>
+        /// <param name="username">username to use when we ssh there</param>
+        /// <returns>A context item. Dispose and it will exit the remote shell. If you let it garbage collect you might be caught by unexpected behavior!!</returns>
+        public IDisposable SSHTo(string host, string username)
+        {
+            // Archive the prompt for later use
+            // Since getting the connection runing is lazy, the prompt won't be set
+            // unless a command has been issued. So if this is the first command,
+            // prompt won't be set yet.
+            if (_prompt == null)
+            {
+                var bogus = ExecuteCommand("pwd");
+            }
+            var r = new SSHSubShellContext(_prompt, this);
+
+            // Issue the ssh command... Since this isn't coming back, we have to do it a little differently.
+            ExecuteCommand($"ssh {username}@{host}", WaitForCommandResult: false);
+            _prompt = null;
+            while (_prompt == null)
+            {
+                _shell.Value.WaitTillPromptText();
+                var text = _shell.Value.Read();
+                if (text.StartsWith("Password"))
+                {
+                    var sclist = new CredentialSet(host);
+                    var passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
+                    if (passwordInfo == null)
+                    {
+                        throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));
+                    }
+                    _shell.Value.WriteLine(passwordInfo.Password);
+                } else if (!string.IsNullOrWhiteSpace(text))
+                {
+                    _prompt = text;
+                    Trace.WriteLine($"SSHTo: Setting prompt to '{_prompt}'.");
+                }
+            }
+
+            // Return the old context so we can restore ourselves when we exit the thing.
+            return r;
+        }
 
         /// <summary>
         /// Copy a remote directory locally
