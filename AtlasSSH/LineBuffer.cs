@@ -68,7 +68,10 @@ namespace AtlasSSH
         public void DumpRest()
         {
             Flush();
-            ActOnLine(_text);
+            if (_text.Length > 0)
+            {
+                ActOnLine(_text);
+            }
         }
 
         List<string> stringsToSuppress = new List<string>();
