@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -115,12 +116,16 @@ namespace AtlasSSH
         /// <param name="ongo">When we see a complete line, call this function. Defaults to null</param>
         /// <param name="secondsTimeout">How long should there be before we have a timeout.</param>
         /// <param name="refreshTimeout">If we see something back from the host, reset the timeout counter</param>
-        private void DumpTillFind(ShellStream s, string matchText, 
+        /// <param name="crlfExpectedAtEnd">If the crlf is expected, then eat it when we see it. A command line prompt, for example, will not have this.</param>
+        /// <param name="seeAndRespond">Dictionary of strings to look for and to respond to with further input.</param>
+        private void DumpTillFind(ShellStream s,
+            string matchText, 
             Action<string> ongo = null, 
             int secondsTimeout = 60*60, 
             bool refreshTimeout = false,
             Func<bool> failNow = null,
-            bool crlfExpectedAtEnd = false
+            bool crlfExpectedAtEnd = false,
+            Dictionary<string, string> seeAndRespond = null
             )
         {
             var lb = new LineBuffer();
@@ -135,13 +140,25 @@ namespace AtlasSSH
             bool gotmatch = false;
             lb.AddAction(l => gotmatch = gotmatch || l.Contains(matchText));
 
+            // Build the actions that will occur when we see various patterns in the text.
+            var expectedMatchText = matchText + (crlfExpectedAtEnd ? LineBuffer.CrLf : "");
+            var matchTextAction = new ExpectAction(expectedMatchText, l => { Trace.WriteLine($"DumpToFill: Found expected Text: {l}"); lb.Add(l); gotmatch = true; });
+            Trace.WriteLine($"DumpTillFind: searching for text: {matchText} (with crlf: {crlfExpectedAtEnd})");
+
+            var expect_actions = (new ExpectAction[] { matchTextAction })
+                .Concat(seeAndRespond == null
+                        ? Enumerable.Empty<ExpectAction>()
+                        : seeAndRespond
+                            .Select(sr => new ExpectAction(sr.Key, whatMatched => { Trace.WriteLine($"DumpToFill: Found seeAndRespond: {whatMatched}"); lb.Add(whatMatched); _shell.Value.WriteLine(sr.Value); }))
+                       )
+                       .ToArray();
+
             // Run until we hit a timeout. Timeout is finegraned so that we can
             // deal with the sometimes very slow GRID.
             var timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
-            var expectedMatchText = matchText + (crlfExpectedAtEnd ? LineBuffer.CrLf : "");
             while (timeout > DateTime.Now)
             {
-                s.Expect(TimeSpan.FromMilliseconds(100), new ExpectAction(expectedMatchText, l => { lb.Add(l); gotmatch = true; }));
+                s.Expect(TimeSpan.FromMilliseconds(100), expect_actions);
                 if (!crlfExpectedAtEnd)
                 {
                     gotmatch = gotmatch || lb.Match(matchText);
@@ -153,6 +170,7 @@ namespace AtlasSSH
                 if (data != null && data.Length > 0)
                 {
                     // Archive the line
+                    Trace.WriteLine($"DumpTillFind: Read text: {data}");
                     lb.Add(data + LineBuffer.CrLf);
 
                     // We got something real back - perhaps refresh it?
@@ -182,15 +200,14 @@ namespace AtlasSSH
         /// <param name="output"></param>
         /// <param name="failNow">If this ever returns true, fail as fast as possible.</param>
         /// <returns></returns>
-        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false)
+        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null)
         {
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             if (!dumpOnly)
             {
                 _shell.Value.WriteLine(command);
                 DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)), crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
-                //_shell.Value.ReadLine(TimeSpan.FromSeconds(10)); // Read back the end of line after the command is sent out.
-                DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow);
+                DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
             }
             return this;
         }

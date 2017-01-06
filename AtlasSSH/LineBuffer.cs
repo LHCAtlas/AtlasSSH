@@ -48,6 +48,9 @@ namespace AtlasSSH
             Flush();
         }
 
+        /// <summary>
+        /// Walk through our text, flushing all lines out.
+        /// </summary>
         private void Flush()
         {
             while (true)

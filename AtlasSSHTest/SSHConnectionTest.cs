@@ -40,7 +40,8 @@ namespace AtlasSSHTest
             using (var s = new SSHConnection(info.Item1, info.Item2))
             {
                 bool foundFile = false;
-                s.ExecuteCommand("ls -a | cat", l => { if (l.Contains(".bash_profile")) { foundFile = true; } Console.WriteLine(l); });
+                s.ExecuteCommand("ls -a | cat", l => { if (l.Contains(".bash_profile")) { foundFile = true; } Console.WriteLine(l); Assert.IsFalse(string.IsNullOrWhiteSpace(l)); });
+                Console.WriteLine("End of listing");
                 Assert.IsTrue(foundFile);
             }
         }
