@@ -142,16 +142,23 @@ namespace AtlasSSH
 
             // Build the actions that will occur when we see various patterns in the text.
             var expectedMatchText = matchText + (crlfExpectedAtEnd ? LineBuffer.CrLf : "");
-            var matchTextAction = new ExpectAction(expectedMatchText, l => { Trace.WriteLine($"DumpToFill: Found expected Text: {l}"); lb.Add(l); gotmatch = true; });
+            var matchTextAction = new ExpectAction(expectedMatchText, l => { Trace.WriteLine($"DumpTillFill: Found expected Text: '{SummarizeText(l)}'"); lb.Add(l); gotmatch = true; });
             Trace.WriteLine($"DumpTillFind: searching for text: {matchText} (with crlf: {crlfExpectedAtEnd})");
 
             var expect_actions = (new ExpectAction[] { matchTextAction })
                 .Concat(seeAndRespond == null
                         ? Enumerable.Empty<ExpectAction>()
                         : seeAndRespond
-                            .Select(sr => new ExpectAction(sr.Key, whatMatched => { Trace.WriteLine($"DumpToFill: Found seeAndRespond: {whatMatched}"); lb.Add(whatMatched); _shell.Value.WriteLine(sr.Value); }))
+                            .Select(sr => new ExpectAction(sr.Key, whatMatched => { Trace.WriteLine($"DumpTillFill: Found seeAndRespond: {whatMatched}"); lb.Add(whatMatched); _shell.Value.WriteLine(sr.Value); }))
                        )
                        .ToArray();
+            if (seeAndRespond != null)
+            {
+                foreach (var item in seeAndRespond)
+                {
+                    Trace.WriteLine($"DumpTillFind:  -> also looking for '{item.Key}' and will respond with '{item.Value}'");
+                }
+            }
 
             // Run until we hit a timeout. Timeout is finegraned so that we can
             // deal with the sometimes very slow GRID.
@@ -190,6 +197,18 @@ namespace AtlasSSH
                 throw new TimeoutException(string.Format("Waiting for '{0}' back from host and it was not seen inside of {1} seconds.", matchText, secondsTimeout));
             }
             lb.DumpRest();
+        }
+
+        /// <summary>
+        /// Generate a summarization version of the text...
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        private string SummarizeText(string str)
+        {
+            return str.Length > 50
+                ? str.Substring(0, 25) + ".." + str.Substring(str.Length - 25)
+                : str;
         }
 
         /// <summary>
