@@ -303,7 +303,7 @@ namespace AtlasSSH
             var r = new SSHSubShellContext(_prompt, this);
 
             // Issue the ssh command... Since this isn't coming back, we have to do it a little differently.
-            ExecuteCommand($"ssh {username}@{host}", WaitForCommandResult: false);
+            ExecuteCommand($"ssh -oStrictHostKeyChecking=no {username}@{host}", WaitForCommandResult: false);
             _prompt = null;
             while (_prompt == null)
             {
