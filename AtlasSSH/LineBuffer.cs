@@ -39,12 +39,12 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Add a new line.
+        /// Add text. A line is delimited by CrLf.
         /// </summary>
-        /// <param name="line"></param>
-        public void Add(string line)
+        /// <param name="text">Less than, more than, or exactly one line of text to be added to the buffer</param>
+        public void Add(string text)
         {
-            _text += line;
+            _text += text;
             Flush();
         }
 
