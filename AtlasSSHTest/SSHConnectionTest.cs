@@ -25,7 +25,6 @@ namespace AtlasSSHTest
         /// entered them into the credential store.
         /// </summary>
         [TestMethod]
-        [Ignore] // Because this requires real remote and is slow.
         public void KnownUserAndCTor()
         {
             var info = util.GetUsernameAndPassword();
@@ -33,7 +32,6 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
-        [Ignore] // Because this requires real remote and is slow.
         public void ListDirectory()
         {
             var info = util.GetUsernameAndPassword();
@@ -47,7 +45,6 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
-        [Ignore] // Because this requires real remote and is slow.
         public void PWDOutputAsExpected()
         {
             var info = util.GetUsernameAndPassword();
@@ -66,7 +63,6 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
-        [Ignore] // Because this requires real remote and is slow.
         public void ListDirectoryWithNoOutput()
         {
             var info = util.GetUsernameAndPassword();
@@ -76,7 +72,6 @@ namespace AtlasSSHTest
             }
         }
 
-#if false
         [TestMethod]
         public void ReadBackWithPrompt()
         {
@@ -93,11 +88,11 @@ namespace AtlasSSHTest
                 bool valueSet = false;
                 bool sawPrompt = false;
                 s.ExecuteCommand("prompt=\"what is up: \"");
-                s.ExecuteCommandWithInput("read -p \"$prompt\" bogusvalue", new Dictionary<string, string>() { { "up:", "\nthis freak me out is a test" } }, l =>
+                s.ExecuteCommand("read -p \"$prompt\" bogusvalue", l =>
                     {
                         sawPrompt = sawPrompt || l.Contains("what is up");
                         Console.WriteLine("==> " + l);
-                    })
+                    }, seeAndRespond: new Dictionary<string, string>() { { "up:", "this freak me out is a test" } })
                     .ExecuteCommand("set", l => Console.WriteLine(" set: " + l))
                     .ExecuteCommand("echo bogusvalue $bogusvalue", l =>
                     {
@@ -106,15 +101,12 @@ namespace AtlasSSHTest
                     });
 
                 // THis guy isn't working yet because we don't seem to read in any input.
-                Assert.Inconclusive();
                 Assert.IsTrue(sawPrompt);
                 Assert.IsTrue(valueSet);
             }
         }
-#endif
 
         [TestMethod]
-        [Ignore] // Because this requires real remote and is slow.
         public void copyRemoteDirectoryLocal()
         {
             var info = util.GetUsernameAndPassword();
@@ -151,7 +143,6 @@ namespace AtlasSSHTest
 
         [TestMethod]
         [ExpectedException(typeof(ScpException))]
-        [Ignore] // Because this requires real remote and is slow.
         public void copyBadRemoteDirectoryLocal()
         {
             var info = util.GetUsernameAndPassword();
@@ -170,7 +161,6 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
-        [Ignore] // Because this requires real remote and is slow.
         public void CopyTwice()
         {
             var info = util.GetUsernameAndPassword();
