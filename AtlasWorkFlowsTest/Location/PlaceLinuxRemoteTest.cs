@@ -199,6 +199,24 @@ namespace AtlasWorkFlowsTest.Location
             var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
 
             var sshRemote = new UtilsForBuildingLinuxDatasets();
+            sshRemote.CreateRepro();
+            var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+        }
+
+        [TestMethod]
+        public void CopyToViaTunnelWithPassword()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnelBigData");
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+
+            var sshRemote = new UtilsForBuildingLinuxDatasets();
+            sshRemote.CreateRepro();
             var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
@@ -257,7 +275,24 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsTrue(p2.HasFile(fileList[1]));
         }
 
-#region Helper Items
+        [TestMethod]
+        public void CopyFromViaTunnelWithPassword()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnelBigData");
+            _ssh.CreateRepro();
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+
+            var sshRemote = new UtilsForBuildingLinuxDatasets();
+            sshRemote.CreateRepro();
+            sshRemote.CreateDS("ds1", "f1.root", "f2.root");
+            var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyFrom(p2, fileList);
+            Assert.IsTrue(p1.HasFile(fileList[0]));
+        }
+        
+        #region Helper Items
 
         /// <summary>
         /// Dummy that implements the target.

@@ -574,18 +574,34 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Execute a Linux command. Throw if the command does not return 0.
+        /// Execute a Linux command. Throw if the command does not return 0 to the shell. Provides for ways to capture (or ignore)
+        /// the output of the command.
         /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="command"></param>
+        /// <param name="connection">The connection onwhich to execute the command.</param>
+        /// <param name="command">The command to execute</param>
         /// <param name="dumpOnly">If true, then only print out the commands</param>
-        /// <returns></returns>
-        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection, string command, Action<string> processLine = null, Func<bool> failNow = null, bool dumpOnly = false)
+        /// <param name="failNow">If true, attempt to bail out of the command early.</param>
+        /// <param name="processLine">A function called for each line read back while the command is executing</param>
+        /// <param name="seeAndRespond">If a string is seen in the output, then the given response is sent</param>
+        /// <param name="refreshTimeout">If we see text, reset the timeout counter</param>
+        /// <param name="secondsTimeout">How many seconds with no output or since beginning of command before we declare failure?</param>
+        /// <returns>The connection we ran this on. Enables fluent progreamming</returns>
+        /// <remarks>
+        /// We check the status by echoing the shell variable $? - so this actually runs two commands.
+        /// </remarks>
+        public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection,
+            string command, 
+            Action<string> processLine = null,
+            Func<bool> failNow = null,
+            bool dumpOnly = false,
+            int secondsTimeout = 60*60,
+            bool refreshTimeout = false,
+            Dictionary<string, string> seeAndRespond = null)
         {
             string rtnValue = "";
             processLine = processLine == null ? l => { } : processLine; 
             connection
-                .ExecuteCommand(command, processLine, failNow: failNow, dumpOnly: dumpOnly)
+                .ExecuteCommand(command, processLine, failNow: failNow, dumpOnly: dumpOnly, seeAndRespond: seeAndRespond, refreshTimeout: refreshTimeout, secondsTimeout: secondsTimeout)
                 .ExecuteCommand("echo $?", l => rtnValue = l, dumpOnly: dumpOnly);
 
             if (rtnValue != "0" && !dumpOnly)

@@ -161,7 +161,9 @@ namespace AtlasWorkFlows.Locations
                 foreach (var f in fsGroup)
                 {
                     var remoteLocation = scpTarget.GetSCPFilePath(f);
-                    _connection.Value.ExecuteLinuxCommand($"echo {passwd} | scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}");
+                    _connection.Value.ExecuteLinuxCommand($"scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}",
+                        seeAndRespond: new Dictionary<string, string>() { {"password:", passwd } },
+                        secondsTimeout: 60, refreshTimeout: true);
                 }
             }
         }
@@ -226,7 +228,9 @@ namespace AtlasWorkFlows.Locations
                 foreach (var f in fsGroup)
                 {
                     var localFilePath = GetSCPFilePath(f);
-                    _connection.Value.ExecuteLinuxCommand($"echo {passwd} | scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}");
+                    _connection.Value.ExecuteLinuxCommand($"scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}",
+                        seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
+                        secondsTimeout: 60, refreshTimeout: true);
                 }
             }
         }
