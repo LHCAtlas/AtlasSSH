@@ -14,7 +14,7 @@ namespace AtlasWorkFlows.Locations
     /// We are paired with a local Linux end point - basically a place where we can
     /// copy files and store them.
     /// </summary>
-    class PlaceGRID : IPlace
+    class PlaceGRID : IPlace, IDisposable
     {
         private PlaceLinuxRemote _linuxRemote;
 
@@ -39,13 +39,29 @@ namespace AtlasWorkFlows.Locations
         {
             if (statusUpdater != null)
                 statusUpdater("Setting up GRID Environment");
-            var r = new SSHConnection(_linuxRemote.RemoteHost, _linuxRemote.RemoteUsername);
-            r
+            var r = _linuxRemote.RemoteHostInfo.MakeConnection();
+            r.Item1
                 .setupATLAS()
-                .setupRucio(_linuxRemote.RemoteUsername)
+                .setupRucio(_linuxRemote.RemoteHostInfo.Last().Username)
                 .VomsProxyInit("atlas");
+            _tunnelConnections = r.Item2;
 
-            return r;
+            return r.Item1;
+        }
+
+        /// <summary>
+        /// Track the other tunnel connections.
+        /// </summary>
+        private List<IDisposable> _tunnelConnections = null;
+        public void Dispose()
+        {
+            if (_tunnelConnections != null)
+            {
+                foreach (var c in _tunnelConnections.Reverse<IDisposable>())
+                {
+                    c.Dispose();
+                }
+            }
         }
 
         /// <summary>
