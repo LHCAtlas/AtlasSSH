@@ -201,7 +201,7 @@ namespace AtlasSSH
         /// <returns></returns>
         private FileInfo GetCacheFileName (string key)
         {
-            return new FileInfo(Path.Combine(_dir.FullName, key.Replace(":", "_") + ".binary"));
+            return new FileInfo(Path.Combine(_dir.FullName, key.Replace(":", "_").Replace("/", "_").Replace("\\", "_") + ".binary"));
         }
 
         public override void Set(string key, object value, CacheItemPolicy policy, string regionName = null)

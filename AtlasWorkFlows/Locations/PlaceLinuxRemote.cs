@@ -240,25 +240,27 @@ namespace AtlasWorkFlows.Locations
         /// The full list of all files that belong to a particular dataset. This is regardless
         /// of weather or not the files are in this repro.
         /// </summary>
-        /// <param name="dsname">Name of the dataset we are looking at</param>
+        /// <param name="cleanDSname">Name of the dataset we are looking at</param>
         /// <returns>List of the files in the dataset, or null if the dataset is not known in this repro</returns>
         public string[] GetListOfFilesForDataset(string dsname)
         {
+            var cleanDSName = dsname.Replace("/", "");
+
             // The list of files for a dataset can't change over time, so we can
             // cache it locally.
-            return NonNullCacheInDisk("PlaceLinuxDatasetFileList", dsname, () =>
+            return NonNullCacheInDisk("PlaceLinuxDatasetFileList", cleanDSName, () =>
             {
                 var files = new List<string>();
                 try
                 {
-                    _connection.Value.ExecuteLinuxCommand($"cat {_remote_path}/{dsname}/aa_dataset_complete_file_list.txt", l => files.Add(l));
+                    _connection.Value.ExecuteLinuxCommand($"cat {_remote_path}/{cleanDSName}/aa_dataset_complete_file_list.txt", l => files.Add(l));
                 } catch (LinuxCommandErrorException) when (files.Count > 0 && files[0].Contains("aa_dataset_complete_file_list.txt: No such file or directory"))
                 {
                     // if there was an error accessing it, then it isn't there... Lets hope.
                     return null;
                 }
 
-                return files.Select(f => f.Split(':').Last()).ToArray();
+                return files.Select(f => f.Split(':').Last().Trim()).ToArray();
             });
         }
 

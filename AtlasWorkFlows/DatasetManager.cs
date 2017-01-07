@@ -67,9 +67,9 @@ namespace AtlasWorkFlows
             // Simply look through the list looking for anyone that has the dataset.
             // Recall the list is in tier order.
             return _places.Value
-                .Select(p => p.GetListOfFilesForDataset(dsname))
+                .Select(p => p.GetListOfFilesForDataset(dsname.Dataset()))
                 .Where(fs => fs != null)
-                .Select(fs => fs.Select(f => new Uri($"gridds://{dsname}/{f}")).ToArray())
+                .Select(fs => fs.Select(f => new Uri($"gridds://{dsname.Dataset()}/{f}")).ToArray())
                 .FirstOrDefault()
                 .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset {dsname} could not be found at any place."));
         }
@@ -249,6 +249,7 @@ namespace AtlasWorkFlows
             return config.Keys
                 .SelectMany(placeName => ParseSingleConfig(config[placeName]))
                 .Where(p => p != null)
+                .OrderBy(p => p.DataTier)
                 .ToArray();
         }
 
@@ -295,10 +296,7 @@ namespace AtlasWorkFlows
         /// <returns></returns>
         private static PlaceLinuxRemote CreateLinuxFilesystemPlace(string name, Dictionary<string, string> info)
         {
-            return new PlaceLinuxRemote(name,
-                info["LinuxHost"],
-                info["LinuxUserName"],
-                info["LinuxPath"]);
+            return new PlaceLinuxRemote(name, info["LinuxPath"], info["LinuxHost"].ParseHostPairChain());
         }
 
         /// <summary>
