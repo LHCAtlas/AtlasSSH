@@ -41,9 +41,15 @@ namespace AtlasWorkFlowsTest.Location
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
-            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var files = p.GetListOfFilesForDataset("ds2");
             Assert.IsNull(files);
+        }
+        [TestMethod]
+        public void GetReproDatasetFileListForBadDSTunnel()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            GetReproDatasetFileListForBadDS();
         }
 
         [TestMethod]
@@ -51,7 +57,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
-            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var files = p.GetListOfFilesForDataset("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual("f1.root", files[0]);
@@ -59,12 +65,26 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void GetReproDatasetFileListTunnel()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            GetReproDatasetFileList();
+        }
+
+        [TestMethod]
         public void HasFileGoodFile()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
-            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             Assert.IsTrue(p.HasFile(new Uri("gridds://ds1/f1.root")));
+        }
+
+        [TestMethod]
+        public void HasGoodFileTunnel()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            HasFileGoodFile();
         }
 
         [TestMethod]
@@ -73,8 +93,15 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             _ssh.RemoveFileInDS("ds1", "f1.root");
-            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
+        }
+
+        [TestMethod]
+        public void HasFileMissingFileInGoodDatastTunnel()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            HasFileMissingFileInGoodDataset();
         }
 
         [TestMethod]
@@ -83,14 +110,21 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             _ssh.RemoveFileInDS("ds1", "f1.root");
-            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             Assert.IsFalse(p.HasFile(new Uri("gridds://ds2/f1.root")));
+        }
+
+        [TestMethod]
+        public void HasFileMissingDatasetTunnel()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            HasFileMissingDataset();
         }
 
         [TestMethod]
         public void CanSourceCopyToISCPTarget()
         {
-            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var other = new ScpTargetDummy() { DoVisibility = true };
             Assert.IsTrue(p.CanSourceCopy(other));
         }
@@ -98,7 +132,7 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CanNotSourceCopyToISCPTarget()
         {
-            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var other = new ScpTargetDummy() { DoVisibility = false };
             Assert.IsFalse(p.CanSourceCopy(other));
         }
@@ -106,9 +140,40 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CanNotSourceCopyToNonISCPTarget()
         {
-            var p = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var other = new DummyPlace("testmeout");
             Assert.IsFalse(p.CanSourceCopy(other));
+        }
+
+#if false
+        [TestMethod]
+        public void CanSourceCopyFromSelf()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            Assert.IsTrue(p1.CanSourceCopy(p2));
+        }
+#endif
+
+        [TestMethod]
+        public void CanSourceCopyFromSomeoneSomewhereElse()
+        {
+            var _ssh1 = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            var p1 = new PlaceLinuxRemote("test1", _ssh1.RemotePath, _ssh1.RemoteHostInfo);
+            var _ssh2 = new UtilsForBuildingLinuxDatasets();
+            var p2 = new PlaceLinuxRemote("test1", _ssh2.RemotePath, _ssh2.RemoteHostInfo);
+            Assert.IsTrue(p1.CanSourceCopy(p2));
+        }
+
+        [TestMethod]
+        public void CanNotSourceCopyFromSomeoneSomewhereElse()
+        {
+            var _ssh1 = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            var p1 = new PlaceLinuxRemote("test1", _ssh1.RemotePath, _ssh1.RemoteHostInfo);
+            var _ssh2 = new UtilsForBuildingLinuxDatasets();
+            var p2 = new PlaceLinuxRemote("test1", _ssh2.RemotePath, _ssh2.RemoteHostInfo);
+            Assert.IsFalse(p2.CanSourceCopy(p1));
         }
 
         [TestMethod]
@@ -116,8 +181,8 @@ namespace AtlasWorkFlowsTest.Location
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
-            var p1 = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
-            var p2 = new PlaceLinuxRemote("test", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath + "2");
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p1.CopyTo(p2, fileList);
@@ -126,13 +191,29 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void CopyToViaTunnel()
+        {
+            _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+
+            var sshRemote = new UtilsForBuildingLinuxDatasets();
+            var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+        }
+
+        [TestMethod]
         public void CopyToTwoStep()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
-            var p1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
             _ssh.CreateRepro(_ssh.RemotePath + "2");
-            var p2 = new PlaceLinuxRemote("test2", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath + "2");
+            var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p1.CopyTo(p2, fileList.Take(1).ToArray());
@@ -148,8 +229,8 @@ namespace AtlasWorkFlowsTest.Location
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
-            var p1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
-            var p2 = new PlaceLinuxRemote("test2", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath + "2");
+            var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p2.CopyFrom(p1, fileList);
@@ -163,9 +244,9 @@ namespace AtlasWorkFlowsTest.Location
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
-            var p1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
             _ssh.CreateRepro(_ssh.RemotePath + "2");
-            var p2 = new PlaceLinuxRemote("test2", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath + "2");
+            var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p2.CopyFrom(p1, fileList.Take(1).ToArray());
@@ -176,7 +257,7 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsTrue(p2.HasFile(fileList[1]));
         }
 
-        #region Helper Items
+#region Helper Items
 
         /// <summary>
         /// Dummy that implements the target.
@@ -306,6 +387,6 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
         }
-        #endregion
+#endregion
     }
 }

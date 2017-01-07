@@ -18,20 +18,18 @@ namespace AtlasWorkFlows.Locations
     /// - If the disks are availible on SAMBA, then create a WindowsLocal as well
     /// - If GRID can download here, then that should also create a new place.
     /// </summary>
-    class PlaceLinuxRemote : IPlace, ISCPTarget
+    class PlaceLinuxRemote : IPlace, ISCPTarget, IDisposable
     {
         /// <summary>
-        /// The remote host we are connected to
+        /// How to get to the end point we are talking to. Might require some tunneling (if there are more than one).
         /// </summary>
-        public string RemoteHost { get; private set; }
+        public SSHUtils.SSHHostPair[] RemoteHostInfo { get; private set; }
 
+        /// <summary>
+        /// Path in the Linux side of things where everything is.
+        /// </summary>
         private string _remote_path;
         
-        /// <summary>
-        /// Username that we use to access the remote host.
-        /// </summary>
-        public string RemoteUsername { get; private set; }
-
         /// <summary>
         /// Create a new repro located on a Linux machine.
         /// </summary>
@@ -40,16 +38,56 @@ namespace AtlasWorkFlows.Locations
         /// <param name="username"></param>
         /// <param name="remote_path"></param>
         public PlaceLinuxRemote(string name, string remote_ipaddr, string username, string remote_path)
+            : this(name, remote_path, new SSHUtils.SSHHostPair[] { new SSHUtils.SSHHostPair() { Host = remote_ipaddr, Username = username } })
         {
-            Name = name;
-            this.RemoteHost = remote_ipaddr;
-            this._remote_path = remote_path;
-            this.RemoteUsername = username;
-            DataTier = 50;
-
-            _connection = new Lazy<SSHConnection>(() => new SSHConnection(RemoteHost, RemoteUsername));
         }
 
+        /// <summary>
+        /// Create the connection based on 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="remote_path"></param>
+        /// <param name="remoteHostAndTunnels"></param>
+        public PlaceLinuxRemote(string name, string remote_path, SSHUtils.SSHHostPair[] remoteHostAndTunnels)
+        {
+            Name = name;
+            _remote_path = remote_path;
+            DataTier = 50;
+
+            RemoteHostInfo = remoteHostAndTunnels;
+
+            _connection = new Lazy<SSHConnection>(() =>
+            {
+                var r = RemoteHostInfo.MakeConnection();
+                _remoteConnections = r.Item2;
+                return r.Item1;
+            });
+        }
+
+        /// <summary>
+        /// Track any sub-ssh shells we've formed.
+        /// </summary>
+        private List<IDisposable> _remoteConnections = null;
+
+        /// <summary>
+        /// Get rid of all the open connections!
+        /// </summary>
+        public void Dispose()
+        {
+            // First, close off all the connections.
+            if (_remoteConnections != null)
+            {
+                foreach (var conn in _remoteConnections.Reverse<IDisposable>())
+                {
+                    conn.Dispose();
+                }
+            }
+            if (_connection.IsValueCreated)
+            {
+                _connection.Value.Dispose();
+            }
+        }
+        
         /// <summary>
         /// Get/Set the data tier. We default to 50 as we have no local access.
         /// </summary>
@@ -73,12 +111,12 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// The machine name for accessing this SCP end point.
         /// </summary>
-        public string SCPMachineName { get { return RemoteHost; } }
+        public string SCPMachineName { get { return RemoteHostInfo.Last().Host; } }
 
         /// <summary>
         /// The username for accessing this machine via SCP
         /// </summary>
-        public string SCPUser { get { return RemoteUsername; } }
+        public string SCPUser { get { return RemoteHostInfo.Last().Username; } }
 
         /// <summary>
         /// We can start a copy from here to other places that have a SSH destination availible.
@@ -88,7 +126,7 @@ namespace AtlasWorkFlows.Locations
         public bool CanSourceCopy(IPlace destination)
         {
             var scpTarget = destination as ISCPTarget;
-            return !(scpTarget == null || !scpTarget.SCPIsVisibleFrom(RemoteHost));
+            return !(scpTarget == null || !scpTarget.SCPIsVisibleFrom(SCPMachineName));
         }
 
         /// <summary>
@@ -290,13 +328,14 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
-        /// We only represent a node that is visible from everywhere.
+        /// Return true if we can source a copy from this machine to or from that machine.
         /// </summary>
         /// <param name="internetLocation"></param>
         /// <returns></returns>
         public bool SCPIsVisibleFrom(string internetLocation)
         {
-            return true;
+            // If we are globally visible. Currently we use a heuristic.
+            return RemoteHostInfo.Length == 1; 
         }
 
         /// <summary>
@@ -399,5 +438,6 @@ namespace AtlasWorkFlows.Locations
                 _connection.Value.CopyLocalFileRemotely(f, $"{copiedLocation}/{f.Name}");
             }
         }
+
     }
 }

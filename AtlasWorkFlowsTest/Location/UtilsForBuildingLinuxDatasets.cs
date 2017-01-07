@@ -1,4 +1,5 @@
 ﻿using AtlasSSH;
+using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -15,7 +16,7 @@ namespace AtlasWorkFlowsTest.Location
         /// <summary>
         /// internet name of machine we will be accessing to run tests against.
         /// </summary>
-        public string RemoteName;
+        public SSHUtils.SSHHostPair[] RemoteHostInfo;
 
         /// <summary>
         /// Absolute path on that machine of where the repro is to be put.
@@ -23,11 +24,11 @@ namespace AtlasWorkFlowsTest.Location
         public string RemotePath;
 
         /// <summary>
-        /// Username we should use to access the remote fellow.
+        /// Track the ssh tunnels we've built.
         /// </summary>
-        public string RemoteUsername;
+        private List<IDisposable> _tunnelInfo = null;
 
-        public UtilsForBuildingLinuxDatasets()
+        public UtilsForBuildingLinuxDatasets(string testMachineName = "LinuxRemoteTest")
         {
             // Clean out all caches.
             DiskCache.RemoveCache("PlaceLinuxDatasetFileList");
@@ -38,11 +39,10 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsTrue(cFile.Exists, $"Unable to locate test file {cFile.FullName}");
             var p = Config.ParseConfigFile(cFile);
             Assert.IsTrue(p.ContainsKey("LinuxRemoteTest"), "Unable to find machine info in LinuxRemoteTest");
-            var lrtInfo = p["LinuxRemoteTest"];
+            var lrtInfo = p[testMachineName];
 
-            RemoteName = lrtInfo["LinuxHost"];
+            RemoteHostInfo = lrtInfo["LinuxHost"].ParseHostPairChain();
             RemotePath = lrtInfo["LinuxPath"];
-            RemoteUsername = lrtInfo["LinuxUserName"];
         }
 
         /// <summary>
@@ -55,6 +55,13 @@ namespace AtlasWorkFlowsTest.Location
         /// </summary>
         public void TestCleanup()
         {
+            if (_tunnelInfo != null)
+            {
+                foreach (var c in _tunnelInfo.Reverse<IDisposable>())
+                {
+                    c.Dispose();
+                }
+            }
             if (Connection != null)
             {
                 Connection.Dispose();
@@ -102,7 +109,9 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsFalse(remote_path.Contains("*"));
 
             // Create the new repro
-            Connection = new SSHConnection(RemoteName, RemoteUsername);
+            var connectionInfo = RemoteHostInfo.MakeConnection();
+            Connection = connectionInfo.Item1;
+            _tunnelInfo = connectionInfo.Item2;
             Connection.ExecuteLinuxCommand($"rm -rf {remote_path}")
                 .ExecuteLinuxCommand($"mkdir -p {remote_path}");
         }

@@ -235,7 +235,7 @@ namespace AtlasWorkFlowsTest.Location
             // Build remote dataset up on linux
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
-            var place1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var place1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
 
             var repro1 = BuildRepro("repro2");
             var place2 = new PlaceLocalWindowsDisk("test1", repro1);
@@ -253,7 +253,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             // Build remote dataset up on linux
             _ssh.CreateRepro();
-            var place1 = new PlaceLinuxRemote("test1", _ssh.RemoteName, _ssh.RemoteUsername, _ssh.RemotePath);
+            var place1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
 
             var repro1 = BuildRepro("repro2");
             BuildDatset(repro1, "ds1", "f1.root", "f2.root");

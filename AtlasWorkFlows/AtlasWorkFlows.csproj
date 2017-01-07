@@ -78,6 +78,7 @@
     <Compile Include="Locations\PlaceLinuxRemote.cs" />
     <Compile Include="Locations\PlaceLocalWindowsDisk.cs" />
     <Compile Include="Locations\Route.cs" />
+    <Compile Include="Locations\SSHUtils.cs" />
     <Compile Include="Locations\UriUtils.cs" />
     <Compile Include="Locations\WindowsGRIDDSRepro.cs" />
     <Compile Include="Panda\PandaDM.cs" />
