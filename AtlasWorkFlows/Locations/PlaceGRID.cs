@@ -137,7 +137,7 @@ namespace AtlasWorkFlows.Locations
                 // Next, run the download into the directory in the linux area where
                 // everything should happen.
                 var remoteLocation = _linuxRemote.GetLinuxDatasetDirectoryPath(dsGroup.Key);
-                var filesList = dsGroup.Select(u => u.Segments.Last()).ToArray();
+                var filesList = dsGroup.Select(u => u.DatasetFilename()).ToArray();
                 _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray());
                 _linuxRemote.DatasetFilesChanged(dsGroup.Key);
             }
@@ -190,7 +190,7 @@ namespace AtlasWorkFlows.Locations
             var files = GetListOfFilesForDataset(u.DatasetName());
             return files == null
                 ? false
-                : files.Contains(u.Segments.Last());
+                : files.Contains(u.DatasetFilename());
         }
     }
 }

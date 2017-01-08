@@ -337,7 +337,7 @@ namespace AtlasWorkFlows.Locations
 
             return GetAbosluteLinuxFilePaths(u.DatasetName())
                 .Select(f => f.Split('/').Last())
-                .Where(f => f == u.Segments.Last())
+                .Where(f => f == u.DatasetFilename())
                 .Any();
         }
 
@@ -360,7 +360,7 @@ namespace AtlasWorkFlows.Locations
         public string GetSCPFilePath(Uri f)
         {
             var file = GetAbosluteLinuxFilePaths(f.DatasetName())
-                .Where(rf => rf.EndsWith("/" + f.Segments.Last()))
+                .Where(rf => rf.EndsWith("/" + f.DatasetFilename()))
                 .FirstOrDefault();
             if (file == null)
             {

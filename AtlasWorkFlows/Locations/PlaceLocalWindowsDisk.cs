@@ -130,7 +130,7 @@ namespace AtlasWorkFlows.Locations
                 {
                     if (!HasFile(f))
                     {
-                        var ourpath = new FileInfo(Path.Combine(_rootLocation.LocationOfDataset(f.DatasetName()).FullName, "copied", f.Segments.Last()));
+                        var ourpath = new FileInfo(Path.Combine(_rootLocation.LocationOfDataset(f.DatasetName()).FullName, "copied", f.DatasetFilename()));
                         if (!ourpath.Directory.Exists)
                         {
                             ourpath.Directory.Create();
@@ -228,7 +228,7 @@ namespace AtlasWorkFlows.Locations
             // Do it by dataset.
             var dsGroups = (from u in uris
                             let ds = u.DatasetName()
-                            let fname = u.Segments.Last()
+                            let fname = u.DatasetFilename()
                             group new { FileName = fname } by ds)
                            .Throw(g => !_rootLocation.HasDS(g.Key), g => new DatasetDoesNotExistInThisReproException($"Dataset '{g.Key}' does not exists in repro {Name}"));
 
@@ -261,7 +261,7 @@ namespace AtlasWorkFlows.Locations
                 return false;
             }
 
-            var filename = u.Segments.Last();
+            var filename = u.DatasetFilename();
             return _rootLocation.HasFile(ds, filename);
         }
 

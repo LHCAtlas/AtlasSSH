@@ -469,7 +469,7 @@ namespace AtlasWorkFlowsTest
             {
                 Assert.IsTrue(IsLocal, "Can't get local file locations unless this is a local repo!");
                 return uris
-                    .Select(u => new Uri($"c:\\junk\\{u.Segments.Last()}.txt"));
+                    .Select(u => new Uri($"c:\\junk\\{u.DatasetFilename()}.txt"));
             }
 
             public bool HasFile(Uri u)
@@ -478,7 +478,7 @@ namespace AtlasWorkFlowsTest
                 if (!_dataset_list.ContainsKey(u.DatasetName()))
                     return false;
 
-                return _dataset_list[u.DatasetName()].Any(fname => fname == u.Segments.Last());
+                return _dataset_list[u.DatasetName()].Any(fname => fname == u.DatasetFilename());
             }
 
             /// <summary>
