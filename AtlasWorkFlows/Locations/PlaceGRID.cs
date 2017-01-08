@@ -142,7 +142,11 @@ namespace AtlasWorkFlows.Locations
                 // everything should happen.
                 var remoteLocation = _linuxRemote.GetLinuxDatasetDirectoryPath(dsGroup.Key);
                 var filesList = dsGroup.Select(u => u.DatasetFilename()).ToArray();
-                _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, fileStatus: statusUpdate, failNow: failNow, fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray());
+                _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, 
+                    fileStatus: fname => statusUpdate($"Downloading {fname} from {Name}"),
+                    failNow: failNow,
+                    fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()
+                    ).ToArray());
                 _linuxRemote.DatasetFilesChanged(dsGroup.Key);
             }
         }
