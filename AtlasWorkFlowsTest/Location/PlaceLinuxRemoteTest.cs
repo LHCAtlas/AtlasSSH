@@ -336,17 +336,17 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
 
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null)
+            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null)
+            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null)
+            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
@@ -356,7 +356,7 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
 
-            public bool HasFile(Uri u, Action<string> statusUpdate = null)
+            public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
@@ -402,7 +402,7 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
 
-            public void CopyDataSetInfo(string key, string[] v, Action<string> statusUpdate = null)
+            public void CopyDataSetInfo(string key, string[] v, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
@@ -412,12 +412,12 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
 
-            public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null)
+            public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files, Action<string> statusUpdate = null)
+            public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }

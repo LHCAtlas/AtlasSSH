@@ -370,10 +370,10 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="lx"></param>
         /// <param name="ourpath"></param>
-        public ISSHConnection CopyRemoteFileLocally(string lx, DirectoryInfo ourpath, Action<string> statusUpdate = null)
+        public ISSHConnection CopyRemoteFileLocally(string lx, DirectoryInfo ourpath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             var lxFname = lx.Split('/').Last();
-            return CopyRemoteFileLocally(lx, new FileInfo(Path.Combine(ourpath.FullName, lxFname)), statusUpdate);
+            return CopyRemoteFileLocally(lx, new FileInfo(Path.Combine(ourpath.FullName, lxFname)), statusUpdate, failNow);
         }
 
         /// <summary>
@@ -383,7 +383,7 @@ namespace AtlasSSH
         /// <param name="localFile"></param>
         /// <param name="statusUpdate"></param>
         /// <returns></returns>
-        public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null)
+        public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             _scpError = null;
             EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
@@ -415,7 +415,7 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="localFile"></param>
         /// <param name="linuxPath"></param>
-        public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null)
+        public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             _scpError = null;
             EventHandler<Renci.SshNet.Common.ScpUploadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);

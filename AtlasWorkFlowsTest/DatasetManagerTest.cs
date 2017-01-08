@@ -354,22 +354,22 @@ namespace AtlasWorkFlowsTest
                 throw new NotImplementedException();
             }
 
-            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null)
+            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null)
+            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null)
+            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null)
+            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 return null;
             }
@@ -379,7 +379,7 @@ namespace AtlasWorkFlowsTest
                 throw new NotImplementedException();
             }
 
-            public bool HasFile(Uri u, Action<string> statusUpdate = null)
+            public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
@@ -417,7 +417,7 @@ namespace AtlasWorkFlowsTest
             {
                 _dataset_list[dsName] = files;
             }
-            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null)
+            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 if (_dataset_list.ContainsKey(dsname))
                 {
@@ -472,7 +472,7 @@ namespace AtlasWorkFlowsTest
                     .Select(u => new Uri($"c:\\junk\\{u.DatasetFilename()}.txt"));
             }
 
-            public bool HasFile(Uri u, Action<string> statusUpdate = null)
+            public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 // Make sure the file is contained in one of our datasets
                 if (!_dataset_list.ContainsKey(u.DatasetName()))
@@ -486,18 +486,18 @@ namespace AtlasWorkFlowsTest
             /// </summary>
             /// <param name="origin"></param>
             /// <param name="uris"></param>
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null)
+            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"{origin.Name} -> *{Name} ({uris.Length} files)");
             }
-            public void CopyTo(IPlace dest, Uri[] uris, Action<string> statusUpdate = null)
+            public void CopyTo(IPlace dest, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"*{Name} -> {dest.Name} ({uris.Length} files)");
             }
 
-            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null)
+            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }

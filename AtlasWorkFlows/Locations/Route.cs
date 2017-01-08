@@ -80,7 +80,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="datasetURIs"></param>
         /// <returns></returns>
-        internal IEnumerable<Uri> ProcessFiles(IEnumerable<Uri> datasetURIs, Action<string> statusUpdate = null)
+        internal IEnumerable<Uri> ProcessFiles(IEnumerable<Uri> datasetURIs, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Make sure objet state is sane
             if (_steps.Count == 0)
@@ -103,7 +103,7 @@ namespace AtlasWorkFlows.Locations
                     {
                         foreach (var fileSet in uris.GroupBy(u => u.DatasetName()))
                         {
-                            pairing.Item1.CopyTo(pairing.Item2, fileSet.ToArray(), statusUpdate);
+                            pairing.Item1.CopyTo(pairing.Item2, fileSet.ToArray(), statusUpdate, failNow);
                         }
                     }
                     else
@@ -111,7 +111,7 @@ namespace AtlasWorkFlows.Locations
                         // Copying must be done by a single dataset at a time.
                         foreach (var fileSet in uris.GroupBy(u => u.DatasetName()))
                         {
-                            pairing.Item2.CopyFrom(pairing.Item1, fileSet.ToArray(), statusUpdate);
+                            pairing.Item2.CopyFrom(pairing.Item1, fileSet.ToArray(), statusUpdate, failNow);
                         }
                     }
                 }

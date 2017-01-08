@@ -96,7 +96,7 @@ namespace PSAtlasDatasetCommands
                 }
 
                 // Find all the members of this dataset.
-                var allFilesToCopy = DatasetManager.ListOfFilesInDataset(dataset, m => DisplayStatus($"Listing Files in {dataset}", m));
+                var allFilesToCopy = DatasetManager.ListOfFilesInDataset(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping);
                 if (nFiles != 0)
                 {
                     allFilesToCopy = allFilesToCopy
@@ -119,8 +119,8 @@ namespace PSAtlasDatasetCommands
                 }
 
                 var resultUris = loc == null
-                    ? DatasetManager.MakeFilesLocal(allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m))
-                    : DatasetManager.CopyFilesTo(loc, allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m));
+                    ? DatasetManager.MakeFilesLocal(allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping)
+                    : DatasetManager.CopyFilesTo(loc, allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping);
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 using (var pl = listener.PauseListening())
