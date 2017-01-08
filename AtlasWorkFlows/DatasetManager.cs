@@ -260,31 +260,52 @@ namespace AtlasWorkFlows
         /// <returns></returns>
         private static IEnumerable<IPlace> ParseSingleConfig(Dictionary<string, string> info)
         {
-            var type = info["LocationType"];
-            if (type == "LocalWindowsFilesystem")
+            // Check to see if there are any restrictions on using these guys
+            bool isGoodConfig = true;
+            if (info.ContainsKey("UseOnlyWhenDNSEndStringIs"))
             {
-                yield return CreateWindowsFilesystemPlace(info);
+                // We will use this iff the DNS string ends with the argument.
+                isGoodConfig = info["UseOnlyWhenDNSEndStringIs"].Split(',').Select(s => IPLocationTests.FindLocalIpName().EndsWith(s.Trim())).Any(t => t);
             }
-            else if (type == "LinuxWithLocalAndGRID")
+            if (info.ContainsKey("UseWhenDNSEndStringIsnt"))
             {
-                // First, do the linux remote
-                var name = info["Name"];
-                var p_linux = CreateLinuxFilesystemPlace($"{name}-linux", info);
-                yield return p_linux;
-                // Next, the grid
-                var p_grid = new PlaceGRID($"{name}-GRID", p_linux);
-                yield return p_grid;
-                // Next, the local if that is "ok" to create.
-                var localVisible = info.ContainsKey("WindowsAccessibleDNSEndString")
-                    ? info["WindowsAccessibleDNSEndString"].Split(',').Select(s => IPLocationTests.FindLocalIpName().EndsWith(s.Trim())).Any(t => t)
-                    : true;
-                if (localVisible)
+                // We will use this config only if the IP address doesn't end in one of the given ones here.
+                if (isGoodConfig)
+                {
+                    isGoodConfig = info["UseWhenDNSEndStringIsnt"].Split(',').Select(s => IPLocationTests.FindLocalIpName().EndsWith(s.Trim())).All(t => !t);
+                }
+            }
+
+            if (isGoodConfig)
+            {
+                // Now, create the end points as needed.
+                var type = info["LocationType"];
+                if (type == "LocalWindowsFilesystem")
                 {
                     yield return CreateWindowsFilesystemPlace(info);
                 }
-            } else
-            {
-                throw new UnknownLocationTypeException($"Location type {type} is not known as read from the configuration file.");
+                else if (type == "LinuxWithLocalAndGRID")
+                {
+                    // First, do the linux remote
+                    var name = info["Name"];
+                    var p_linux = CreateLinuxFilesystemPlace($"{name}-linux", info);
+                    yield return p_linux;
+                    // Next, the grid
+                    var p_grid = new PlaceGRID($"{name}-GRID", p_linux);
+                    yield return p_grid;
+                    // Next, the local if that is "ok" to create.
+                    var localVisible = info.ContainsKey("WindowsAccessibleDNSEndString")
+                        ? info["WindowsAccessibleDNSEndString"].Split(',').Select(s => IPLocationTests.FindLocalIpName().EndsWith(s.Trim())).Any(t => t)
+                        : true;
+                    if (localVisible)
+                    {
+                        yield return CreateWindowsFilesystemPlace(info);
+                    }
+                }
+                else
+                {
+                    throw new UnknownLocationTypeException($"Location type {type} is not known as read from the configuration file.");
+                }
             }
         }
 
