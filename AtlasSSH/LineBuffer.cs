@@ -39,15 +39,18 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Add a new line.
+        /// Add text. A line is delimited by CrLf.
         /// </summary>
-        /// <param name="line"></param>
-        public void Add(string line)
+        /// <param name="text">Less than, more than, or exactly one line of text to be added to the buffer</param>
+        public void Add(string text)
         {
-            _text += line;
+            _text += text;
             Flush();
         }
 
+        /// <summary>
+        /// Walk through our text, flushing all lines out.
+        /// </summary>
         private void Flush()
         {
             while (true)
@@ -65,7 +68,10 @@ namespace AtlasSSH
         public void DumpRest()
         {
             Flush();
-            ActOnLine(_text);
+            if (_text.Length > 0)
+            {
+                ActOnLine(_text);
+            }
         }
 
         List<string> stringsToSuppress = new List<string>();

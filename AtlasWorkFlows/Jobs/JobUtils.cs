@@ -56,22 +56,6 @@ namespace AtlasWorkFlows.Jobs
             return J.Print().ComputeMD5Hash();
         }
 
-
-        /// <summary>
-        /// Functional throw.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="obj"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public static T ThrowIfNull<T>(this T obj, string message)
-        {
-            if (obj != null)
-                return obj;
-
-            throw new GRIDSubmitException(message);
-        }
-
         /// <summary>
         /// We will run the job submission. We assume that any checking has already gone one
         /// and we are just going to execute all the commands required of this job request.
@@ -100,7 +84,7 @@ namespace AtlasWorkFlows.Jobs
             var cernCred = new CredentialSet(credSet)
                 .Load()
                 .FirstOrDefault()
-                .ThrowIfNull($"Please create a windows generic credential with a target of '{credSet}' to allow access to kinit");
+                .ThrowIfNull(() => new GRIDSubmitException($"Please create a windows generic credential with a target of '{credSet}' to allow access to kinit"));
 
             // If this is the first time through with a single job, then setup a directory we can use.
             if (!sameJobAsLastTime)

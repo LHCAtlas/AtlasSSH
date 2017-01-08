@@ -26,12 +26,12 @@ namespace PSAtlasDatasetCommands
             Trace.Listeners.Add(listener);
             try
             {
-                var list = GRIDDatasetLocator.GetActiveLocations();
+                var list = DatasetManager.ValidLocations;
                 foreach (var l in list)
                 {
                     using (var pl = listener.PauseListening())
                     {
-                        WriteObject(l.Name);
+                        WriteObject(l);
                     }
                 }
             } finally

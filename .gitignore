@@ -195,3 +195,4 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 nuget.exe
+AtlasWorkFlowsTest/location_test_params.txt
