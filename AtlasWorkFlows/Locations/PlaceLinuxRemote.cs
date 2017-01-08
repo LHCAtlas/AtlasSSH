@@ -163,7 +163,7 @@ namespace AtlasWorkFlows.Locations
                     var remoteLocation = scpTarget.GetSCPFilePath(f);
                     _connection.Value.ExecuteLinuxCommand($"scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}",
                         seeAndRespond: new Dictionary<string, string>() { {"password:", passwd } },
-                        secondsTimeout: 60, refreshTimeout: true);
+                        secondsTimeout: 5*60, refreshTimeout: true);
                 }
             }
         }
@@ -230,7 +230,7 @@ namespace AtlasWorkFlows.Locations
                     var localFilePath = GetSCPFilePath(f);
                     _connection.Value.ExecuteLinuxCommand($"scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}",
                         seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
-                        secondsTimeout: 60, refreshTimeout: true);
+                        secondsTimeout: 5 * 60, refreshTimeout: true);
                 }
             }
         }
