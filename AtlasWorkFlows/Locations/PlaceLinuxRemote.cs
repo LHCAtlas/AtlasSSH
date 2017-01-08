@@ -161,9 +161,12 @@ namespace AtlasWorkFlows.Locations
                 foreach (var f in fsGroup)
                 {
                     var remoteLocation = scpTarget.GetSCPFilePath(f);
-                    _connection.Value.ExecuteLinuxCommand($"scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}",
+                    var fname = f.DatasetFilename();
+                    var pname = $"{fname}.part";
+                    _connection.Value.ExecuteLinuxCommand($"scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}/{pname}",
                         seeAndRespond: new Dictionary<string, string>() { {"password:", passwd } },
                         secondsTimeout: 5*60, refreshTimeout: true);
+                    _connection.Value.ExecuteLinuxCommand($"mv {destLocation}/{pname} {destLocation}/{fname}");
                 }
             }
         }
@@ -224,11 +227,16 @@ namespace AtlasWorkFlows.Locations
                 // The file path where we will store it all
                 var destLocation = scpTarget.GetPathToCopyFiles(fsGroup.Key);
 
-                // Next, queue up the copies, one at a time.
+                // Next, queue up the copies, one at a time. Move to a part file and then do a rename.
                 foreach (var f in fsGroup)
                 {
                     var localFilePath = GetSCPFilePath(f);
-                    _connection.Value.ExecuteLinuxCommand($"scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}",
+                    var fname = f.DatasetFilename();
+                    var pname = $"{fname}.part";
+                    _connection.Value.ExecuteLinuxCommand($"scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}/{pname}",
+                        seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
+                        secondsTimeout: 5 * 60, refreshTimeout: true);
+                    _connection.Value.ExecuteLinuxCommand($"ssh {remoteUser}@{remoteMachine} mv {destLocation}/{pname} {destLocation}/{fname}",
                         seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
                         secondsTimeout: 5 * 60, refreshTimeout: true);
                 }
@@ -377,14 +385,19 @@ namespace AtlasWorkFlows.Locations
             // Prep for running
             var dsDir = $"{_remote_path}/{key}";
             var infoFile = $"{dsDir}/aa_dataset_complete_file_list.txt";
+            var infoFilePart = $"{infoFile}.Part";
             _connection.Value.ExecuteLinuxCommand($"mkdir -p {dsDir}");
-            _connection.Value.ExecuteLinuxCommand($"rm -rf {infoFile}");
+            _connection.Value.ExecuteLinuxCommand($"rm -rf {infoFilePart}");
 
             // Just add every file in.
             foreach (var f in filesInDataset)
             {
-                _connection.Value.ExecuteLinuxCommand($"echo {f} >> {infoFile}");
+                _connection.Value.ExecuteLinuxCommand($"echo {f} >> {infoFilePart}");
             }
+
+            // Done - rename it so it takes up the official name for later use.
+            _connection.Value.ExecuteLinuxCommand($"rm -rf {infoFile}");
+            _connection.Value.ExecuteLinuxCommand($"mv {infoFilePart} {infoFile}");
         }
 
         /// <summary>
@@ -420,9 +433,15 @@ namespace AtlasWorkFlows.Locations
                 .Select(f => linuxLocations.Where(lx => lx.EndsWith("/" + f)).FirstOrDefault())
                 .Throw<string>(s => s == null, s => new DatasetFileNotLocalException($"File '{s}' is not in place {Name}, so we can't copy it locally!"));
 
+            // Do the files one at a time, and download them to a temp location and then move them
+            // to the proper location. Saftey if we get cut off mid-move.
             foreach(var lx in linuxFiles)
             {
-                _connection.Value.CopyRemoteFileLocally(lx, ourpath);
+                var fname = lx.Split('/').Last();
+                var partName = $"{fname}.part";
+                var partFileInfo = new FileInfo(Path.Combine(ourpath.FullName, partName));
+                _connection.Value.CopyRemoteFileLocally(lx, partFileInfo);
+                partFileInfo.MoveTo(Path.Combine(ourpath.FullName, fname));
             }
         }
 
@@ -441,7 +460,9 @@ namespace AtlasWorkFlows.Locations
             // Now copy the files
             foreach (var f in files)
             {
-                _connection.Value.CopyLocalFileRemotely(f, $"{copiedLocation}/{f.Name}");
+                var partName = $"{f.Name}.part";
+                _connection.Value.CopyLocalFileRemotely(f, $"{copiedLocation}/{partName}");
+                _connection.Value.ExecuteLinuxCommand($"mv {copiedLocation}/{partName} {copiedLocation}/{f.Name}");
             }
         }
 

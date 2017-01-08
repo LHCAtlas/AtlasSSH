@@ -372,6 +372,19 @@ namespace AtlasSSH
         /// <param name="ourpath"></param>
         public ISSHConnection CopyRemoteFileLocally(string lx, DirectoryInfo ourpath, Action<string> statusUpdate = null)
         {
+            var lxFname = lx.Split('/').Last();
+            return CopyRemoteFileLocally(lx, new FileInfo(Path.Combine(ourpath.FullName, lxFname)), statusUpdate);
+        }
+
+        /// <summary>
+        /// Copy a file from a remote location to our local directory at a speciic spot.
+        /// </summary>
+        /// <param name="lx"></param>
+        /// <param name="localFile"></param>
+        /// <param name="statusUpdate"></param>
+        /// <returns></returns>
+        public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null)
+        {
             _scpError = null;
             EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
             if (statusUpdate != null)
@@ -381,7 +394,7 @@ namespace AtlasSSH
             try
             {
                 var lxFname = lx.Split('/').Last();
-                _scp.Value.Download(lx, new FileInfo(Path.Combine(ourpath.FullName, lxFname)));
+                _scp.Value.Download(lx, localFile);
                 if (_scpError != null)
                 {
                     throw _scpError;
@@ -396,7 +409,6 @@ namespace AtlasSSH
                 }
             }
         }
-
 
         /// <summary>
         /// Copy a file from the local directory up into the cloud
