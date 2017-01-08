@@ -67,6 +67,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ISSHConnectionUtils.cs" />
     <Compile Include="SSHStreamUtils.cs" />
+    <Compile Include="ValueHasChanged.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -174,6 +174,9 @@ namespace AtlasSSH
             // Run until we hit a timeout. Timeout is finegraned so that we can
             // deal with the sometimes very slow GRID.
             var timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
+            var streamDataLength = new ValueHasChanged<long>(() => s.Length);
+            streamDataLength.Evaluate();
+
             while (timeout > DateTime.Now)
             {
                 s.Expect(TimeSpan.FromMilliseconds(100), expect_actions);
@@ -184,18 +187,18 @@ namespace AtlasSSH
                 if (gotmatch)
                     break;
 
+                // Reset the timeout if data has come in and we are doing that.
+                if (refreshTimeout && streamDataLength.HasChanged)
+                {
+                    timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
+                }
+
                 var data = s.ReadLine(TimeSpan.FromSeconds(1));
                 if (data != null && data.Length > 0)
                 {
                     // Archive the line
                     Trace.WriteLine($"DumpTillFind: Read text: {data}");
                     lb.Add(data + LineBuffer.CrLf);
-
-                    // We got something real back - perhaps refresh it?
-                    if (refreshTimeout)
-                    {
-                        timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
-                    }
                 }
 
                 if (failNow != null && failNow())
