@@ -47,17 +47,6 @@ namespace PSAtlasDatasetCommands
         [ValidateLocation]
         public string Location { get; set; }
 
-        [Parameter(HelpMessage = "Timeout in seconds between updates from the download. Defaults to 1 hour")]
-        public int Timeout { get; set; }
-
-        /// <summary>
-        /// Setup defaults.
-        /// </summary>
-        public GetGRIDDataset()
-        {
-            Timeout = 3600;
-        }
-
         /// <summary>
         /// Fetch a particular dataset.
         /// </summary>
