@@ -99,7 +99,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="files"></param>
-        public void CopyDataSetInfo(string dsName, string[] files)
+        public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null)
         {
             throw new NotSupportedException($"GRID Place {Name} can't be copied to.");
         }
@@ -109,7 +109,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="origin"></param>
         /// <param name="uris"></param>
-        public void CopyFrom(IPlace origin, Uri[] uris)
+        public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null)
         {
             throw new NotSupportedException($"GRID Place {Name} can't be copied to.");
         }
@@ -119,7 +119,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="uris"></param>
-        public void CopyTo(IPlace destination, Uri[] uris)
+        public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null)
         {
             if (destination != _linuxRemote)
             {
@@ -130,15 +130,15 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // First, move the catalog over
-                var catalog = GetListOfFilesForDataset(dsGroup.Key)
+                var catalog = GetListOfFilesForDataset(dsGroup.Key, statusUpdate)
                     .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
-                _linuxRemote.CopyDataSetInfo(dsGroup.Key, catalog);
+                _linuxRemote.CopyDataSetInfo(dsGroup.Key, catalog, statusUpdate);
 
                 // Next, run the download into the directory in the linux area where
                 // everything should happen.
                 var remoteLocation = _linuxRemote.GetLinuxDatasetDirectoryPath(dsGroup.Key);
                 var filesList = dsGroup.Select(u => u.DatasetFilename()).ToArray();
-                _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray());
+                _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, fileStatus: statusUpdate, fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray());
                 _linuxRemote.DatasetFilesChanged(dsGroup.Key);
             }
         }
@@ -152,12 +152,13 @@ namespace AtlasWorkFlows.Locations
         /// Consider all datasets on the GRID frozen, so once they have been downloaded
         /// we cache them locally.
         /// </remarks>
-        public string[] GetListOfFilesForDataset(string dsname)
+        public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null)
         {
             return NonNullCacheInDisk("PlaceGRIDDSCatalog", dsname, () =>
             {
                 try
                 {
+                    statusUpdate.PCall($"Listing files in dataset ({Name})");
                     return _connection.Value.FilelistFromGRID(dsname)
                         .Select(f => f.Split(':').Last())
                         .ToArray();
@@ -184,10 +185,10 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="u"></param>
         /// <returns></returns>
-        public bool HasFile(Uri u)
+        public bool HasFile(Uri u, Action<string> statusUpdate = null)
         {
             // Get the list of files for the dataset and just look.
-            var files = GetListOfFilesForDataset(u.DatasetName());
+            var files = GetListOfFilesForDataset(u.DatasetName(), statusUpdate);
             return files == null
                 ? false
                 : files.Contains(u.DatasetFilename());

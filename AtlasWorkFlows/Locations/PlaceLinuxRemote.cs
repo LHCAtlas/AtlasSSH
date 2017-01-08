@@ -134,7 +134,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="origin"></param>
         /// <param name="uris"></param>
-        public void CopyFrom(IPlace origin, Uri[] uris)
+        public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null)
         {
             // Make sure we have a target we can deal with for the copy.
             var scpTarget = origin as ISCPTarget;
@@ -152,7 +152,7 @@ namespace AtlasWorkFlows.Locations
                 var passwd = GetPasswordForHost(remoteMachine, remoteUser);
 
                 // Get the catalog over
-                CopyDataSetInfo(fsGroup.Key, origin.GetListOfFilesForDataset(fsGroup.Key));
+                CopyDataSetInfo(fsGroup.Key, origin.GetListOfFilesForDataset(fsGroup.Key), statusUpdate);
 
                 // The file path where we will store it all
                 var destLocation = GetPathToCopyFiles(fsGroup.Key);
@@ -163,6 +163,7 @@ namespace AtlasWorkFlows.Locations
                     var remoteLocation = scpTarget.GetSCPFilePath(f);
                     var fname = f.DatasetFilename();
                     var pname = $"{fname}.part";
+                    statusUpdate.PCall($"Copy file {fname}: {origin.Name} -> {Name}");
                     _connection.Value.ExecuteLinuxCommand($"scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}/{pname}",
                         seeAndRespond: new Dictionary<string, string>() { {"password:", passwd } },
                         secondsTimeout: 5*60, refreshTimeout: true);
@@ -204,7 +205,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="uris"></param>
-        public void CopyTo(IPlace destination, Uri[] uris)
+        public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null)
         {
             // Make sure we have something we can deal with.
             var scpTarget = destination as ISCPTarget;
@@ -222,7 +223,7 @@ namespace AtlasWorkFlows.Locations
                 var passwd = GetPasswordForHost(remoteMachine, remoteUser);
 
                 // Get the catalog over
-                destination.CopyDataSetInfo(fsGroup.Key, GetListOfFilesForDataset(fsGroup.Key));
+                destination.CopyDataSetInfo(fsGroup.Key, GetListOfFilesForDataset(fsGroup.Key), statusUpdate);
 
                 // The file path where we will store it all
                 var destLocation = scpTarget.GetPathToCopyFiles(fsGroup.Key);
@@ -233,6 +234,7 @@ namespace AtlasWorkFlows.Locations
                     var localFilePath = GetSCPFilePath(f);
                     var fname = f.DatasetFilename();
                     var pname = $"{fname}.part";
+                    statusUpdate.PCall($"Copying file {fname}: {Name} -> {destination.Name}");
                     _connection.Value.ExecuteLinuxCommand($"scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}/{pname}",
                         seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
                         secondsTimeout: 5 * 60, refreshTimeout: true);
@@ -254,7 +256,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="cleanDSname">Name of the dataset we are looking at</param>
         /// <returns>List of the files in the dataset, or null if the dataset is not known in this repro</returns>
-        public string[] GetListOfFilesForDataset(string dsname)
+        public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null)
         {
             var cleanDSName = dsname.Replace("/", "");
 
@@ -262,6 +264,7 @@ namespace AtlasWorkFlows.Locations
             // cache it locally.
             return NonNullCacheInDisk("PlaceLinuxDatasetFileList", cleanDSName, () =>
             {
+                statusUpdate.PCall($"Getting dataset file catalog ({Name})");
                 var files = new List<string>();
                 try
                 {
@@ -306,12 +309,13 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsname"></param>
         /// <returns>List of all Linux paths for files in the dataset. Returns the empty array if the dataset does not exist on the server.</returns>
-        private string[] GetAbosluteLinuxFilePaths(string dsname)
+        private string[] GetAbosluteLinuxFilePaths(string dsname, Action<string> statusUpdate = null)
         {
             return _filePaths.GetOrCalc(dsname, () =>
             {
                 try
                 {
+                    statusUpdate.PCall($"Getting availible files ({Name})");
                     var files = new List<string>();
                     _connection.Value.ExecuteLinuxCommand($"find {_remote_path}/{dsname} -print", l => files.Add(l));
                     return files.ToArray();
@@ -327,7 +331,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="u"></param>
         /// <returns></returns>
-        public bool HasFile(Uri u)
+        public bool HasFile(Uri u, Action<string> statusUpdate = null)
         {
             // Simpmle check.
             if (u.Scheme != "gridds")
@@ -335,7 +339,7 @@ namespace AtlasWorkFlows.Locations
                 throw new UnknownUriSchemeException($"The uri '{u.OriginalString}' is not a gridds:// uri - can't map it to a file!");
             }
 
-            return GetAbosluteLinuxFilePaths(u.DatasetName())
+            return GetAbosluteLinuxFilePaths(u.DatasetName(), statusUpdate)
                 .Select(f => f.Split('/').Last())
                 .Where(f => f == u.DatasetFilename())
                 .Any();
@@ -375,7 +379,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="key"></param>
         /// <param name="filesInDataset">List of files that are in this dataset.</param>
-        public void CopyDataSetInfo(string key, string[] filesInDataset)
+        public void CopyDataSetInfo(string key, string[] filesInDataset, Action<string> statusUpdate = null)
         {
             if (filesInDataset == null)
             {
@@ -425,10 +429,10 @@ namespace AtlasWorkFlows.Locations
         /// <remarks>
         /// Use our scp connection to do this.
         /// </remarks>
-        public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath)
+        public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null)
         {
             // Turn them into linux file locations by doing matching. The files should be identical.
-            var linuxLocations = GetAbosluteLinuxFilePaths(dsName);
+            var linuxLocations = GetAbosluteLinuxFilePaths(dsName, statusUpdate);
             var linuxFiles = files
                 .Select(f => linuxLocations.Where(lx => lx.EndsWith("/" + f)).FirstOrDefault())
                 .Throw<string>(s => s == null, s => new DatasetFileNotLocalException($"File '{s}' is not in place {Name}, so we can't copy it locally!"));
@@ -440,7 +444,7 @@ namespace AtlasWorkFlows.Locations
                 var fname = lx.Split('/').Last();
                 var partName = $"{fname}.part";
                 var partFileInfo = new FileInfo(Path.Combine(ourpath.FullName, partName));
-                _connection.Value.CopyRemoteFileLocally(lx, partFileInfo);
+                _connection.Value.CopyRemoteFileLocally(lx, partFileInfo, statusUpdate);
                 partFileInfo.MoveTo(Path.Combine(ourpath.FullName, fname));
             }
         }
@@ -450,7 +454,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="files"></param>
-        public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files)
+        public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files, Action<string> statusUpdate = null)
         {
             // The the dest direction setup
             var lxlocation = GetLinuxDatasetDirectoryPath(dsName);
@@ -461,7 +465,7 @@ namespace AtlasWorkFlows.Locations
             foreach (var f in files)
             {
                 var partName = $"{f.Name}.part";
-                _connection.Value.CopyLocalFileRemotely(f, $"{copiedLocation}/{partName}");
+                _connection.Value.CopyLocalFileRemotely(f, $"{copiedLocation}/{partName}", statusUpdate);
                 _connection.Value.ExecuteLinuxCommand($"mv {copiedLocation}/{partName} {copiedLocation}/{f.Name}");
             }
         }

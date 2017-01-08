@@ -52,7 +52,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="files">gridds uri's fo files that we want to have copied to the local directory</param>
         /// <param name="ourpath">Location to place the files. It should have been created already.</param>
-        void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath);
+        void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null);
 
         /// <summary>
         /// Copy a file from a local windows path to a remote dataset.
@@ -60,6 +60,6 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName">Dataset name where the files should be stored</param>
         /// <param name="files">Files that we are going to copy to</param>
-        void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files);
+        void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files, Action<string> statusUpdate = null);
     }
 }

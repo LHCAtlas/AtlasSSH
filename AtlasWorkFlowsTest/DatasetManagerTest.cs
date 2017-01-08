@@ -76,14 +76,14 @@ namespace AtlasWorkFlowsTest
         public void FindLocalDatasetWhenNotAround()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
-            var localFiles = DatasetManager.MakeFilesLocal(new Uri("gridds://ds2/f2"));
+            var localFiles = DatasetManager.MakeFilesLocal(new Uri[] { new Uri("gridds://ds2/f2") });
         }
 
         [TestMethod]
         [ExpectedException(typeof(UnknownUriSchemeException))]
         public void FindLocalDatasetWithBadURIs()
         {
-            var localFiles = DatasetManager.MakeFilesLocal(new Uri("http://www.nytimes.com"));
+            var localFiles = DatasetManager.MakeFilesLocal(new Uri[] { new Uri("http://www.nytimes.com") });
         }
 
         [TestMethod]
@@ -354,22 +354,22 @@ namespace AtlasWorkFlowsTest
                 throw new NotImplementedException();
             }
 
-            public void CopyDataSetInfo(string dsName, string[] files)
+            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyFrom(IPlace origin, Uri[] uris)
+            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyTo(IPlace destination, Uri[] uris)
+            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null)
             {
                 throw new NotImplementedException();
             }
 
-            public string[] GetListOfFilesForDataset(string dsname)
+            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null)
             {
                 return null;
             }
@@ -379,7 +379,7 @@ namespace AtlasWorkFlowsTest
                 throw new NotImplementedException();
             }
 
-            public bool HasFile(Uri u)
+            public bool HasFile(Uri u, Action<string> statusUpdate = null)
             {
                 throw new NotImplementedException();
             }
@@ -417,7 +417,7 @@ namespace AtlasWorkFlowsTest
             {
                 _dataset_list[dsName] = files;
             }
-            public string[] GetListOfFilesForDataset(string dsname)
+            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null)
             {
                 if (_dataset_list.ContainsKey(dsname))
                 {
@@ -472,7 +472,7 @@ namespace AtlasWorkFlowsTest
                     .Select(u => new Uri($"c:\\junk\\{u.DatasetFilename()}.txt"));
             }
 
-            public bool HasFile(Uri u)
+            public bool HasFile(Uri u, Action<string> statusUpdate = null)
             {
                 // Make sure the file is contained in one of our datasets
                 if (!_dataset_list.ContainsKey(u.DatasetName()))
@@ -486,18 +486,18 @@ namespace AtlasWorkFlowsTest
             /// </summary>
             /// <param name="origin"></param>
             /// <param name="uris"></param>
-            public void CopyFrom(IPlace origin, Uri[] uris)
+            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null)
             {
                 Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"{origin.Name} -> *{Name} ({uris.Length} files)");
             }
-            public void CopyTo(IPlace dest, Uri[] uris)
+            public void CopyTo(IPlace dest, Uri[] uris, Action<string> statusUpdate = null)
             {
                 Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"*{Name} -> {dest.Name} ({uris.Length} files)");
             }
 
-            public void CopyDataSetInfo(string dsName, string[] files)
+            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null)
             {
                 throw new NotImplementedException();
             }

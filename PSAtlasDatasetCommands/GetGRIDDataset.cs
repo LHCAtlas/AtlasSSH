@@ -96,7 +96,7 @@ namespace PSAtlasDatasetCommands
                 }
 
                 // Find all the members of this dataset.
-                var allFilesToCopy = DatasetManager.ListOfFilesInDataset(dataset);
+                var allFilesToCopy = DatasetManager.ListOfFilesInDataset(dataset, m => DisplayStatus($"Listing Files in {dataset}", m));
                 if (nFiles != 0)
                 {
                     allFilesToCopy = allFilesToCopy
@@ -119,8 +119,8 @@ namespace PSAtlasDatasetCommands
                 }
 
                 var resultUris = loc == null
-                    ? DatasetManager.MakeFilesLocal(allFilesToCopy)
-                    : DatasetManager.CopyFilesTo(loc, allFilesToCopy);
+                    ? DatasetManager.MakeFilesLocal(allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m))
+                    : DatasetManager.CopyFilesTo(loc, allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m));
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 using (var pl = listener.PauseListening())
@@ -135,6 +135,17 @@ namespace PSAtlasDatasetCommands
             {
                 Trace.Listeners.Remove(listener);
             }
+        }
+
+
+        /// <summary>
+        /// Called to build a status object
+        /// </summary>
+        /// <param name="message"></param>
+        private void DisplayStatus(string phase, string message)
+        {
+            var pr = new ProgressRecord(1, phase, message);
+            WriteProgress(pr);
         }
 
         /// <summary>

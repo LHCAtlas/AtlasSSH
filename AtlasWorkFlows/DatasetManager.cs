@@ -62,12 +62,12 @@ namespace AtlasWorkFlows
         /// <remarks>
         /// Look through the list of places in tier order (from closests to furthest) until we find a good dataset.
         /// </remarks>
-        public static Uri[] ListOfFilesInDataset (string dsname)
+        public static Uri[] ListOfFilesInDataset (string dsname, Action<string> statusUpdate = null)
         {
             // Simply look through the list looking for anyone that has the dataset.
             // Recall the list is in tier order.
             return _places.Value
-                .Select(p => p.GetListOfFilesForDataset(dsname.Dataset()))
+                .Select(p => p.GetListOfFilesForDataset(dsname.Dataset(), statusUpdate))
                 .Where(fs => fs != null)
                 .Select(fs => fs.Select(f => new Uri($"gridds://{dsname.Dataset()}/{f}")).ToArray())
                 .FirstOrDefault()
@@ -80,7 +80,7 @@ namespace AtlasWorkFlows
         /// </summary>
         /// <param name="files">A uri list of files that we need to make local. Must all be gridds URI's</param>
         /// <returns>A list of local files that point to the file objects themselves.</returns>
-        public static Uri[] MakeFilesLocal(params Uri[] files)
+        public static Uri[] MakeFilesLocal(Uri[] files, Action<string> statusUpdate = null)
         {
             // Simple checks
             var goodFiles = files
@@ -89,7 +89,7 @@ namespace AtlasWorkFlows
 
             // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
             var routedFiles = goodFiles
-                .Select(u => new { Route = FindRouteTo(u, p => p.IsLocal), File = u })
+                .Select(u => new { Route = FindRouteTo(u, p => p.IsLocal, statusUpdate: statusUpdate), File = u })
                 .GroupBy(info => info.Route.Name)
                 .ToArray();
 
@@ -97,7 +97,7 @@ namespace AtlasWorkFlows
             // are done rather than a single file.
             var resultUris = from rtGrouping in routedFiles
                              let rt = rtGrouping.First().Route
-                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File))
+                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate)
                              select uri;
 
             return resultUris.ToArray();
@@ -109,7 +109,7 @@ namespace AtlasWorkFlows
         /// <param name="destination">The place we want to move everything to.</param>
         /// <param name="files">List of gridds Uri's of the files that we should be moving</param>
         /// <returns>List of local URI's if the <paramref name="destination"/> is local, otherwise the gridds type Uri's</returns>
-        public static Uri[] CopyFilesTo(IPlace destination, params Uri[] files)
+        public static Uri[] CopyFilesTo(IPlace destination, Uri[] files, Action<string> statusUpdate = null)
         {
             // Simple checks
             var goodFiles = files
@@ -127,14 +127,14 @@ namespace AtlasWorkFlows
 
             // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
             var routedFiles = goodFiles
-                .Select(u => new { Route = FindRouteTo(u, p => p == destination, p => p == destination), File = u })
+                .Select(u => new { Route = FindRouteTo(u, p => p == destination, p => p == destination, statusUpdate: statusUpdate), File = u })
                 .GroupBy(info => info.Route.Name)
                 .ToArray();
 
             // To do the files, we need to first fine a routing from wherever they are to the final location.
             var resultUris = from rtGrouping in routedFiles
                              let rt = rtGrouping.First().Route
-                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File))
+                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate)
                              select uri;
 
             return resultUris.ToArray();
@@ -147,11 +147,11 @@ namespace AtlasWorkFlows
         /// <param name="endCondition">The condition which says we have made it to where we want to go</param>
         /// <param name="forceOk">Will make sure this particular place is considered in all of our searches no matter what</param>
         /// <returns>A route</returns>
-        private static Route FindRouteTo(Uri u, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk = null)
+        private static Route FindRouteTo(Uri u, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk = null, Action<string> statusUpdate = null)
         {
             // First we need to find a source for this file.
             var sources = _places.Value
-                .Where(p => p.HasFile(u))
+                .Where(p => p.HasFile(u, statusUpdate))
                 .ToArray()
                 .Throw(places => places.Length == 0,  places => new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'."));
 

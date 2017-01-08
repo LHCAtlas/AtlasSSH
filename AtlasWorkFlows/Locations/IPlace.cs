@@ -70,14 +70,14 @@ namespace AtlasWorkFlows.Locations
         /// one "true" set of files in a dataset. If there is a difference, it is a bug, and
         /// results are not longer going to be... sensible!
         /// </remarks>
-        string[] GetListOfFilesForDataset(string dsname);
+        string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null);
 
         /// <summary>
         /// Copy the full info for this dataset into the repro
         /// </summary>
         /// <param name="dsName">Dataset name</param>
         /// <param name="files">List of files in the dataset</param>
-        void CopyDataSetInfo(string dsName, string[] files);
+        void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null);
 
         /// <summary>
         /// The user must explicitly request this site as a destination that things are to be copied or cached to.
@@ -92,7 +92,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="u">Uri of the dataset and filename we are interested in</param>
         /// <returns>True if the file exists locally, false if not. Does not check for dataset existance or file membership.</returns>
-        bool HasFile(Uri u);
+        bool HasFile(Uri u, Action<string> statusUpdate = null);
 
         /// <summary>
         /// Copy the URI's to the other place, by running the copy from this place.
@@ -101,7 +101,7 @@ namespace AtlasWorkFlows.Locations
         /// <param name="item2"></param>
         /// <param name="uris"></param>
         /// <remarks>All URI's are of the same dataest.</remarks>
-        void CopyTo(IPlace destination, Uri[] uris);
+        void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null);
 
         /// <summary>
         /// Copy the URI's from the other location to this local location, running the copy
@@ -109,6 +109,6 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="origin"></param>
         /// <param name="uris"></param>
-        void CopyFrom(IPlace origin, Uri[] uris);
+        void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null);
     }
 }
