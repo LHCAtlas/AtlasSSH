@@ -213,7 +213,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             var files = new List<string>();
-            statusUpdate.PCall("Reading catalog file");
+            statusUpdate.PCall($"Reading catalog file ({Name})");
             using (var rd = f.OpenText())
             {
                 while (!rd.EndOfStream)
