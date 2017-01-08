@@ -64,23 +64,16 @@
   </Choose>
   <ItemGroup>
     <Compile Include="DatasetManagerTest.cs" />
-    <Compile Include="GRIDDatasetLocatorTest.cs" />
     <Compile Include="Jobs\AtlasJobEnvrionmentTest.cs" />
     <Compile Include="Jobs\DatasetTest.cs" />
     <Compile Include="Jobs\JobDataStructuresTest.cs" />
     <Compile Include="Jobs\JobParserTest.cs" />
     <Compile Include="Jobs\JobPrintTest.cs" />
     <Compile Include="Jobs\JobUtilsTest.cs" />
-    <Compile Include="LinuxMirrorDownloaderPretend.cs" />
-    <Compile Include="Location\LinuxWithWindowsReflectorTest.cs" />
-    <Compile Include="Location\GRIDFetchToLinuxVisibleOnWindowsTest.cs" />
-    <Compile Include="Location\LocatorTest.cs" />
-    <Compile Include="Location\LocalMachineTest.cs" />
     <Compile Include="Location\PlaceGRIDTest.cs" />
     <Compile Include="Location\PlaceLinuxRemoteTest.cs" />
     <Compile Include="Location\PlaceLocalWindowsDiskTest.cs" />
     <Compile Include="Location\UtilsForBuildingLinuxDatasets.cs" />
-    <Compile Include="Location\WindowsGRIDDSReproTest.cs" />
     <Compile Include="Panda\PandUtilsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="utils.cs" />

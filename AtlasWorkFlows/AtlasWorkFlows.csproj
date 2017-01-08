@@ -57,7 +57,6 @@
   <ItemGroup>
     <Compile Include="DatasetManager.cs" />
     <Compile Include="DSInfo.cs" />
-    <Compile Include="GRIDDatasetLocator.cs" />
     <Compile Include="Jobs\AtlasJobEnvrionment.cs" />
     <Compile Include="Jobs\Datasets.cs" />
     <Compile Include="Jobs\JobDataStructures.cs" />
@@ -65,14 +64,8 @@
     <Compile Include="Jobs\JobUtils.cs" />
     <Compile Include="Jobs\Print.cs" />
     <Compile Include="Location.cs" />
-    <Compile Include="Locations\FetchToRemoteLinuxDirInstance.cs" />
+    <Compile Include="Locations\DatasetGlobalConstants.cs" />
     <Compile Include="Locations\IPlace.cs" />
-    <Compile Include="Locations\LinuxFetcher.cs" />
-    <Compile Include="Locations\LinuxWithWindowsReflector.cs" />
-    <Compile Include="Locations\GRIDFetchToLinuxVisibleOnWindows.cs" />
-    <Compile Include="Locations\IFetchToRemoteLinuxDir.cs" />
-    <Compile Include="Locations\LocalMachine.cs" />
-    <Compile Include="Locations\Locator.cs" />
     <Compile Include="Locations\PlaceExceptions.cs" />
     <Compile Include="Locations\PlaceGRID.cs" />
     <Compile Include="Locations\PlaceLinuxRemote.cs" />
@@ -80,7 +73,6 @@
     <Compile Include="Locations\Route.cs" />
     <Compile Include="Locations\SSHUtils.cs" />
     <Compile Include="Locations\UriUtils.cs" />
-    <Compile Include="Locations\WindowsGRIDDSRepro.cs" />
     <Compile Include="Panda\PandaDM.cs" />
     <Compile Include="Panda\PandaUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

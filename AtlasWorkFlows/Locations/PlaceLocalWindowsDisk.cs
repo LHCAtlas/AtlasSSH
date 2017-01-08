@@ -21,7 +21,7 @@ namespace AtlasWorkFlows.Locations
         public PlaceLocalWindowsDisk(string name, DirectoryInfo repoDir)
         {
             Name = name;
-            _rootLocation = new WindowsGRIDDSRepro(repoDir);
+            _locationOfLocalRepro = repoDir;
         }
 
         /// <summary>
@@ -43,9 +43,14 @@ namespace AtlasWorkFlows.Locations
         public bool NeedsConfirmationCopy { get { return true; } }
 
         /// <summary>
+        /// Location of the repro we are using
+        /// </summary>
+        private DirectoryInfo _locationOfLocalRepro;
+
+        /// <summary>
         /// Location of this repo.
         /// </summary>
-        private WindowsGRIDDSRepro _rootLocation;
+        //private WindowsGRIDDSRepro _rootLocation;
 
         /// <summary>
         /// We can copy files from other locations.
@@ -98,7 +103,7 @@ namespace AtlasWorkFlows.Locations
                 CopyDataSetInfo(dsGroup.Key, files);
 
                 // Now, do the files via SCP.
-                var ourpath = new DirectoryInfo(Path.Combine(_rootLocation.LocationOfDataset(dsGroup.Key).FullName, "copied"));
+                var ourpath = new DirectoryInfo(Path.Combine(BuildDSRootDirectory(dsGroup.Key).FullName, "copied"));
                 if (!ourpath.Exists)
                 {
                     ourpath.Create();
@@ -118,10 +123,8 @@ namespace AtlasWorkFlows.Locations
             var groupedByDS = uris.GroupBy(u => u.DatasetName());
             foreach (var dsFileListing in groupedByDS)
             {
-                if (!_rootLocation.HasDS(dsFileListing.Key))
-                {
-                    CopyDSInfoFrom(other, dsFileListing.Key);
-                }
+                // Copy over the dataset info
+                CopyDataSetInfo(dsFileListing.Key, other.GetListOfFilesForDataset(dsFileListing.Key));
 
                 // For each file we don't have, do the copy. Checking for existance shouldn't
                 // be necessary - it should have been done - but it is so cheap compared to the cost
@@ -130,7 +133,7 @@ namespace AtlasWorkFlows.Locations
                 {
                     if (!HasFile(f))
                     {
-                        var ourpath = new FileInfo(Path.Combine(_rootLocation.LocationOfDataset(f.DatasetName()).FullName, "copied", f.DatasetFilename()));
+                        var ourpath = new FileInfo(Path.Combine(BuildDSRootDirectory(f.DatasetName()).FullName, "copied", f.DatasetFilename()));
                         if (!ourpath.Directory.Exists)
                         {
                             ourpath.Directory.Create();
@@ -191,31 +194,77 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
-        /// Copy the dataset file listing from another location
-        /// </summary>
-        /// <param name="other"></param>
-        /// <param name="key"></param>
-        private void CopyDSInfoFrom(PlaceLocalWindowsDisk other, string dsName)
-        {
-            var filenames = other.GetListOfFilesForDataset(dsName);
-            CopyDataSetInfo(dsName, filenames);
-        }
-
-        /// <summary>
         /// Look to see if we know about the dataset in our library, and if so, fetch the file list.
         /// </summary>
         /// <param name="dsname">Name of datest</param>
         /// <returns>List of files, null if the dataset is not known.</returns>
         public string[] GetListOfFilesForDataset(string dsname)
         {
-            var files = _rootLocation.ListOfDSFiles(dsname);
-            if (files.Length == 0)
+            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetGlobalConstants.DatasetFileList));
+            if (!f.Exists)
             {
                 return null;
             }
-            return files
-                .Select(f => f.Contains(":") ? f.Substring(f.IndexOf(":")+1) : f)
-                .ToArray();
+
+            var files = new List<string>();
+            using (var rd = f.OpenText())
+            {
+                while (!rd.EndOfStream)
+                {
+                    var line = rd.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        line = line.Contains(":") ? line.Substring(line.IndexOf(":") + 1) : line;
+                        files.Add(line);
+                    }
+                }
+            }
+
+            return files.ToArray();
+        }
+
+        /// <summary>
+        /// Make this dataset known to the repository.
+        /// </summary>
+        /// <param name="dsName"></param>
+        /// <param name="files"></param>
+        public void CopyDataSetInfo(string dsName, string[] files)
+        {
+            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsName).FullName, DatasetGlobalConstants.DatasetFileList));
+            if (!f.Directory.Exists)
+            {
+                f.Directory.Create();
+            }
+
+            using (var write = f.CreateText())
+            {
+                foreach (var dsFile in files)
+                {
+                    write.WriteLine(dsFile);
+                }
+                write.Close();
+            }
+        }
+
+        /// <summary>
+        /// Returns true if we at least know about this dataset.
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns></returns>
+        private bool HasDS(string dsname)
+        {
+            var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetGlobalConstants.DatasetFileList));
+            return f.Exists;
+        }
+
+        /// <summary>
+        /// Return the root directory for a particular dataset.
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <returns>Directory where files can be written and read. Does not create the directory if it doesn't exist.</returns>
+        private DirectoryInfo BuildDSRootDirectory(string dsname)
+        {
+            return new DirectoryInfo(Path.Combine(_locationOfLocalRepro.FullName, dsname.SantizeDSName()));
         }
 
         /// <summary>
@@ -230,16 +279,30 @@ namespace AtlasWorkFlows.Locations
                             let ds = u.DatasetName()
                             let fname = u.DatasetFilename()
                             group new { FileName = fname } by ds)
-                           .Throw(g => !_rootLocation.HasDS(g.Key), g => new DatasetDoesNotExistInThisReproException($"Dataset '{g.Key}' does not exists in repro {Name}"));
+                           .Throw(g => !HasDS(g.Key), g => new DatasetDoesNotExistInThisReproException($"Dataset '{g.Key}' does not exists in repro {Name}"));
 
             var fileUris = from dsFiles in dsGroups
-                           let flist = _rootLocation.FindDSFiles(dsFiles.Key, returnWhatWeHave: true)
+                           let flist = FindAllFilesOnDisk(dsFiles.Key)
                            from u in dsFiles
                            select new { matchedUri = flist.Where(fu => fu.Segments.Last() == u.FileName).FirstOrDefault(), OrigUri = u };
 
             return fileUris
                 .Throw(o => o.matchedUri == null, o => new DatasetFileNotLocalException($"File {o.OrigUri} does not exist locally!"))
                 .Select(o => o.matchedUri);
+        }
+
+        /// <summary>
+        /// Return all files in the dataset. This will include everything on disk (including parts and other things!).
+        /// NOTE: Do not return 
+        /// </summary>
+        /// <param name="dsName"></param>
+        /// <returns>List of every file</returns>
+        private Uri[] FindAllFilesOnDisk(string dsName)
+        {
+            var dir = BuildDSRootDirectory(dsName);
+            return dir.EnumerateFiles("*", SearchOption.AllDirectories)
+                .Select(f => new Uri(f.FullName))
+                .ToArray();
         }
 
         /// <summary>
@@ -256,23 +319,14 @@ namespace AtlasWorkFlows.Locations
             }
 
             var ds = u.DatasetName();
-            if (!_rootLocation.HasDS(ds))
+            if (!HasDS(ds))
             {
                 return false;
             }
 
-            var filename = u.DatasetFilename();
-            return _rootLocation.HasFile(ds, filename);
-        }
-
-        /// <summary>
-        /// Copy files over
-        /// </summary>
-        /// <param name="dsName"></param>
-        /// <param name="files"></param>
-        public void CopyDataSetInfo(string dsName, string[] files)
-        {
-            _rootLocation.SaveListOfDSFiles(dsName, files);
+            // See if any of the files on disk match the file we need to look at.
+            var allLocalFiles = FindAllFilesOnDisk(ds);
+            return allLocalFiles.Select(lf => lf.Segments.Last() == u.DatasetFilename()).Any(t => t);
         }
     }
 }
