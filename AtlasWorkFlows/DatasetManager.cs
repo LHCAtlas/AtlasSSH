@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlows
 {
@@ -152,6 +153,7 @@ namespace AtlasWorkFlows
             // First we need to find a source for this file.
             var sources = _places.Value
                 .Where(p => p.HasFile(u, statusUpdate, failNow))
+                .TakeUntil(p => endCondition(p), 1)
                 .ToArray()
                 .Throw(places => places.Length == 0,  places => new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'."));
 

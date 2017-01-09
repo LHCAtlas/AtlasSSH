@@ -71,6 +71,62 @@ namespace AtlasWorkFlowsTest
             Assert.AreEqual(0, DummyPlace.CopyLogs.Count);
         }
 
+        /// <summary>
+        /// Seen in the wild. We have a single file request, and it is already local. But
+        /// system still queries other non-local locatoins.
+        /// </summary>
+        [TestMethod]
+        public void LocalDatasetQueryDoesNotForceOtherQueries()
+        {
+            var p1 = new DummyPlace("bogusLocal") { { "ds1", "f1", "f2" } };
+            p1.IsLocal = true;
+            p1.DataTier = 1;
+            var p2 = new DummyPlace("bogusRemote") { { "ds1", "f1", "f2" } };
+            p2.IsLocal = false;
+            p2.DataTier = 10;
+            DatasetManager.ResetDSM(p1, p2);
+
+            DatasetManager.MakeFilesLocal(new Uri[] { new Uri("gridds://ds1/f1") });
+            Assert.AreEqual(0, p2.GetListOfFilesForDatasetCalled);
+            Assert.AreEqual(0, p2.HasFileCalled);
+        }
+
+        [TestMethod]
+        public void LocalPartialDatasetQueryDoesNotForceOtherQueries()
+        {
+            var p1 = new DummyPlace("bogusLocal") { { "ds1", "f1", "f2" } };
+            p1.IsLocal = true;
+            p1.DataTier = 1;
+            p1.BlockHasFileFor("f2");
+            var p2 = new DummyPlace("bogusRemote") { { "ds1", "f1", "f2" } };
+            p2.IsLocal = false;
+            p2.DataTier = 10;
+            DatasetManager.ResetDSM(p1, p2);
+
+            DatasetManager.MakeFilesLocal(new Uri[] { new Uri("gridds://ds1/f1") });
+            Assert.AreEqual(0, p2.GetListOfFilesForDatasetCalled);
+            Assert.AreEqual(0, p2.HasFileCalled);
+        }
+
+        [TestMethod]
+        public void LocalPartialDatasetQueryForcesOtherQueries()
+        {
+            var p1 = new DummyPlace("bogusLocal") { { "ds1", "f1", "f2" } };
+            p1.IsLocal = true;
+            p1.DataTier = 1;
+            p1.NeedsConfirmationCopy = false;
+            p1.CanSourceACopy = true;
+            p1.BlockHasFileFor("f2");
+            var p2 = new DummyPlace("bogusRemote") { { "ds1", "f1", "f2" } };
+            p2.IsLocal = false;
+            p2.DataTier = 10;
+            DatasetManager.ResetDSM(p1, p2);
+
+            DatasetManager.MakeFilesLocal(new Uri[] { new Uri("gridds://ds1/f2") });
+            Assert.AreEqual(0, p2.GetListOfFilesForDatasetCalled);
+            Assert.AreEqual(1, p2.HasFileCalled);
+        }
+
         [TestMethod]
         [ExpectedException(typeof(DatasetDoesNotExistException))]
         public void FindLocalDatasetWhenNotAround()
@@ -402,6 +458,8 @@ namespace AtlasWorkFlowsTest
                 NeedsConfirmationCopy = true;
                 CanSourceACopy = false;
                 CopyLogs = new List<string>();
+                HasFileCalled = 0;
+                GetListOfFilesForDatasetCalled = 0;
             }
 
             public static List<string> CopyLogs = new List<string>();
@@ -419,6 +477,7 @@ namespace AtlasWorkFlowsTest
             }
             public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
+                GetListOfFilesForDatasetCalled++;
                 if (_dataset_list.ContainsKey(dsname))
                 {
                     return _dataset_list[dsname];
@@ -435,6 +494,8 @@ namespace AtlasWorkFlowsTest
             public bool NeedsConfirmationCopy { get; set; }
 
             public bool CanSourceACopy { get; set; }
+            public int HasFileCalled { get; private set; }
+            public int GetListOfFilesForDatasetCalled { get; private set; }
 
             /// <summary>
             /// Add a pairing and no matter CanSourceACopy this will return false.
@@ -472,11 +533,34 @@ namespace AtlasWorkFlowsTest
                     .Select(u => new Uri($"c:\\junk\\{u.DatasetFilename()}.txt"));
             }
 
+            private List<string> _filesWeDontHaveLocally = new List<string>();
+            /// <summary>
+            /// so that a file that is in the dataset isn't on disk for this location.
+            /// </summary>
+            /// <param name="fname"></param>
+            public void BlockHasFileFor(string fname)
+            {
+                _filesWeDontHaveLocally.Add(fname);
+            }
+
+            /// <summary>
+            /// See if this file is here.
+            /// </summary>
+            /// <param name="u"></param>
+            /// <param name="statusUpdate"></param>
+            /// <param name="failNow"></param>
+            /// <returns></returns>
             public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
+                HasFileCalled++;
                 // Make sure the file is contained in one of our datasets
                 if (!_dataset_list.ContainsKey(u.DatasetName()))
                     return false;
+
+                if (_filesWeDontHaveLocally.Contains(u.DatasetFilename()))
+                {
+                    return false;
+                }
 
                 return _dataset_list[u.DatasetName()].Any(fname => fname == u.DatasetFilename());
             }
