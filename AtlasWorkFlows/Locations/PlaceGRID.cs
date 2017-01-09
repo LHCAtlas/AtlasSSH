@@ -2,7 +2,9 @@
 using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using static AtlasSSH.DiskCacheTypedHelpers;
@@ -162,28 +164,38 @@ namespace AtlasWorkFlows.Locations
         /// </remarks>
         public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            return NonNullCacheInDisk("PlaceGRIDDSCatalog", dsname, () =>
+            try
             {
-                try
+                return NonNullCacheInDisk("PlaceGRIDDSCatalog", dsname, () =>
                 {
-                    statusUpdate.PCall($"Listing files in dataset ({Name})");
                     try
                     {
-                        return _connection.Value.FilelistFromGRID(dsname, failNow: failNow)
-                            .Select(f => f.Split(':').Last())
-                            .ToArray();
-                    } finally
-                    {
-                        if (failNow.PCall(false))
+                        statusUpdate.PCall($"Listing files in dataset ({Name})");
+                        try
                         {
-                            throw new Exception("Interrupt by user.");
+                            return _connection.Value.FilelistFromGRID(dsname, failNow: failNow)
+                                .Select(f => f.Split(':').Last())
+                                .ToArray();
+                        }
+                        finally
+                        {
+                            if (failNow.PCall(false))
+                            {
+                                throw new Exception("Interrupt by user.");
+                            }
                         }
                     }
-                } catch (DatasetDoesNotExistException)
-                {
-                    return null;
-                }
-            });
+                    catch (DatasetDoesNotExistException)
+                    {
+                        return null;
+                    }
+                });
+            } catch (SocketException e)
+            {
+                // This means the remote machine is offline. So pretend we know nothing here.
+                Trace.WriteLine($"Unable to connect to {Name}: {e.Message}");
+                return null;
+            }
         }
 
         /// <summary>

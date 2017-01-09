@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using static AtlasSSH.DiskCacheTypedHelpers;
 using System.IO;
+using System.Net.Sockets;
+using System.Diagnostics;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -277,21 +279,30 @@ namespace AtlasWorkFlows.Locations
 
             // The list of files for a dataset can't change over time, so we can
             // cache it locally.
-            return NonNullCacheInDisk("PlaceLinuxDatasetFileList", cleanDSName, () =>
+            try
             {
-                statusUpdate.PCall($"Getting dataset file catalog ({Name})");
-                var files = new List<string>();
-                try
+                return NonNullCacheInDisk("PlaceLinuxDatasetFileList", cleanDSName, () =>
                 {
-                    _connection.Value.ExecuteLinuxCommand($"cat {_remote_path}/{cleanDSName}/aa_dataset_complete_file_list.txt", l => files.Add(l), failNow: failNow);
-                } catch (LinuxCommandErrorException) when (files.Count > 0 && files[0].Contains("aa_dataset_complete_file_list.txt: No such file or directory"))
-                {
+                    statusUpdate.PCall($"Getting dataset file catalog ({Name})");
+                    var files = new List<string>();
+                    try
+                    {
+                        _connection.Value.ExecuteLinuxCommand($"cat {_remote_path}/{cleanDSName}/aa_dataset_complete_file_list.txt", l => files.Add(l), failNow: failNow);
+                    }
+                    catch (LinuxCommandErrorException) when (files.Count > 0 && files[0].Contains("aa_dataset_complete_file_list.txt: No such file or directory"))
+                    {
                     // if there was an error accessing it, then it isn't there... Lets hope.
                     return null;
-                }
+                    }
 
-                return files.Select(f => f.Split(':').Last().Trim()).ToArray();
-            });
+                    return files.Select(f => f.Split(':').Last().Trim()).ToArray();
+                });
+            } catch (SocketException e)
+            {
+                // Machine is offline - so just pretend we know nothing for now.
+                Trace.WriteLine($"Socket error connecting to {Name}: {e.Message}");
+                return null;
+            }
         }
 
         /// <summary>
@@ -326,19 +337,27 @@ namespace AtlasWorkFlows.Locations
         /// <returns>List of all Linux paths for files in the dataset. Returns the empty array if the dataset does not exist on the server.</returns>
         private string[] GetAbosluteLinuxFilePaths(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            return _filePaths.GetOrCalc(dsname, () =>
+            try
             {
-                try
+                return _filePaths.GetOrCalc(dsname, () =>
                 {
-                    statusUpdate.PCall($"Getting availible files ({Name})");
-                    var files = new List<string>();
-                    _connection.Value.ExecuteLinuxCommand($"find {_remote_path}/{dsname} -print", l => files.Add(l), failNow: failNow);
-                    return files.ToArray();
-                } catch (LinuxCommandErrorException e) when (e.Message.Contains("return status error"))
-                {
-                    return new string[0];
-                }
-            });
+                    try
+                    {
+                        statusUpdate.PCall($"Getting availible files ({Name})");
+                        var files = new List<string>();
+                        _connection.Value.ExecuteLinuxCommand($"find {_remote_path}/{dsname} -print", l => files.Add(l), failNow: failNow);
+                        return files.ToArray();
+                    }
+                    catch (LinuxCommandErrorException e) when (e.Message.Contains("return status error"))
+                    {
+                        return new string[0];
+                    }
+                });
+            } catch (SocketException e)
+            {
+                Trace.WriteLine($"Unable to connect to {Name}: {e.Message}");
+                return new string[0];
+            }
         }
 
         /// <summary>
