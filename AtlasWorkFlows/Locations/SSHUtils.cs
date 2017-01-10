@@ -1,10 +1,9 @@
 ﻿using AtlasSSH;
+using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using AtlasWorkFlows.Utils;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -32,9 +31,11 @@ namespace AtlasWorkFlows.Locations
             {
                 if (r == null)
                 {
+                    Trace.WriteLine($"Creating new connection to {pair.Username}@{pair.Host}");
                     r = new SSHConnection(pair.Host, pair.Username);
                 } else
                 {
+                    Trace.WriteLine($"MakeConnection: Running ssh to tunnel through to {pair.Username}@{pair.Host}.");
                     l.Add(r.SSHTo(pair.Host, pair.Username));
                 }
             }

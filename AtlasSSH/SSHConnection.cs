@@ -324,7 +324,7 @@ namespace AtlasSSH
                 } else if (!string.IsNullOrWhiteSpace(text))
                 {
                     _prompt = text;
-                    Trace.WriteLine($"SSHTo: Setting prompt to '{_prompt}'.");
+                    Trace.WriteLine($"SSHTo: Setting prompt to '{_prompt}'.", "SSHConnection");
                 }
             }
 

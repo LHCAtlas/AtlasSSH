@@ -58,6 +58,11 @@ namespace PSAtlasDatasetCommands.Utils
         /// Pause this listener from running
         /// </summary>
         /// <returns></returns>
+        /// <remakrs>
+        /// There is probabl a better way to do this: http://stackoverflow.com/questions/41157349/how-to-avoid-writeverbose-writeobject-bad-thread
+        /// But for now anytime control is left you must do a pause (e.g. when you do WriteOutput or similar, as cooperative multi-tasking might switch
+        /// who is allowed to write, etc.).
+        /// </remakrs>
         public IDisposable PauseListening()
         {
             return new PSListenerPause(this);
@@ -69,7 +74,6 @@ namespace PSAtlasDatasetCommands.Utils
         /// <param name="message"></param>
         public override void WriteLine(string message)
         {
-            // Disabled till we can figure out how to better do this: http://stackoverflow.com/questions/41157349/how-to-avoid-writeverbose-writeobject-bad-thread
             if (LogState)
             {
                 _host.WriteVerbose(message);
