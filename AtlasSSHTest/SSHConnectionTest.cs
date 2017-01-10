@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.IO;
 using Renci.SshNet.Common;
+using static AtlasSSH.SSHConnection;
 
 namespace AtlasSSHTest
 {
@@ -128,6 +129,24 @@ namespace AtlasSSHTest
             Assert.AreNotEqual(hostInner, hostOutter, "Expect the host names of the two machines to be different");
             Assert.IsFalse(string.IsNullOrWhiteSpace(hostInner));
             Assert.IsFalse(string.IsNullOrWhiteSpace(hostOutter));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(UnableToCreateSSHTunnelException))]
+        public void DoubleSSHToBadAddress()
+        {
+            var infoOutter = util.GetUsernameAndPassword("CERNSSHTest");
+            var infoInner = Tuple.Create("bogus-pc.holidays.edu", "myusername");
+            string hostInner = null;
+            string hostOutter = null;
+            using (var s = new SSHConnection(infoOutter.Item1, infoOutter.Item2))
+            {
+                using (var subShell = s.SSHTo(infoInner.Item1, infoInner.Item2))
+                {
+                    s.ExecuteCommand("echo $HOSTNAME", output: l => hostInner = l);
+                }
+                s.ExecuteCommand("echo $HOSTNAME", output: l => hostOutter = l);
+            }
         }
 
         [TestMethod]

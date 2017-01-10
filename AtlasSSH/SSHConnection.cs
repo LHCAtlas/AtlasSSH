@@ -27,7 +27,9 @@ namespace AtlasSSH
     {
         const int TerminalWidth = 240;
 
-
+        /// <summary>
+        /// Thrown when the ssh command is interupted by the failnow
+        /// </summary>
         [Serializable]
         public class SSHCommandInterruptedException : Exception
         {
@@ -38,6 +40,18 @@ namespace AtlasSSH
               System.Runtime.Serialization.SerializationInfo info,
               System.Runtime.Serialization.StreamingContext context) : base(info, context)
             { }
+        }
+
+
+        [Serializable]
+        public class UnableToCreateSSHTunnelException : Exception
+        {
+            public UnableToCreateSSHTunnelException() { }
+            public UnableToCreateSSHTunnelException(string message) : base(message) { }
+            public UnableToCreateSSHTunnelException(string message, Exception inner) : base(message, inner) { }
+            protected UnableToCreateSSHTunnelException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
         public SSHConnection(string host, string username)
@@ -308,10 +322,12 @@ namespace AtlasSSH
             // Issue the ssh command... Since this isn't coming back, we have to do it a little differently.
             ExecuteCommand($"ssh -oStrictHostKeyChecking=no {username}@{host}", WaitForCommandResult: false);
             _prompt = null;
+            var cmdResult = new StringBuilder();
             while (_prompt == null)
             {
-                _shell.Value.WaitTillPromptText();
+                cmdResult.Append(_shell.Value.WaitTillPromptText());
                 var text = _shell.Value.Read();
+                cmdResult.Append(text);
                 if (text.StartsWith("Password"))
                 {
                     var sclist = new CredentialSet(host);
@@ -326,6 +342,14 @@ namespace AtlasSSH
                     _prompt = text;
                     Trace.WriteLine($"SSHTo: Setting prompt to '{_prompt}'.", "SSHConnection");
                 }
+            }
+
+            // Now make sure we successfully went down a step to look at what was going on.
+            string shellStatus = "";
+            ExecuteCommand("echo $?", l => shellStatus = l);
+            if (shellStatus != "0")
+            {
+                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel (ssh command returned {shellStatus}. Error text from the command: {cmdResult.ToString()}");
             }
 
             // Return the old context so we can restore ourselves when we exit the thing.

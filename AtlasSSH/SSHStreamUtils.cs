@@ -50,10 +50,10 @@ namespace AtlasSSH
         /// Move through everything in the input stream until it looks like we are looking at a prompt.
         /// </summary>
         /// <param name="shell"></param>
-        public static void WaitTillPromptText(this ShellStream shell)
+        public static string WaitTillPromptText(this ShellStream shell)
         {
             var timeout = DateTime.Now + TimeSpan.FromSeconds(10);
-
+            var allText = new StringBuilder();
             while (true)
             {
                 while (shell.Length == 0 && timeout > DateTime.Now)
@@ -69,10 +69,11 @@ namespace AtlasSSH
                 while ((line = shell.ReadLine(TimeSpan.FromMilliseconds(1))) != null)
                 {
                     Trace.WriteLine("WaitTillPromptText: read text: " + line, "SSHConnection");
+                    allText.AppendLine(line);
                 }
 
                 if (shell.Length > 0)
-                    return;
+                    return allText.ToString();
             }
         }
     }
