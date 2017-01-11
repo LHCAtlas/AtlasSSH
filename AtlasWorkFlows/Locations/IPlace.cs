@@ -110,5 +110,10 @@ namespace AtlasWorkFlows.Locations
         /// <param name="origin"></param>
         /// <param name="uris"></param>
         void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null);
+
+        /// <summary>
+        /// If we are holding open any connections to remote machines, close them.
+        /// </summary>
+        void ResetConnections();
     }
 }

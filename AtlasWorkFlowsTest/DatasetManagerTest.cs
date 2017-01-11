@@ -439,6 +439,10 @@ namespace AtlasWorkFlowsTest
             {
                 throw new NotImplementedException();
             }
+
+            public void ResetConnections()
+            {
+            }
         }
 
         /// <summary>
@@ -584,6 +588,10 @@ namespace AtlasWorkFlowsTest
             public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
+            }
+
+            public void ResetConnections()
+            {
             }
         }
         #endregion

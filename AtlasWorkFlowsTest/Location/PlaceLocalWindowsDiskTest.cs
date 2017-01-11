@@ -492,6 +492,10 @@ namespace AtlasWorkFlowsTest.Location
             {
                 throw new NotImplementedException();
             }
+
+            public void ResetConnections()
+            {
+            }
         }
         #endregion
     }

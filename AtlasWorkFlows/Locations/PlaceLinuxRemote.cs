@@ -57,39 +57,54 @@ namespace AtlasWorkFlows.Locations
             DataTier = 50;
 
             RemoteHostInfo = remoteHostAndTunnels;
-
-            _connection = new Lazy<SSHConnection>(() =>
-            {
-                var r = RemoteHostInfo.MakeConnection();
-                _remoteConnections = r.Item2;
-                return r.Item1;
-            });
+            _connection = null;
+            ResetConnections();
         }
 
         /// <summary>
         /// Track any sub-ssh shells we've formed.
         /// </summary>
-        private List<IDisposable> _remoteConnections = null;
+        private List<IDisposable> _tunnelConnections = null;
 
         /// <summary>
-        /// Get rid of all the open connections!
+        /// Close and reset the connection
         /// </summary>
-        public void Dispose()
+        public void ResetConnections(bool reAlloc)
         {
-            // First, close off all the connections.
-            if (_remoteConnections != null)
+            if (_tunnelConnections != null)
             {
-                foreach (var conn in _remoteConnections.Reverse<IDisposable>())
+                foreach (var c in _tunnelConnections.Reverse<IDisposable>())
                 {
-                    conn.Dispose();
+                    c.Dispose();
                 }
             }
-            if (_connection.IsValueCreated)
+            if (_connection != null && _connection.IsValueCreated)
             {
                 _connection.Value.Dispose();
             }
+            if (reAlloc)
+            {
+                _connection = new Lazy<SSHConnection>(() =>
+                {
+                    var r = RemoteHostInfo.MakeConnection();
+                    _tunnelConnections = r.Item2;
+                    return r.Item1;
+                });
+            }
         }
-        
+        public void ResetConnections()
+        {
+            ResetConnections(true);
+        }
+
+        /// <summary>
+        /// When we are done, make sure to clean up all the resources we are holding on to.
+        /// </summary>
+        public void Dispose()
+        {
+            ResetConnections(false);
+        }
+
         /// <summary>
         /// Get/Set the data tier. We default to 50 as we have no local access.
         /// </summary>

@@ -25,6 +25,12 @@ namespace AtlasWorkFlows.Locations
         }
 
         /// <summary>
+        /// Reset any connections we have - null operation for us as we have none!
+        /// </summary>
+        public void ResetConnections()
+        { }
+
+        /// <summary>
         /// Get the data tier - which is super fast and local.
         /// </summary>
         public int DataTier { get { return 1; } }

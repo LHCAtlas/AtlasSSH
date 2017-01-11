@@ -1,14 +1,9 @@
-﻿using AtlasWorkFlows.Jobs;
-using AtlasWorkFlows.Locations;
+﻿using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlows
 {
@@ -139,6 +134,17 @@ namespace AtlasWorkFlows
                              select uri;
 
             return resultUris.ToArray();
+        }
+
+        /// <summary>
+        /// Reset the connections on all of our places
+        /// </summary>
+        public static void ResetConnections()
+        {
+            foreach (var p in _places.Value)
+            {
+                p.ResetConnections();
+            }
         }
 
         /// <summary>

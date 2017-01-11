@@ -29,7 +29,8 @@ namespace AtlasWorkFlows.Locations
         {
             Name = name;
             _linuxRemote = linuxRemote;
-            _connection = new Lazy<ISSHConnection>(() => InitConnection(null));
+            _connection = null;
+            ResetConnections();
         }
 
         /// <summary>
@@ -37,6 +38,42 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         private Lazy<ISSHConnection> _connection;
 
+        /// <summary>
+        /// Close and reset the connection
+        /// </summary>
+        public void ResetConnections(bool reAlloc)
+        {
+            if (_tunnelConnections != null)
+            {
+                foreach (var c in _tunnelConnections.Reverse<IDisposable>())
+                {
+                    c.Dispose();
+                }
+            }
+            if (_connection != null && _connection.IsValueCreated)
+            {
+                _connection.Value.Dispose();
+            }
+            _connection = new Lazy<ISSHConnection>(() => InitConnection(null));
+        }
+
+        public void ResetConnections()
+        {
+            ResetConnections(true);
+        }
+
+        /// <summary>
+        /// When we are done, make sure to clean up all the resources we are holding on to.
+        /// </summary>
+        public void Dispose()
+        {
+            ResetConnections(false);
+        }
+
+        /// <summary>
+        /// Track the other tunnel connections.
+        /// </summary>
+        private List<IDisposable> _tunnelConnections = null;
         private ISSHConnection InitConnection(Action<string> statusUpdater, Func<bool> failNow = null)
         {
             if (statusUpdater != null)
@@ -49,21 +86,6 @@ namespace AtlasWorkFlows.Locations
             _tunnelConnections = r.Item2;
 
             return r.Item1;
-        }
-
-        /// <summary>
-        /// Track the other tunnel connections.
-        /// </summary>
-        private List<IDisposable> _tunnelConnections = null;
-        public void Dispose()
-        {
-            if (_tunnelConnections != null)
-            {
-                foreach (var c in _tunnelConnections.Reverse<IDisposable>())
-                {
-                    c.Dispose();
-                }
-            }
         }
 
         /// <summary>

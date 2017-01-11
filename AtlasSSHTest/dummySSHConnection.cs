@@ -17,7 +17,6 @@ namespace AtlasSSHTest
 
         const string CrLf = "\r\n";
 
-
         [Serializable]
         public class UnknownTestCommandException : Exception
         {
@@ -107,6 +106,10 @@ namespace AtlasSSHTest
         public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, System.IO.DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

@@ -142,6 +142,7 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void EndProcessing()
         {
+            DatasetManager.ResetConnections();
             base.EndProcessing();
         }
     }
