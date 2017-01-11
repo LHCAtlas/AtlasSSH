@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using AtlasWorkFlows.Utils;
+using System.Diagnostics;
 
 namespace AtlasWorkFlows.Panda
 {
@@ -64,6 +65,7 @@ namespace AtlasWorkFlows.Panda
             }
 
             // Do a full web request.
+            Trace.WriteLine($"GetTaskDataFromPanda: Querying PandDA at {url.OriginalString}.", "PandaUtils");
             var wr = WebRequest.CreateHttp(url);
             wr.Accept = "application/json";
 
