@@ -409,12 +409,27 @@ namespace AtlasSSH
         /// <returns></returns>
         public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
+            // Reset the global error value to null.
             _scpError = null;
-            EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
+
+            // Update, but only when something interesting changes.
+            string oldMessage = "";
+            EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) =>
+            {
+                if (args.Filename != oldMessage)
+                {
+                    statusUpdate(args.Filename);
+                    oldMessage = args.Filename;
+                }
+            };
+
             if (statusUpdate != null)
             {
                 _scp.Value.Downloading += updateStatus;
             }
+
+            // Do the download, but protect ourselves against exceptions,
+            // which always happen with the network.
             try
             {
                 var lxFname = lx.Split('/').Last();
@@ -441,12 +456,25 @@ namespace AtlasSSH
         /// <param name="linuxPath"></param>
         public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
+            // Rest the global error catcher.
             _scpError = null;
-            EventHandler<Renci.SshNet.Common.ScpUploadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
+
+            // Send a message only when the message changes.
+            string oldMessage = "";
+            EventHandler<Renci.SshNet.Common.ScpUploadEventArgs> updateStatus = (o, args) =>
+            {
+                if (args.Filename != oldMessage)
+                {
+                    statusUpdate(args.Filename);
+                    oldMessage = args.Filename;
+                }
+            };
             if (statusUpdate != null)
             {
                 _scp.Value.Uploading += updateStatus;
             }
+
+            // Run the download, pretected against the network breaking.
             try
             {
                 _scp.Value.Upload(localFile, linuxPath);
