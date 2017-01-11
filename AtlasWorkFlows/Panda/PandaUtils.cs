@@ -172,6 +172,7 @@ namespace AtlasWorkFlows.Panda
             {
                 return null;
             }
+            Trace.WriteLine($"PullFromCache: Pulling PandDA data for {url.OriginalString} from cache file {f.FullName}.", "PandaUtils");
             using (var rdr = f.OpenText())
             {
                 return JsonConvert.DeserializeObject<PandaTask[]>(rdr.ReadToEnd());
