@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>PSAtlasDatasetCommands</id>
-    <version>3.0.5</version>
+    <version>3.0.6</version>
     <title>ATLAS Dataset Powershell Commands</title>
     <authors>Gordon Watts</authors>
     <owners>Gordon Watts</owners>
