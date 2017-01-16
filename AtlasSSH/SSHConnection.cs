@@ -386,7 +386,7 @@ namespace AtlasSSH
         public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             _scpError = null;
-            EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
+            EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate($"Copying {args.Filename} via SCP");
             if (statusUpdate != null)
             {
                 _scp.Value.Downloading += updateStatus;
