@@ -25,7 +25,7 @@ namespace PSAtlasDatasetCommands
         [Parameter(Mandatory=true, HelpMessage="Rucio dataset name to copy", ValueFromPipeline=true, Position=1, ParameterSetName = "dataset")]
         public string DatasetName { get; set; }
 
-        [Parameter(Mandatory =true, HelpMessage ="Rucio dataset name the job was run on", ParameterSetName ="job")]
+        [Parameter(Mandatory =true, HelpMessage ="Rucio dataset name the job was run on", ParameterSetName ="job", ValueFromPipeline = true)]
         public string JobSourceDatasetName { get; set; }
 
         [Parameter(Mandatory = true, HelpMessage = "Job that was run on the dataset", ParameterSetName = "job")]
