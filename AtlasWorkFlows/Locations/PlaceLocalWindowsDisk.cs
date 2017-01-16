@@ -18,10 +18,12 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="name"></param>
         /// <param name="repoDir"></param>
-        public PlaceLocalWindowsDisk(string name, DirectoryInfo repoDir)
+        /// <param name="needsConfirmationOfCopy">If true, then the destination needs to be explicitly indicated, rather than part of the default route finding.</param>
+        public PlaceLocalWindowsDisk(string name, DirectoryInfo repoDir, bool needsConfirmationOfCopy = true)
         {
             Name = name;
             _locationOfLocalRepro = repoDir;
+            NeedsConfirmationCopy = needsConfirmationOfCopy;
         }
 
         /// <summary>
@@ -40,7 +42,7 @@ namespace AtlasWorkFlows.Locations
         /// By default, one can't copy to this location without explicitly mentioning it as
         /// a destination point.
         /// </summary>
-        public bool NeedsConfirmationCopy { get { return true; } }
+        public bool NeedsConfirmationCopy { get; private set; }
 
         /// <summary>
         /// Location of the repro we are using

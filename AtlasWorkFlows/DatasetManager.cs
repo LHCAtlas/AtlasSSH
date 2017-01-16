@@ -299,7 +299,8 @@ namespace AtlasWorkFlows
                         : true;
                     if (localVisible)
                     {
-                        yield return CreateWindowsFilesystemPlace(info);
+                        // Create the local disk - but this is a big server, so a copy confirmation isn't needed
+                        yield return CreateWindowsFilesystemPlace(info, needsCopyConfirmation: false);
                     }
                 }
                 else
@@ -324,8 +325,9 @@ namespace AtlasWorkFlows
         /// Create a place that is a Windows filesystem.
         /// </summary>
         /// <param name="info"></param>
+        /// <param name="needsCopyConfirmation">If false, then this can be used as part of default routing</param>
         /// <returns></returns>
-        private static IPlace CreateWindowsFilesystemPlace(Dictionary<string, string> info)
+        private static IPlace CreateWindowsFilesystemPlace(Dictionary<string, string> info, bool needsCopyConfirmation = true)
         {
             // Look at the paths. And if we can't find something, then there is no location!
             var goodPath = info["WindowsPaths"]
@@ -340,7 +342,7 @@ namespace AtlasWorkFlows
                 return null;
             }
 
-            return new PlaceLocalWindowsDisk(info["Name"], goodPath);
+            return new PlaceLocalWindowsDisk(info["Name"], goodPath, needsConfirmationOfCopy: needsCopyConfirmation);
         }
     }
 }
