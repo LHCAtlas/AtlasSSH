@@ -418,7 +418,7 @@ namespace AtlasSSH
             {
                 if (args.Filename != oldMessage)
                 {
-                    statusUpdate(args.Filename);
+                    statusUpdate($"Copying {args.Filename} via SCP");
                     oldMessage = args.Filename;
                 }
             };
