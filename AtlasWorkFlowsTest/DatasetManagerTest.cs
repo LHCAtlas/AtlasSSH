@@ -179,6 +179,26 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
+        public void CopyFromSourceToDestButFilesThere()
+        {
+            var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
+            loc1.Add("ds1", "f1", "f2");
+            loc1.BlockHasFileFor("f1");
+            loc2.Add("ds1", "f1", "f2");
+            DatasetManager.ResetDSM(loc1, loc2);
+            var files = DatasetManager.ListOfFilesInDataset("ds1");
+            var localFiles = DatasetManager.CopyFiles(loc2, loc1, files);
+            Assert.IsNotNull(localFiles);
+            Assert.AreEqual(2, localFiles.Length);
+            Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
+            Assert.AreEqual(@"c:\junk\f2.txt", localFiles[1].OriginalString);
+
+            Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
+            Assert.AreEqual("bogusNonLocal -> *bogusLocal (1 files)", DummyPlace.CopyLogs[0]);
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(NoLocalPlaceToCopyToException))]
         public void CopyToLocalWithNoNonConfirmLocalAvailible()
         {

@@ -178,7 +178,10 @@ namespace AtlasWorkFlows
             // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
             var routeSources = new IPlace[] { source };
             var routedFiles = goodFiles
-                .Select(u => new { Route = FindRouteFromSources(routeSources, u, p => p == destination, p => p == destination), File = u })
+                .Select(u => new {
+                    Route = FindRouteFromSources(destination.HasFile(u, statusUpdate, failNow) ? routeSources.Concat(new IPlace[] { destination }).ToArray() : routeSources, u, p => p == destination, p => p == destination),
+                    File = u
+                })
                 .GroupBy(info => info.Route.Name)
                 .ToArray();
 
