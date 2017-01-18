@@ -11,18 +11,18 @@ using System.Management.Automation;
 namespace PSAtlasDatasetCommands
 {
     /// <summary>
-    /// Fetch a dataset from the grid using a location profile. Passwords must be set in the credential cache for this to work!
+    /// Copy a GRID dataset from one location to another.
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GRIDDataset")]
-    public class GetGRIDDataset : PSCmdlet
+    [Cmdlet(VerbsCommon.Copy, "GRIDDataset")]
+    public class CopyGRIDDataset : PSCmdlet
     {
         /// <summary>
         /// Get/Set the name of the dataset we are being asked to fetch.
         /// </summary>
-        [Parameter(Mandatory=true, HelpMessage="Rucio dataset name to copy", ValueFromPipeline=true, Position=1, ParameterSetName = "dataset")]
+        [Parameter(Mandatory = true, HelpMessage = "Rucio dataset name to copy", ValueFromPipeline = true, Position = 1, ParameterSetName = "dataset")]
         public string DatasetName { get; set; }
 
-        [Parameter(Mandatory =true, HelpMessage ="Rucio dataset name the job was run on", ParameterSetName ="job", ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, HelpMessage = "Rucio dataset name the job was run on", ParameterSetName = "job", ValueFromPipeline = true)]
         public string JobSourceDatasetName { get; set; }
 
         [Parameter(Mandatory = true, HelpMessage = "Job that was run on the dataset", ParameterSetName = "job")]
@@ -34,15 +34,22 @@ namespace PSAtlasDatasetCommands
         /// <summary>
         /// How many files should be downloaded. They are sorted before making a determination (so it isn't random).
         /// </summary>
-        [Parameter(HelpMessage="Maximum number of files to fetch")]
+        [Parameter(HelpMessage = "Maximum number of files to copy")]
         public int nFiles { get; set; }
 
         /// <summary>
-        /// The location where we should copy the dataset to.
+        /// The location where we should find the dataset and copy it from.
         /// </summary>
-        [Parameter(HelpMessage="Location where the dataset should be copied to")]
+        [Parameter(HelpMessage = "Location where the dataset should be copied from", Mandatory = true)]
         [ValidateLocation]
-        public string Location { get; set; }
+        public string SourceLocation { get; set; }
+
+        /// <summary>
+        /// The location where we should find the dataset and copy it to.
+        /// </summary>
+        [Parameter(HelpMessage = "Location where the dataset should be copied to", Mandatory = true)]
+        [ValidateLocation]
+        public string DestinationLocation { get; set; }
 
         /// <summary>
         /// Fetch a particular dataset.
@@ -91,22 +98,17 @@ namespace PSAtlasDatasetCommands
                         .ToArray();
                 }
 
-                // If we have a location, we want to do a copy. If we don't have a location, then we just
-                // want to get the files somewhere local.
-                var loc = string.IsNullOrWhiteSpace(Location)
+                // Turn the source and destination locations into actual locations.
+                var locSource = string.IsNullOrWhiteSpace(SourceLocation)
                     ? (IPlace)null
-                    : DatasetManager.FindLocation(Location);
+                    : DatasetManager.FindLocation(SourceLocation);
 
-                if (loc == null && !string.IsNullOrWhiteSpace(Location))
-                {
-                    var err = new ArgumentException($"Location {Location} is now known to us!");
-                    WriteError(new ErrorRecord(err, "NoSuchLocation", ErrorCategory.InvalidArgument, null));
-                    throw err;
-                }
+                var locDest = string.IsNullOrWhiteSpace(DestinationLocation)
+                    ? (IPlace)null
+                    : DatasetManager.FindLocation(DestinationLocation);
 
-                var resultUris = loc == null
-                    ? DatasetManager.MakeFilesLocal(allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping)
-                    : DatasetManager.CopyFilesTo(loc, allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping);
+                // Do the actual copy. This will fail if one of the files can't be found at the source.
+                var resultUris = DatasetManager.CopyFiles(locSource, locDest, allFilesToCopy, mbox => DisplayStatus($"Downloading {dataset}", mbox), failNow: () => Stopping);
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 using (var pl = listener.PauseListening())

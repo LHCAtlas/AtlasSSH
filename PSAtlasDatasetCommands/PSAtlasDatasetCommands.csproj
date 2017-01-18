@@ -90,6 +90,7 @@
   <ItemGroup>
     <Compile Include="AtlasJobSpec.cs" />
     <Compile Include="AtlasPandaTaskID.cs" />
+    <Compile Include="CopyGRIDDataset.cs" />
     <Compile Include="FindATLASMCJobOptions.cs" />
     <Compile Include="FindGRIDJob.cs" />
     <Compile Include="GetAMIDatasetInfo.cs" />

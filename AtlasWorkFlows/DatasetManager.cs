@@ -137,6 +137,61 @@ namespace AtlasWorkFlows
         }
 
         /// <summary>
+        /// Copy files one one location to another. This method has the start and destination locations "pinned".
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="destination"></param>
+        /// <param name="files"></param>
+        /// <param name="statusUpdate"></param>
+        /// <param name="failNow"></param>
+        /// <returns></returns>
+        public static Uri[] CopyFiles (IPlace source, IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            // Simple checks
+            var goodFiles = files
+                .ThrowIfNull(() => new ArgumentNullException($"files can't be a null argument"))
+                .Throw(u => u.Scheme != "gridds", u => new UnknownUriSchemeException($"Can only deal with gridds:// uris - found: {u.OriginalString}"));
+
+            if (destination == null)
+            {
+                throw new ArgumentNullException("Can't have a null destination!");
+            }
+            if (!_places.Value.Contains(destination))
+            {
+                throw new ArgumentException($"Place {destination.Name} is not on our master list of places!");
+            }
+
+            if (source == null)
+            {
+                throw new ArgumentNullException("Can't have a null source!");
+            }
+            if (!_places.Value.Contains(source))
+            {
+                throw new ArgumentException($"Place {source.Name} is not on our master list of places!");
+            }
+
+            if (!files.All(f => source.HasFile(f, statusUpdate, failNow)))
+            {
+                throw new ArgumentException($"Place {source.Name} does not have all the requested files");
+            }
+
+            // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
+            var routeSources = new IPlace[] { source };
+            var routedFiles = goodFiles
+                .Select(u => new { Route = FindRouteFromSources(routeSources, u, p => p == destination, p => p == destination), File = u })
+                .GroupBy(info => info.Route.Name)
+                .ToArray();
+
+            // To do the files, we need to first fine a routing from wherever they are to the final location.
+            var resultUris = from rtGrouping in routedFiles
+                             let rt = rtGrouping.First().Route
+                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow)
+                             select uri;
+
+            return resultUris.ToArray();
+        }
+
+        /// <summary>
         /// Reset the connections on all of our places
         /// </summary>
         public static void ResetConnections()
@@ -161,17 +216,28 @@ namespace AtlasWorkFlows
                 .Where(p => p.HasFile(u, statusUpdate, failNow))
                 .TakeUntil(p => endCondition(p), 1)
                 .ToArray()
-                .Throw(places => places.Length == 0,  places => new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'."));
+                .Throw(places => places.Length == 0, places => new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'."));
 
+            return FindRouteFromSources(sources, u, endCondition, forceOk);
+        }
+
+        /// <summary>
+        /// From a list of sources, find a route to a destination.
+        /// </summary>
+        /// <param name="u"></param>
+        /// <param name="endCondition"></param>
+        /// <param name="forceOk"></param>
+        /// <param name="sources"></param>
+        /// <returns></returns>
+        private static Route FindRouteFromSources(IPlace[] sources, Uri u, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk)
+        {
             // Now we have sources. We build a path for each, and select the path with the least number of steps.
-            var bestRoute = sources
+            return sources
                 .Select(s => new Route(s))
                 .SelectMany(r => FindStepsTo(r, endCondition, forceOk))
                 .OrderBy(r => r.Length)
                 .FirstOrDefault()
                 .ThrowIfNull(() => new NoLocalPlaceToCopyToException($"Unable to find a way to copy {u} locally. Could be you have to explicitly copy it to your local cache."));
-
-            return bestRoute;
         }
 
         /// <summary>
