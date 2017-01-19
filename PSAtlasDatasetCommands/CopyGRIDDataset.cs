@@ -132,6 +132,14 @@ namespace PSAtlasDatasetCommands
         }
 
         /// <summary>
+        /// Make sure no connections have been left over from some previous failure.
+        /// </summary>
+        protected override void BeginProcessing()
+        {
+            DatasetManager.ResetConnections();
+            base.BeginProcessing();
+        }
+        /// <summary>
         /// Cleanup
         /// </summary>
         protected override void EndProcessing()
