@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>PSAtlasDatasetCommands</id>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
     <title>ATLAS Dataset Powershell Commands</title>
     <authors>Gordon Watts</authors>
     <owners>Gordon Watts</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A PowerShell module that adds commands that will fetch data from the GRID and run jobs on the grid. Read docs to find out how to configure properly: requires properly configured Linux endpoint to work.</description>
-    <releaseNotes>Added a Copy-GRIDDataset command to move files from one explicit location to another.</releaseNotes>
+    <releaseNotes>Added a Copy-GRIDDataset command to move files from one explicit location to another. Test-GRIDDataset will look for a GRID dataset to exist at a location</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>ATLAS GRID CERN PowerShell</tags>
     <dependencies></dependencies>
