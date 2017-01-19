@@ -119,14 +119,24 @@ namespace PSAtlasDatasetCommands
         }
 
 
+        private ProgressRecord _pr = null;
+
         /// <summary>
         /// Called to build a status object
         /// </summary>
         /// <param name="message"></param>
         private void DisplayStatus(string phase, string message)
         {
-            var pr = new ProgressRecord(1, phase, message);
-            WriteProgress(pr);
+            if (_pr == null)
+            {
+                _pr = new ProgressRecord(1, phase, message);
+            }
+            else
+            {
+                _pr.Activity = phase;
+                _pr.StatusDescription = message;
+            }
+            WriteProgress(_pr);
         }
 
         /// <summary>
