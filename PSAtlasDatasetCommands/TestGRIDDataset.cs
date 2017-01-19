@@ -104,7 +104,7 @@ namespace PSAtlasDatasetCommands
                 var loc = Location.AsIPlace();
 
                 var hasFiles = allFilesToCopy
-                    .All(f => loc.HasFile(f, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping));
+                    .All(f => loc.HasFile(f, m => DisplayStatus($"Checking Files {dataset}", m), failNow: () => Stopping));
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 using (var pl = listener.PauseListening())
