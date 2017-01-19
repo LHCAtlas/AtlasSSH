@@ -11,15 +11,15 @@ using System.Management.Automation;
 namespace PSAtlasDatasetCommands
 {
     /// <summary>
-    /// Copy a GRID dataset from one location to another.
+    /// Fetch a dataset from the grid using a location profile. Passwords must be set in the credential cache for this to work!
     /// </summary>
-    [Cmdlet(VerbsCommon.Copy, "GRIDDataset")]
-    public class CopyGRIDDataset : PSCmdlet
+    [Cmdlet(VerbsDiagnostic.Test, "GRIDDataset")]
+    public class TestGRIDDataset : PSCmdlet
     {
         /// <summary>
         /// Get/Set the name of the dataset we are being asked to fetch.
         /// </summary>
-        [Parameter(Mandatory = true, HelpMessage = "Rucio dataset name to copy", ValueFromPipeline = true, Position = 1, ParameterSetName = "dataset")]
+        [Parameter(Mandatory = true, HelpMessage = "Rucio dataset name to test", ValueFromPipeline = true, Position = 1, ParameterSetName = "dataset")]
         public string DatasetName { get; set; }
 
         [Parameter(Mandatory = true, HelpMessage = "Rucio dataset name the job was run on", ParameterSetName = "job", ValueFromPipeline = true)]
@@ -34,22 +34,18 @@ namespace PSAtlasDatasetCommands
         /// <summary>
         /// How many files should be downloaded. They are sorted before making a determination (so it isn't random).
         /// </summary>
-        [Parameter(HelpMessage = "Maximum number of files to copy")]
+        [Parameter(HelpMessage = "Maximum number of files to test for (ordering is alphabetical)")]
         public int nFiles { get; set; }
 
         /// <summary>
-        /// The location where we should find the dataset and copy it from.
+        /// The location where we should copy the dataset to.
         /// </summary>
-        [Parameter(HelpMessage = "Location where the dataset should be copied from", Mandatory = true)]
+        [Parameter(HelpMessage = "Location where the dataset should be tested", Mandatory = true)]
         [ValidateLocation]
-        public string SourceLocation { get; set; }
+        public string Location { get; set; }
 
-        /// <summary>
-        /// The location where we should find the dataset and copy it to.
-        /// </summary>
-        [Parameter(HelpMessage = "Location where the dataset should be copied to", Mandatory = true)]
-        [ValidateLocation]
-        public string DestinationLocation { get; set; }
+        [Parameter(HelpMessage = "Test for the existance of the dataset at the location")]
+        public SwitchParameter Exists { get; set; }
 
         /// <summary>
         /// Fetch a particular dataset.
@@ -98,20 +94,22 @@ namespace PSAtlasDatasetCommands
                         .ToArray();
                 }
 
-                // Turn the source and destination locations into actual locations.
-                var locSource = SourceLocation.AsIPlace();
-                var locDest = DestinationLocation.AsIPlace();
+                // Next, see what the test is. It is only exists right now.
+                if (!Exists)
+                {
+                    throw new ArgumentException("Test-GRIDDataset just use the -Exists flag.");
+                }
 
-                // Do the actual copy. This will fail if one of the files can't be found at the source.
-                var resultUris = DatasetManager.CopyFiles(locSource, locDest, allFilesToCopy, mbox => DisplayStatus($"Downloading {dataset}", mbox), failNow: () => Stopping);
+                // Query the location to see if we have a decent copy there.
+                var loc = Location.AsIPlace();
+
+                var hasFiles = allFilesToCopy
+                    .All(f => loc.HasFile(f, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping));
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 using (var pl = listener.PauseListening())
                 {
-                    foreach (var ds in resultUris)
-                    {
-                        WriteObject(ds);
-                    }
+                    WriteObject(hasFiles);
                 }
             }
             finally

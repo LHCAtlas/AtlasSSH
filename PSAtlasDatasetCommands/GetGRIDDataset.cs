@@ -93,16 +93,8 @@ namespace PSAtlasDatasetCommands
 
                 // If we have a location, we want to do a copy. If we don't have a location, then we just
                 // want to get the files somewhere local.
-                var loc = string.IsNullOrWhiteSpace(Location)
-                    ? (IPlace)null
-                    : DatasetManager.FindLocation(Location);
-
-                if (loc == null && !string.IsNullOrWhiteSpace(Location))
-                {
-                    var err = new ArgumentException($"Location {Location} is now known to us!");
-                    WriteError(new ErrorRecord(err, "NoSuchLocation", ErrorCategory.InvalidArgument, null));
-                    throw err;
-                }
+                var loc = Location.AsIPlace();
+                //WriteError(new ErrorRecord(err, "NoSuchLocation", ErrorCategory.InvalidArgument, null));
 
                 var resultUris = loc == null
                     ? DatasetManager.MakeFilesLocal(allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping)
