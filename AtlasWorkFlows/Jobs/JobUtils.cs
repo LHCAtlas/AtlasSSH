@@ -109,7 +109,7 @@ namespace AtlasWorkFlows.Jobs
 
             // We should now be in the directory where everything is - so submit!
             return connection
-                .Apply(() => update($"Running submit command ({inputDataset}"))
+                .Apply(() => update($"Running submit command ({inputDataset})"))
                 .ExecuteLinuxCommand(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow, dumpOnly: dumpOnly);
         }
 
