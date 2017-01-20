@@ -261,11 +261,17 @@ namespace AtlasSSH
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             if (!dumpOnly)
             {
-                _shell.Value.WriteLine(command);
-                DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)), crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
-                if (WaitForCommandResult)
+                try
                 {
-                    DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
+                    _shell.Value.WriteLine(command);
+                    DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)), crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
+                    if (WaitForCommandResult)
+                    {
+                        DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
+                    }
+                } catch (TimeoutException e)
+                {
+                    throw new TimeoutException($"{e.Message} - occured while executing command {command}.", e);
                 }
             }
             return this;
