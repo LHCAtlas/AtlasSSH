@@ -183,7 +183,7 @@ namespace PSAtlasDatasetCommands
         /// <param name="fname"></param>
         private void DisplayStatus(string message)
         {
-            var pr = new ProgressRecord(1, string.Format("Submitting {0} v{1}", JobName, JobVersion), message);
+            var pr = new ProgressRecord(1, $"Submitting {JobName} v{JobVersion} ({DatasetName})", message);
             WriteProgress(pr);
         }
     }
