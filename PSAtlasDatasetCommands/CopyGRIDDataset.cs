@@ -16,6 +16,11 @@ namespace PSAtlasDatasetCommands
     [Cmdlet(VerbsCommon.Copy, "GRIDDataset")]
     public class CopyGRIDDataset : PSCmdlet
     {
+        public CopyGRIDDataset()
+        {
+            Timeout = 60;
+        }
+
         /// <summary>
         /// Get/Set the name of the dataset we are being asked to fetch.
         /// </summary>
@@ -30,6 +35,12 @@ namespace PSAtlasDatasetCommands
 
         [Parameter(Mandatory = true, HelpMessage = "Version of the job that was run on the dataset", ParameterSetName = "job")]
         public int JobVersion { get; set; }
+
+        /// <summary>
+        /// Number of minutes for a timeout
+        /// </summary>
+        [Parameter(HelpMessage = "Number of minutes to wait for a timeout.")]
+        public int Timeout { get; set; }
 
         /// <summary>
         /// How many files should be downloaded. They are sorted before making a determination (so it isn't random).
@@ -103,7 +114,7 @@ namespace PSAtlasDatasetCommands
                 var locDest = DestinationLocation.AsIPlace();
 
                 // Do the actual copy. This will fail if one of the files can't be found at the source.
-                var resultUris = DatasetManager.CopyFiles(locSource, locDest, allFilesToCopy, mbox => DisplayStatus($"Downloading {dataset}", mbox), failNow: () => Stopping);
+                var resultUris = DatasetManager.CopyFiles(locSource, locDest, allFilesToCopy, mbox => DisplayStatus($"Downloading {dataset}", mbox), failNow: () => Stopping, timeout: Timeout);
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 using (var pl = listener.PauseListening())

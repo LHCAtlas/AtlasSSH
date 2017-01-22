@@ -442,12 +442,12 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
 
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
             {
                 throw new NotImplementedException();
             }

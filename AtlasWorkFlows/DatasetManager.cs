@@ -75,8 +75,11 @@ namespace AtlasWorkFlows
         /// point to the files. We will do real work here - copying files if we need to.
         /// </summary>
         /// <param name="files">A uri list of files that we need to make local. Must all be gridds URI's</param>
+        /// <param name="failNow">Abort early if this function ever returns true</param>
+        /// <param name="statusUpdate">Callback used to send out messages updating the progress.</param>
+        /// <param name="timeout">How many minutes to allow things to progress without aborting</param>
         /// <returns>A list of local files that point to the file objects themselves.</returns>
-        public static Uri[] MakeFilesLocal(Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public static Uri[] MakeFilesLocal(Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
         {
             // Simple checks
             var goodFiles = files
@@ -93,7 +96,7 @@ namespace AtlasWorkFlows
             // are done rather than a single file.
             var resultUris = from rtGrouping in routedFiles
                              let rt = rtGrouping.First().Route
-                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow)
+                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow, timeout)
                              select uri;
 
             return resultUris.ToArray();
@@ -104,8 +107,9 @@ namespace AtlasWorkFlows
         /// </summary>
         /// <param name="destination">The place we want to move everything to.</param>
         /// <param name="files">List of gridds Uri's of the files that we should be moving</param>
+        /// <param name="timeout">How many minutes before timeing out</param>
         /// <returns>List of local URI's if the <paramref name="destination"/> is local, otherwise the gridds type Uri's</returns>
-        public static Uri[] CopyFilesTo(IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public static Uri[] CopyFilesTo(IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
         {
             // Simple checks
             var goodFiles = files
@@ -130,7 +134,7 @@ namespace AtlasWorkFlows
             // To do the files, we need to first fine a routing from wherever they are to the final location.
             var resultUris = from rtGrouping in routedFiles
                              let rt = rtGrouping.First().Route
-                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow)
+                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow, timeout)
                              select uri;
 
             return resultUris.ToArray();
@@ -144,8 +148,9 @@ namespace AtlasWorkFlows
         /// <param name="files"></param>
         /// <param name="statusUpdate"></param>
         /// <param name="failNow"></param>
+        /// <param name="timeout">Minutes of no progress before canceling it</param>
         /// <returns></returns>
-        public static Uri[] CopyFiles (IPlace source, IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public static Uri[] CopyFiles (IPlace source, IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
         {
             // Simple checks
             var goodFiles = files
@@ -188,7 +193,7 @@ namespace AtlasWorkFlows
             // To do the files, we need to first fine a routing from wherever they are to the final location.
             var resultUris = from rtGrouping in routedFiles
                              let rt = rtGrouping.First().Route
-                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow)
+                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow, timeout)
                              select uri;
 
             return resultUris.ToArray();

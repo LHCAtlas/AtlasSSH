@@ -133,7 +133,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="origin"></param>
         /// <param name="uris"></param>
-        public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
         {
             throw new NotSupportedException($"GRID Place {Name} can't be copied to.");
         }
@@ -143,7 +143,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="uris"></param>
-        public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
         {
             if (destination != _linuxRemote)
             {
@@ -169,8 +169,9 @@ namespace AtlasWorkFlows.Locations
                 _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, 
                     fileStatus: fname => statusUpdate($"Downloading {fname} from {Name}"),
                     failNow: failNow,
-                    fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()
-                    ).ToArray());
+                    fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray(),
+                    timeout: timeoutMinutes * 60
+                    );
                 _linuxRemote.DatasetFilesChanged(dsGroup.Key);
             }
         }

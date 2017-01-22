@@ -79,8 +79,9 @@ namespace AtlasWorkFlows.Locations
         /// Process files, and return the locations.
         /// </summary>
         /// <param name="datasetURIs"></param>
+        /// <param name="timeout">How many minutes to run before the timeout occurs</param>
         /// <returns></returns>
-        internal IEnumerable<Uri> ProcessFiles(IEnumerable<Uri> datasetURIs, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        internal IEnumerable<Uri> ProcessFiles(IEnumerable<Uri> datasetURIs, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
         {
             // Make sure objet state is sane
             if (_steps.Count == 0)
@@ -103,7 +104,7 @@ namespace AtlasWorkFlows.Locations
                     {
                         foreach (var fileSet in uris.GroupBy(u => u.DatasetName()))
                         {
-                            pairing.Item1.CopyTo(pairing.Item2, fileSet.ToArray(), statusUpdate, failNow);
+                            pairing.Item1.CopyTo(pairing.Item2, fileSet.ToArray(), statusUpdate, failNow, timeout);
                         }
                     }
                     else
@@ -111,7 +112,7 @@ namespace AtlasWorkFlows.Locations
                         // Copying must be done by a single dataset at a time.
                         foreach (var fileSet in uris.GroupBy(u => u.DatasetName()))
                         {
-                            pairing.Item2.CopyFrom(pairing.Item1, fileSet.ToArray(), statusUpdate, failNow);
+                            pairing.Item2.CopyFrom(pairing.Item1, fileSet.ToArray(), statusUpdate, failNow, timeout);
                         }
                     }
                 }

@@ -101,7 +101,7 @@ namespace AtlasWorkFlows.Locations
         /// <param name="item2"></param>
         /// <param name="uris"></param>
         /// <remarks>All URI's are of the same dataest.</remarks>
-        void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null);
+        void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60);
 
         /// <summary>
         /// Copy the URI's from the other location to this local location, running the copy
@@ -109,7 +109,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="origin"></param>
         /// <param name="uris"></param>
-        void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null);
+        void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60);
 
         /// <summary>
         /// If we are holding open any connections to remote machines, close them.

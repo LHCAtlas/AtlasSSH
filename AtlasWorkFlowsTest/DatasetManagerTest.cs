@@ -453,12 +453,12 @@ namespace AtlasWorkFlowsTest
                 throw new NotImplementedException();
             }
 
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
             {
                 throw new NotImplementedException();
             }
@@ -612,12 +612,12 @@ namespace AtlasWorkFlowsTest
             /// </summary>
             /// <param name="origin"></param>
             /// <param name="uris"></param>
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
             {
                 Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"{origin.Name} -> *{Name} ({uris.Length} files)");
             }
-            public void CopyTo(IPlace dest, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public void CopyTo(IPlace dest, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
             {
                 Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"*{Name} -> {dest.Name} ({uris.Length} files)");
