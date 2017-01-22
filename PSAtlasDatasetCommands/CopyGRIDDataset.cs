@@ -63,6 +63,12 @@ namespace PSAtlasDatasetCommands
         public string DestinationLocation { get; set; }
 
         /// <summary>
+        /// If set, return locations of all times
+        /// </summary>
+        [Parameter(HelpMessage = "If present then return the locations of the files")]
+        public SwitchParameter PassThru { get; set; }
+
+        /// <summary>
         /// Fetch a particular dataset.
         /// </summary>
         protected override void ProcessRecord()
@@ -117,11 +123,14 @@ namespace PSAtlasDatasetCommands
                 var resultUris = DatasetManager.CopyFiles(locSource, locDest, allFilesToCopy, mbox => DisplayStatus($"Downloading {dataset}", mbox), failNow: () => Stopping, timeout: Timeout);
 
                 // Dump all the returned files out to whatever is next in the pipeline.
-                using (var pl = listener.PauseListening())
+                if (PassThru.IsPresent)
                 {
-                    foreach (var ds in resultUris)
+                    using (var pl = listener.PauseListening())
                     {
-                        WriteObject(ds);
+                        foreach (var ds in resultUris)
+                        {
+                            WriteObject(ds);
+                        }
                     }
                 }
             }
