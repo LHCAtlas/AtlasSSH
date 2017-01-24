@@ -270,7 +270,7 @@ namespace AtlasSSH
         {
             string filesThatFailedToDownload = "";
             bool foundClockSkewMessage = false;
-            connection.ExecuteCommand(string.Format("rucio download --dir {1} `cat {0}`", fileListName, localDirectory), l =>
+            connection.ExecuteCommand($"rucio -T {timeout} download --dir {localDirectory} `cat {fileListName}`", l =>
             {
                 // Look for something that indicates which file we are currently getting from the GRID.
                 if (fileStatus != null)
