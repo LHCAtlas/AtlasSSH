@@ -132,7 +132,7 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsFileListing in groupedByDS)
             {
                 // Copy over the dataset info
-                CopyDataSetInfo(dsFileListing.Key, other.GetListOfFilesForDataset(dsFileListing.Key), statusUpdate, failNow);
+                CopyDataSetInfo(dsFileListing.Key, other.GetListOfFilesForDataset(dsFileListing.Key, statusUpdate, failNow), statusUpdate, failNow);
 
                 // For each file we don't have, do the copy. Checking for existance shouldn't
                 // be necessary - it should have been done - but it is so cheap compared to the cost
