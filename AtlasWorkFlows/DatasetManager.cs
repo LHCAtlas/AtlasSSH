@@ -1,9 +1,11 @@
-﻿using AtlasWorkFlows.Locations;
+﻿using AtlasSSH;
+using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static AtlasSSH.DiskCacheTypedHelpers;
 
 namespace AtlasWorkFlows
 {
@@ -50,6 +52,26 @@ namespace AtlasWorkFlows
         }
 
         /// <summary>
+        /// Return a list of files in a dataset. For high-speed access we cache everything.
+        /// </summary>
+        /// <param name="dsname"></param>
+        /// <param name="statusUpdate"></param>
+        /// <param name="failNow"></param>
+        /// <returns></returns>
+        internal static string[] ListOfFilenamesInDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            return NonNullCacheInDisk("AtlasWorkFlows-ListOfFilenamesInDataset", dsname, () =>
+            {
+                return _places.Value
+                    .Select(p => p.GetListOfFilesForDataset(dsname.Dataset(), statusUpdate, failNow: failNow))
+                    .Where(fs => fs != null)
+                    .FirstOrDefault()
+                    .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset {dsname} could not be found at any place."));
+            });
+
+        }
+
+        /// <summary>
         /// Given a dataset name, fine its list of files.
         /// </summary>
         /// <param name="dsname"></param>
@@ -60,14 +82,9 @@ namespace AtlasWorkFlows
         /// </remarks>
         public static Uri[] ListOfFilesInDataset (string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            // Simply look through the list looking for anyone that has the dataset.
-            // Recall the list is in tier order.
-            return _places.Value
-                .Select(p => p.GetListOfFilesForDataset(dsname.Dataset(), statusUpdate, failNow: failNow))
-                .Where(fs => fs != null)
-                .Select(fs => fs.Select(f => new Uri($"gridds://{dsname.Dataset()}/{f}")).ToArray())
-                .FirstOrDefault()
-                .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset {dsname} could not be found at any place."));
+            return ListOfFilenamesInDataset(dsname, statusUpdate, failNow)
+                    .Select(fs => new Uri($"gridds://{dsname.Dataset()}/{fs}"))
+                    .ToArray();
         }
 
         /// <summary>
@@ -292,6 +309,7 @@ namespace AtlasWorkFlows
             {
                 _places = new Lazy<IPlace[]>(() => places.OrderBy(p => p.DataTier).ToArray());
             }
+            DiskCache.RemoveCache("AtlasWorkFlows-ListOfFilenamesInDataset");
         }
 
         /// <summary>

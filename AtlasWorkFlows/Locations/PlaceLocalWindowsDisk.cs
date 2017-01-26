@@ -108,7 +108,7 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // Move the catalog over.
-                var files = origin.GetListOfFilesForDataset(dsGroup.Key, statusUpdate, failNow);
+                var files = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow);
                 CopyDataSetInfo(dsGroup.Key, files, statusUpdate, failNow);
 
                 // Now, do the files via SCP.
@@ -133,7 +133,9 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsFileListing in groupedByDS)
             {
                 // Copy over the dataset info
-                CopyDataSetInfo(dsFileListing.Key, other.GetListOfFilesForDataset(dsFileListing.Key, statusUpdate, failNow), statusUpdate, failNow);
+                CopyDataSetInfo(dsFileListing.Key,
+                    DatasetManager.ListOfFilenamesInDataset(dsFileListing.Key, statusUpdate, failNow),
+                    statusUpdate, failNow);
 
                 // For each file we don't have, do the copy. Checking for existance shouldn't
                 // be necessary - it should have been done - but it is so cheap compared to the cost
@@ -206,7 +208,7 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // Move the catalog over.
-                var files = GetListOfFilesForDataset(dsGroup.Key, statusUpdate, failNow);
+                var files = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow);
                 destination.CopyDataSetInfo(dsGroup.Key, files);
 
                 // Now, do the files via SCP.

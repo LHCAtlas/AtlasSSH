@@ -154,7 +154,7 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // First, move the catalog over
-                var catalog = GetListOfFilesForDataset(dsGroup.Key, statusUpdate, failNow)
+                var catalog = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow)
                     .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
                 _linuxRemote.CopyDataSetInfo(dsGroup.Key, catalog, statusUpdate);
                 if (failNow.PCall(false))
@@ -240,6 +240,8 @@ namespace AtlasWorkFlows.Locations
         public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Get the list of files for the dataset and just look.
+            // We use the GRID fetch explicitly here - so we can make sure that
+            // we know if the files are there or are now gone from the GRID.
             var files = GetListOfFilesForDataset(u.DatasetName(), statusUpdate, failNow);
             return files == null
                 ? false

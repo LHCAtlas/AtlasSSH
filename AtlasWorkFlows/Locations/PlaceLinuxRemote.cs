@@ -174,7 +174,9 @@ namespace AtlasWorkFlows.Locations
                 var passwd = GetPasswordForHost(remoteMachine, remoteUser);
 
                 // Get the catalog over
-                CopyDataSetInfo(fsGroup.Key, origin.GetListOfFilesForDataset(fsGroup.Key), statusUpdate, failNow);
+                CopyDataSetInfo(fsGroup.Key,
+                    DatasetManager.ListOfFilenamesInDataset(fsGroup.Key, statusUpdate, failNow),
+                    statusUpdate, failNow);
 
                 // The file path where we will store it all
                 var destLocation = GetPathToCopyFiles(fsGroup.Key);
@@ -250,7 +252,9 @@ namespace AtlasWorkFlows.Locations
                 var passwd = GetPasswordForHost(remoteMachine, remoteUser);
 
                 // Get the catalog over
-                destination.CopyDataSetInfo(fsGroup.Key, GetListOfFilesForDataset(fsGroup.Key), statusUpdate, failNow);
+                destination.CopyDataSetInfo(fsGroup.Key,
+                    DatasetManager.ListOfFilenamesInDataset(fsGroup.Key, statusUpdate, failNow),
+                    statusUpdate, failNow);
 
                 // The file path where we will store it all
                 var destLocation = scpTarget.GetPathToCopyFiles(fsGroup.Key);

@@ -1,4 +1,5 @@
 ﻿using AtlasSSH;
+using AtlasWorkFlows;
 using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -24,6 +25,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestSetup()
         {
             _ssh = new UtilsForBuildingLinuxDatasets();
+            DatasetManager.ResetDSM();
         }
 
         /// <summary>
@@ -33,6 +35,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestCleanup()
         {
             _ssh.TestCleanup();
+            DatasetManager.ResetDSM();
         }
 
         [TestMethod]
@@ -223,6 +226,7 @@ namespace AtlasWorkFlowsTest.Location
 
             var place1 = new PlaceLocalWindowsDisk("test1", repro1);
             var place2 = new PlaceLocalWindowsDisk("test2", repro2);
+            DatasetManager.ResetDSM(place1, place2);
 
             Assert.IsNull(place2.GetListOfFilesForDataset("ds1"));
             place2.CopyFrom(place1, place1.GetListOfFilesForDataset("ds1").Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
@@ -239,6 +243,7 @@ namespace AtlasWorkFlowsTest.Location
 
             var repro1 = BuildRepro("repro2");
             var place2 = new PlaceLocalWindowsDisk("test1", repro1);
+            DatasetManager.ResetDSM(place1, place2);
 
             var uris = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             place2.CopyFrom(place1, uris);
@@ -258,6 +263,7 @@ namespace AtlasWorkFlowsTest.Location
             var repro1 = BuildRepro("repro2");
             BuildDatset(repro1, "ds1", "f1.root", "f2.root");
             var place2 = new PlaceLocalWindowsDisk("test1", repro1);
+            DatasetManager.ResetDSM(place1, place2);
 
             var uris = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             place2.CopyTo(place1, uris);
@@ -276,6 +282,7 @@ namespace AtlasWorkFlowsTest.Location
 
             var place1 = new PlaceLocalWindowsDisk("test1", repro1);
             var place2 = new PlaceLocalWindowsDisk("test2", repro2);
+            DatasetManager.ResetDSM(place1, place2);
 
             Assert.IsNull(place2.GetListOfFilesForDataset("ds1"));
             place1.CopyTo(place2, place1.GetListOfFilesForDataset("ds1").Select(f => new Uri($"gridds://ds1/{f}")).ToArray());

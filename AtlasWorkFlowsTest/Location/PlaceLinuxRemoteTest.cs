@@ -1,4 +1,5 @@
 ﻿using AtlasSSH;
+using AtlasWorkFlows;
 using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,6 +26,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestSetup()
         {
             _ssh = new UtilsForBuildingLinuxDatasets();
+            DatasetManager.ResetDSM();
         }
 
         /// <summary>
@@ -34,6 +36,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestCleanup()
         {
             _ssh.TestCleanup();
+            DatasetManager.ResetDSM();
         }
 
         [TestMethod]
@@ -249,6 +252,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
+            DatasetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             p2.CopyFrom(p1, fileList);
