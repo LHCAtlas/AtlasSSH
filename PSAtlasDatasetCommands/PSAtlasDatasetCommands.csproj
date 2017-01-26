@@ -53,8 +53,8 @@
       <HintPath>..\packages\CredentialManagement.1.0.2\lib\net35\CredentialManagement.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Polly, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Polly.4.3.0\lib\net45\Polly.dll</HintPath>
+    <Reference Include="Polly, Version=5.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Polly.5.0.3\lib\net45\Polly.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="SharpSvn, Version=1.9004.3900.136, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=AMD64">

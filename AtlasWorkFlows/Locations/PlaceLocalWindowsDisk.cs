@@ -1,4 +1,5 @@
 ﻿using AtlasWorkFlows.Utils;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -153,7 +154,15 @@ namespace AtlasWorkFlows.Locations
                         var otherPath = new FileInfo(other.GetLocalFileLocations(new Uri[] { f }).First().LocalPath);
                         var otherPathPart = new FileInfo($"{ourpath.FullName}.part");
                         statusUpdate.PCall($"Copying {otherPath.Name}: {other.Name} -> {Name}");
-                        otherPath.CopyTo(otherPathPart.FullName);
+                        int count = 0;
+                        Policy
+                            .Handle<IOException>()
+                            .RetryForever(e =>
+                            {
+                                count++;
+                                statusUpdate.PCall($"Copying {otherPath.Name}: {other.Name} -> {Name} (retry ({count}): {e.Message})");
+                            })
+                            .Execute(() => otherPath.CopyTo(otherPathPart.FullName));
                         if (otherPath.Exists)
                         {
                             // No idea why it is already here - but replacing it anyway...
