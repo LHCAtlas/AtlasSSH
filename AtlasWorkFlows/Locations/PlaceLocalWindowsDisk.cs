@@ -151,8 +151,8 @@ namespace AtlasWorkFlows.Locations
                             ourpath.Directory.Create();
                         }
                         var otherPath = new FileInfo(other.GetLocalFileLocations(new Uri[] { f }).First().LocalPath);
-                        var otherPathPart = new FileInfo($"{otherPath.FullName}.part");
-                        statusUpdate.PCall($"Copying {otherPath.Name}: {Name} -> {other.Name}");
+                        var otherPathPart = new FileInfo($"{ourpath.FullName}.part");
+                        statusUpdate.PCall($"Copying {otherPath.Name}: {other.Name} -> {Name}");
                         otherPath.CopyTo(otherPathPart.FullName);
                         if (otherPath.Exists)
                         {
