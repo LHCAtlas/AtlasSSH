@@ -90,10 +90,18 @@ namespace PSAtlasDatasetCommands
                     {
                         throw new ArgumentException($"No panda task found with name '{pandaJobName}' for job '{JobName}' v{JobVersion}.");
                     }
+                    if (pandaTask.status != "finished" && pandaTask.status != "done")
+                    {
+                        throw new ArgumentException($"Panda task {pandaTask.jeditaskid} has status {pandaTask.status} - which is not done or finished ({pandaJobName}).");
+                    }
                     var containers = pandaTask.DatasetNamesOUT();
                     if (containers.Length > 1)
                     {
                         throw new ArgumentException($"There are more than one output container for the panda task {pandaTask.jeditaskid} - can't decide. Need code upgrade!! Thanks for the fish!");
+                    }
+                    if (containers.Length == 0)
+                    {
+                        throw new ArgumentException($"There are no output containers for the panda task {pandaTask.jeditaskid} ({pandaJobName}) - so nothing to fetch!");
                     }
                     dataset = containers.First();
                 }
