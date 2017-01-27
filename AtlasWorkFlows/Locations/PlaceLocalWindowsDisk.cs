@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -125,8 +123,8 @@ namespace AtlasWorkFlows.Locations
         /// Copy files from another local disk to this local disk.
         /// </summary>
         /// <param name="uris"></param>
-        /// <param name="other"></param>
-        private void CopyFromLocalDisk(Uri[] uris, PlaceLocalWindowsDisk other, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        /// <param name="source"></param>
+        private void CopyFromLocalDisk(Uri[] uris, PlaceLocalWindowsDisk source, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Do the copy by dataset, which is our primary way of storing things here.
             var groupedByDS = uris.GroupBy(u => u.DatasetName());
@@ -148,29 +146,36 @@ namespace AtlasWorkFlows.Locations
                     }
                     if (!HasFile(f, statusUpdate, failNow))
                     {
-                        var ourpath = new FileInfo(Path.Combine(BuildDSRootDirectory(f.DatasetName()).FullName, "copied", f.DatasetFilename()));
-                        if (!ourpath.Directory.Exists)
+                        var destPath = new FileInfo(Path.Combine(BuildDSRootDirectory(f.DatasetName()).FullName, "copied", f.DatasetFilename()));
+                        if (!destPath.Directory.Exists)
                         {
-                            ourpath.Directory.Create();
+                            destPath.Directory.Create();
                         }
-                        var otherPath = new FileInfo(other.GetLocalFileLocations(new Uri[] { f }).First().LocalPath);
-                        var otherPathPart = new FileInfo($"{ourpath.FullName}.part");
-                        statusUpdate.PCall($"Copying {otherPath.Name}: {other.Name} -> {Name}");
+                        var destPathPart = new FileInfo($"{destPath.FullName}.part");
+                        var sourcePath = new FileInfo(source.GetLocalFileLocations(new Uri[] { f }).First().LocalPath);
+                        statusUpdate.PCall($"Copying {sourcePath.Name}: {source.Name} -> {Name}");
                         int count = 0;
                         Policy
                             .Handle<IOException>()
-                            .RetryForever(e =>
+                            .WaitAndRetryForever(i => TimeSpan.FromSeconds(2), (e, t, c) =>
                             {
                                 count++;
-                                statusUpdate.PCall($"Copying {otherPath.Name}: {other.Name} -> {Name} (retry ({count}): {e.Message})");
+                                statusUpdate.PCall($"Copying {sourcePath.Name}: {source.Name} -> {Name} (retry ({count}): {e.Message})");
                             })
-                            .Execute(() => otherPath.CopyTo(otherPathPart.FullName));
-                        if (otherPath.Exists)
+                            .Execute(() => {
+                                destPathPart.Refresh();
+                                if (destPathPart.Exists)
+                                {
+                                    destPathPart.Delete();
+                                }
+                                sourcePath.CopyTo(destPathPart.FullName);
+                                });
+                        if (destPath.Exists)
                         {
                             // No idea why it is already here - but replacing it anyway...
-                            otherPath.Delete();
+                            destPath.Delete();
                         }
-                        otherPathPart.MoveTo(otherPath.FullName);
+                        destPathPart.MoveTo(destPath.FullName);
                     }
                 }
             }
@@ -233,19 +238,29 @@ namespace AtlasWorkFlows.Locations
 
             var files = new List<string>();
             statusUpdate.PCall($"Reading catalog file ({Name})");
-            using (var rd = f.OpenText())
-            {
-                while (!rd.EndOfStream)
+            int count = 0;
+            Policy
+                .Handle<IOException>()
+                .WaitAndRetryForever(i => TimeSpan.FromSeconds(2), (e, t, c) =>
                 {
-                    var line = rd.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(line))
+                    count++;
+                    statusUpdate.PCall($"Reading catalog file ({Name}) (retry ({count}): {e.Message})");
+                })
+                .Execute(() =>
+                {
+                    using (var rd = f.OpenText())
                     {
-                        line = line.Contains(":") ? line.Substring(line.IndexOf(":") + 1) : line;
-                        files.Add(line);
+                        while (!rd.EndOfStream)
+                        {
+                            var line = rd.ReadLine();
+                            if (!string.IsNullOrWhiteSpace(line))
+                            {
+                                line = line.Contains(":") ? line.Substring(line.IndexOf(":") + 1) : line;
+                                files.Add(line);
+                            }
+                        }
                     }
-                }
-            }
-
+                });
             return files.ToArray();
         }
 
