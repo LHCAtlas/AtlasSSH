@@ -53,16 +53,16 @@
       <HintPath>..\packages\CredentialManagement.1.0.2\lib\net35\CredentialManagement.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Polly, Version=5.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Polly.5.0.3\lib\net45\Polly.dll</HintPath>
+    <Reference Include="Polly, Version=5.0.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Polly.5.0.6\lib\net45\Polly.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="SharpSvn, Version=1.9004.3900.136, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=AMD64">
-      <HintPath>..\packages\SharpSvn.1.9-x64.1.9004.3900.136\lib\net40\SharpSvn.dll</HintPath>
+    <Reference Include="SharpSvn, Version=1.9005.3940.224, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=AMD64">
+      <HintPath>..\packages\SharpSvn.1.9-x64.1.9005.3940.224\lib\net40\SharpSvn.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="SharpSvn.UI, Version=1.9004.3900.136, Culture=neutral, PublicKeyToken=33789aa53ca44aa9, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpSvn.1.9-x64.1.9004.3900.136\lib\net40\SharpSvn.UI.dll</HintPath>
+    <Reference Include="SharpSvn.UI, Version=1.9005.3940.224, Culture=neutral, PublicKeyToken=33789aa53ca44aa9, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpSvn.1.9-x64.1.9005.3940.224\lib\net40\SharpSvn.UI.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Sprache, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
