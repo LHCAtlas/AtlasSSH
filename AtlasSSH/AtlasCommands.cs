@@ -99,17 +99,8 @@ namespace AtlasSSH
         /// <returns>A reconfigured SSH shell connection (same as what went in)</returns>
         public static ISSHConnection setupATLAS(this ISSHConnection connection, bool dumpOnly = false)
         {
-            bool foundalias = false;
-            connection
-                .ExecuteCommand("setupATLAS", dumpOnly: dumpOnly)
-                .ExecuteCommand("alias", l => foundalias = foundalias || l.Contains("rcSetup"), dumpOnly: dumpOnly);
-
-            if (!foundalias && !dumpOnly)
-            {
-                throw new LinuxConfigException("The setupATLAS command did not have the expected effect - rcSetup was not defined as an alias");
-            }
-
-            return connection;
+            return connection
+                .ExecuteCommand("setupATLAS", dumpOnly: dumpOnly);
         }
 
         /// <summary>
