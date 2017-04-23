@@ -175,7 +175,7 @@ namespace AtlasWorkFlows.Locations
 
                 // Get the catalog over
                 CopyDataSetInfo(fsGroup.Key,
-                    DatasetManager.ListOfFilenamesInDataset(fsGroup.Key, statusUpdate, failNow),
+                    DatasetManager.ListOfFilenamesInDataset(fsGroup.Key, statusUpdate, failNow, probabalLocation: origin),
                     statusUpdate, failNow);
 
                 // The file path where we will store it all
@@ -253,7 +253,7 @@ namespace AtlasWorkFlows.Locations
 
                 // Get the catalog over
                 destination.CopyDataSetInfo(fsGroup.Key,
-                    DatasetManager.ListOfFilenamesInDataset(fsGroup.Key, statusUpdate, failNow),
+                    DatasetManager.ListOfFilenamesInDataset(fsGroup.Key, statusUpdate, failNow, probabalLocation: this),
                     statusUpdate, failNow);
 
                 // The file path where we will store it all

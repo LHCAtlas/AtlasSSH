@@ -57,12 +57,14 @@ namespace AtlasWorkFlows
         /// <param name="dsname"></param>
         /// <param name="statusUpdate"></param>
         /// <param name="failNow"></param>
+        /// <param name="probabalLocation">The dataset is almost certainly here - look here first</param>
         /// <returns></returns>
-        internal static string[] ListOfFilenamesInDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        internal static string[] ListOfFilenamesInDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null, IPlace probabalLocation = null)
         {
             return NonNullCacheInDisk("AtlasWorkFlows-ListOfFilenamesInDataset", dsname, () =>
             {
-                return _places.Value
+                return new IPlace[] { probabalLocation }.Concat(_places.Value)
+                    .Where(p => p != null)
                     .Select(p => p.GetListOfFilesForDataset(dsname.Dataset(), statusUpdate, failNow: failNow))
                     .Where(fs => fs != null)
                     .FirstOrDefault()
@@ -297,9 +299,9 @@ namespace AtlasWorkFlows
         }
         
         /// <summary>
-                 /// Reset the IPlace list. Used only for testing, dangerous otherwise!
-                 /// </summary>
-                 /// <param name="places">List of places that we should use. If empty, then the default list will be used.</param>
+        /// Reset the IPlace list. Used only for testing, dangerous otherwise!
+        /// </summary>
+        /// <param name="places">List of places that we should use. If empty, then the default list will be used.</param>
         public static void ResetDSM(params IPlace[] places)
         {
             if (places.Length == 0)

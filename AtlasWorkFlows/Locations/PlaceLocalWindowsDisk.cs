@@ -106,7 +106,7 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // Move the catalog over.
-                var files = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow);
+                var files = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow, probabalLocation: origin);
                 CopyDataSetInfo(dsGroup.Key, files, statusUpdate, failNow);
 
                 // Now, do the files via SCP.
@@ -132,7 +132,7 @@ namespace AtlasWorkFlows.Locations
             {
                 // Copy over the dataset info
                 CopyDataSetInfo(dsFileListing.Key,
-                    DatasetManager.ListOfFilenamesInDataset(dsFileListing.Key, statusUpdate, failNow),
+                    DatasetManager.ListOfFilenamesInDataset(dsFileListing.Key, statusUpdate, failNow, probabalLocation: this),
                     statusUpdate, failNow);
 
                 // For each file we don't have, do the copy. Checking for existance shouldn't
@@ -213,7 +213,7 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // Move the catalog over.
-                var files = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow);
+                var files = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow, probabalLocation: this);
                 destination.CopyDataSetInfo(dsGroup.Key, files);
 
                 // Now, do the files via SCP.

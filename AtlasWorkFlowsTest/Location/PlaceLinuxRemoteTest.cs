@@ -264,6 +264,7 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         public void CopyFromTwoStep()
         {
+            DatasetManager.ResetDSM();
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);

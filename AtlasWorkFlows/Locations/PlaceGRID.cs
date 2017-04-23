@@ -154,7 +154,7 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // First, move the catalog over
-                var catalog = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow)
+                var catalog = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow, probabalLocation: this)
                     .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
                 _linuxRemote.CopyDataSetInfo(dsGroup.Key, catalog, statusUpdate);
                 if (failNow.PCall(false))
