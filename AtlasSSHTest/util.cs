@@ -315,7 +315,7 @@ Total size : 0
                 {
                     d = d.AddEntry($"echo mc15_13TeV:AOD.07483884._0000{fileIndex.ToString("00")}.pool.root.1 >> /tmp/{dsName}.filelist", "");
                 }
-                d = d.AddEntry("rucio download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
+                d = d.AddEntry("rucio -T 3600 download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
                     @"[32;1m2016-06-18 18:07:45,515 INFO [Starting download for mc15_13TeV:mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282 with 40 files][0m
 [32;1m2016-06-18 18:07:46,095 INFO [Starting the download of mc15_13TeV:AOD.07787075._000002.pool.root.1][0m
 [32;1m2016-06-18 18:07:46,095 INFO [Starting the download of mc15_13TeV:AOD.07787075._000001.pool.root.1][0m
@@ -731,7 +731,7 @@ Files that cannot be downloaded :             0
                 {
                     d = d.AddEntry($"echo mc15_13TeV:AOD.07483884._0000{fileIndex.ToString("00")}.pool.root.1 >> /tmp/{dsName}.filelist", "");
                 }
-                d = d.AddEntry("rucio download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
+                d = d.AddEntry("rucio -T 3600 download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
                     @"[32;1m2016-06-18 18:07:45,515 INFO [Starting download for mc15_13TeV:mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282 with 40 files][0m
 [32;1m2016-06-18 18:07:46,095 INFO [Starting the download of mc15_13TeV:AOD.07787075._000002.pool.root.1][0m
 [32;1m2016-06-18 18:07:46,095 INFO [Starting the download of mc15_13TeV:AOD.07787075._000001.pool.root.1][0m
@@ -1146,7 +1146,7 @@ Files that cannot be downloaded :             1");
                 {
                     d = d.AddEntry($"echo mc15_13TeV:AOD.07483884._0000{fileIndex.ToString("00")}.pool.root.1 >> /tmp/{dsName}.filelist", "");
                 }
-                d = d.AddEntry("rucio download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
+                d = d.AddEntry("rucio -T 3600 download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
                     @"2016-06-18 15:35:07,774 INFO [Starting download for user.gwatts:user.gwatts.8746548._000001.hist-output.root with 1 files]
 2016-06-18 15:35:07,980 INFO [Starting the download of user.gwatts:user.gwatts.8746548._000001.hist-output.root]
 No handlers could be found for logger ""gfal2""

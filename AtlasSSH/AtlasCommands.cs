@@ -99,8 +99,15 @@ namespace AtlasSSH
         /// <returns>A reconfigured SSH shell connection (same as what went in)</returns>
         public static ISSHConnection setupATLAS(this ISSHConnection connection, bool dumpOnly = false)
         {
-            return connection
-                .ExecuteCommand("setupATLAS", dumpOnly: dumpOnly);
+            bool badCommand = false;
+            var r = connection
+                .ExecuteCommand("setupATLAS", dumpOnly: dumpOnly, output: l => badCommand = badCommand || l.Contains("command not found"));
+            if (badCommand)
+            {
+                throw new LinuxConfigException("Unable to setupATLAS - command is not known!");
+            }
+
+            return r;
         }
 
         /// <summary>

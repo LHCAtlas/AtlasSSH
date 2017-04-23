@@ -30,23 +30,10 @@ namespace AtlasSSHTest
         public void setupATLASNosetupATLASThere()
         {
             var setupATLASBad = @"-bash: setupATLAS: command not found";
-            var aliasResponse = @"alias asetup='source $AtlasSetup/scripts/asetup.sh'
-alias diagnostics='source ${ATLAS_LOCAL_ROOT_BASE}/swConfig/Post/diagnostics/setup-Linux.sh'
-alias helpMe='${ATLAS_LOCAL_ROOT_BASE}/utilities/generateHelpMe.sh'
-alias l.='ls -d .* --color=auto'
-alias ll='ls -l --color=auto'
-alias ls='ls --color=auto'
-alias printMenu='$ATLAS_LOCAL_ROOT_BASE/swConfig/printMenu.sh ""all""'
-alias setupATLAS='source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh'
-alias showVersions='${ATLAS_LOCAL_ROOT_BASE}/utilities/showVersions.sh'
-alias vi='vim'
-alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
-";
             var s = new dummySSHConnection(new Dictionary<string, string>() { 
             { "setupATLAS", setupATLASBad },
-            { "alias", aliasResponse}
             });
-            util.CatchException(() => s.setupATLAS(), typeof(LinuxConfigException), "setupATLAS command did not have the expected effect");
+            util.CatchException(() => s.setupATLAS(), typeof(LinuxConfigException), "Unable to setupATLAS - command is not known!");
         }
 
         [TestMethod]
