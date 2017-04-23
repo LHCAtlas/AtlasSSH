@@ -98,6 +98,24 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
+        public void GoodGitPackageLongForm()
+        {
+            var s = "package(https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git)";
+            var c = JobParser.ParsePackage.Parse(s);
+            Assert.AreEqual("https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", c.Name);
+            Assert.AreEqual("", c.SCTag);
+        }
+
+        [TestMethod]
+        public void GoodGitPackageShortForm()
+        {
+            var s = "package(atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git)";
+            var c = JobParser.ParsePackage.Parse(s);
+            Assert.AreEqual("atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", c.Name);
+            Assert.AreEqual("", c.SCTag);
+        }
+
+        [TestMethod]
         public void SubmissionMachine()
         {
             var s = "submission_machine(tev01.phys.washington.edu, gwatts)";
