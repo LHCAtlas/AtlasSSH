@@ -656,6 +656,29 @@ kinit: Preauthentication failed while getting initial credentials")
         }
 
         [TestMethod]
+        public void CheckoutGitGoodShorthand()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddEntry("git clone https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", @"RootCore: Error unknown package xAODForward")
+                .AddEntry("cd DiVertAnalysisCode; git checkout 77658117c62ac99610068228668563d29baa3912; cd ..", "Now using dude")
+                );
+
+            s.CheckoutPackage("atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", "77658117c62ac99610068228668563d29baa3912");
+        }
+
+        [TestMethod]
+        public void CheckoutGitGoodShorthandBadSHA()
+        {
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddEntry("git clone https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", @"RootCore: Error unknown package xAODForward")
+                .AddEntry("cd DiVertAnalysisCode; git checkout 77658117c62ac99610068228668563d29baa3912; cd ..", "error: pathspec '77658117c62ac99610068228668563d29baa39122' did not match any file(s) known to git.")
+                );
+
+            util.CatchException(() => s.CheckoutPackage("atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", "77658117c62ac99610068228668563d29baa3912"),
+                typeof(LinuxCommandErrorException), "Unable to check out package https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git with SHA 77658117c62ac99610068228668563d29baa3912: error: pathspec '77658117c62ac99610068228668563d29baa39122' did not match any file(s) known to git.");
+        }
+
+        [TestMethod]
         public void ExecuteBadLinuxCommand()
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()

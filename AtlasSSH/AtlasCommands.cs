@@ -2,6 +2,7 @@
 using Polly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -503,14 +504,73 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Check out a package.
-        /// 
+        /// Check out SVN or a GIT package.
         /// </summary>
-        /// <param name="connection"></param>
+        /// <param name="connection">Connection on which we should be checking this out on</param>
         /// <param name="scPackagePath">The svn path to the package. Basically what you would hand to the rc checkout command. Nohting like "tags" or "trunk" is permitted.</param>
         /// <param name="scRevision">The revision number. A SVN revision number. If blank, then the version associated with the build is checked out.</param>
         /// <returns></returns>
         public static ISSHConnection CheckoutPackage(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            var isGit = scPackagePath.EndsWith(".git");
+            return isGit
+                ? connection.CheckoutPackageGit(scPackagePath, scRevision, failNow, dumpOnly)
+                : connection.CheckoutPackageSVN(scPackagePath, scRevision, failNow, dumpOnly);
+        }
+
+        /// <summary>
+        /// Check out a Git package from the CERN git repro, of what is pecified in the package.
+        /// </summary>
+        /// <param name="connection">Connection on which to do the checkout</param>
+        /// <param name="scPackagePath">Path to the package, perhaps a short-cut (see remarks)</param>
+        /// <param name="scRevision">Revision for the package, or empty to grab the head</param>
+        /// <param name="failNow">Fuction that returns true if we should bail right away</param>
+        /// <param name="dumpOnly">Just dump the commands output - don't actually do anything.</param>
+        /// <returns></returns>
+        public static ISSHConnection CheckoutPackageGit(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            // The revision must be specified.
+            if (string.IsNullOrWhiteSpace(scRevision))
+            {
+                throw new ArgumentException($"The commit hash for {scPackagePath} must be specified - it may well move with time");
+            }
+            if (scRevision.Length < 15)
+            {
+                throw new ArgumentException($"The SHA {scRevision} for git package {scPackagePath} doesn't look like a full git SHA (e.g. 77658117c62ac99610068228668563d29baa3912).");
+            }
+
+            // Determine if this was short-hand, and we need to put the gitlab specification in front.
+            if (!scPackagePath.Contains("://"))
+            {
+                scPackagePath = $"https://:@gitlab.cern.ch:8443/{scPackagePath}";
+            }
+
+            // Do the check out
+            connection.ExecuteCommand($"git clone {scPackagePath}", secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
+
+            // Now, we have to move to that revision.
+            var pkgName = Path.GetFileNameWithoutExtension(scPackagePath.Split('/').Last());
+
+            string error = "";
+            connection.ExecuteCommand($"cd {pkgName}; git checkout {scRevision}; cd ..", output: l => error = l.Contains("error") ? l : error);
+            if (error.Length > 0)
+            {
+                throw new LinuxCommandErrorException($"Unable to check out package {scPackagePath} with SHA {scRevision}: {error}");
+            }
+
+            return connection;
+        }
+
+        /// <summary>
+        /// Check out a SVN package
+        /// </summary>
+        /// <param name="connection">Connection on which to check this guy out</param>
+        /// <param name="scPackagePath">Path to the package</param>
+        /// <param name="scRevision">tag/svn revision to check out</param>
+        /// <param name="failNow">Function retursn true when we should quit</param>
+        /// <param name="dumpOnly">Are we just dumping commands, or doing work?</param>
+        /// <returns></returns>
+        public static ISSHConnection CheckoutPackageSVN(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
         {
             // Has the user asked us to do something we won't do?
             if (scPackagePath.EndsWith("/tags"))
@@ -548,7 +608,7 @@ namespace AtlasSSH
                 }
             }
 
-            var sawRevisionMessage = false;            
+            var sawRevisionMessage = false;
             connection.ExecuteCommand(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
             if (!sawRevisionMessage && !dumpOnly)
             {
