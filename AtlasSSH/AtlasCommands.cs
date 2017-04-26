@@ -546,7 +546,7 @@ namespace AtlasSSH
             }
 
             // Do the check out
-            connection.ExecuteCommand($"git clone {scPackagePath}", secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
+            connection.ExecuteCommand($"git clone --recursive {scPackagePath}", secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
 
             // Now, we have to move to that revision.
             var pkgName = Path.GetFileNameWithoutExtension(scPackagePath.Split('/').Last());
