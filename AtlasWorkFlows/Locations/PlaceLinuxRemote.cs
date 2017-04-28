@@ -17,7 +17,7 @@ namespace AtlasWorkFlows.Locations
     /// <summary>
     /// This is a remote linux machine.
     /// - Files are accessible only as a repository - copy in or out
-    /// - If the disks are availible on SAMBA, then create a WindowsLocal as well
+    /// - If the disks are available on SAMBA, then create a WindowsLocal as well
     /// - If GRID can download here, then that should also create a new place.
     /// </summary>
     class PlaceLinuxRemote : IPlace, ISCPTarget, IDisposable
@@ -136,7 +136,7 @@ namespace AtlasWorkFlows.Locations
         public string SCPUser { get { return RemoteHostInfo.Last().Username; } }
 
         /// <summary>
-        /// We can start a copy from here to other places that have a SSH destination availible.
+        /// We can start a copy from here to other places that have a SSH destination available.
         /// </summary>
         /// <param name="destination"></param>
         /// <returns></returns>
@@ -362,7 +362,7 @@ namespace AtlasWorkFlows.Locations
                 {
                     try
                     {
-                        statusUpdate.PCall($"Getting availible files ({Name})");
+                        statusUpdate.PCall($"Getting available files ({Name})");
                         var files = new List<string>();
                         _connection.Value.ExecuteLinuxCommand($"find {_remote_path}/{dsname} -print", l => files.Add(l), failNow: failNow);
                         return files.ToArray();

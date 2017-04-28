@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PSAtlasDatasetCommands
 {
     /// <summary>
-    /// Add for a location argument, makes sure that only the availible locations can
+    /// Add for a location argument, makes sure that only the available locations can
     /// be x-checked.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]

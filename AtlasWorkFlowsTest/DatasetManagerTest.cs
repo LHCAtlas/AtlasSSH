@@ -200,7 +200,7 @@ namespace AtlasWorkFlowsTest
 
         [TestMethod]
         [ExpectedException(typeof(NoLocalPlaceToCopyToException))]
-        public void CopyToLocalWithNoNonConfirmLocalAvailible()
+        public void CopyToLocalWithNoNonConfirmLocalAvailable()
         {
             var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = true, CanSourceACopy = true };
             var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
