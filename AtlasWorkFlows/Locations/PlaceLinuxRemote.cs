@@ -77,10 +77,12 @@ namespace AtlasWorkFlows.Locations
                 {
                     c.Dispose();
                 }
+                _tunnelConnections = null;
             }
             if (_connection != null && _connection.IsValueCreated)
             {
                 _connection.Value.Dispose();
+                _connection = null;
             }
             if (reAlloc)
             {
