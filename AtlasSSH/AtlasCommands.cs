@@ -269,18 +269,16 @@ namespace AtlasSSH
         {
             string filesThatFailedToDownload = "";
             bool foundClockSkewMessage = false;
+            var messageNameMatch = new Regex(@"Starting the download of ([\w\.:]+)");
             connection.ExecuteCommand($"rucio -T {timeout} download --dir {localDirectory} `cat {fileListName}`", l =>
             {
                 // Look for something that indicates which file we are currently getting from the GRID.
                 if (fileStatus != null)
                 {
-                    const string fileNameMarker = "Starting the download of ";
-                    var idx = l.IndexOf(fileNameMarker);
-                    if (idx >= 0)
+                    var m = messageNameMatch.Match(l);
+                    if (m.Success)
                     {
-                        var closeBracket = l.IndexOf(']', idx);
-                        var startOfFileName = idx + fileNameMarker.Length;
-                        fileStatus(l.Substring(startOfFileName, closeBracket - startOfFileName));
+                        fileStatus(m.Groups[1].Value);
                     }
                 }
 
