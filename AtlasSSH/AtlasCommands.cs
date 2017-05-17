@@ -364,7 +364,7 @@ namespace AtlasSSH
 
             // Run it in rucio and bring back our answers.
             var fileNameList = new List<GRIDFileInfo>();
-            var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +(?<fsize>[0-9\.]*) *(?<fsizeunits>[MGTB]*) *\| +(?<events>[0-9]*) +\|");
+            var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +(?<fsize>[0-9\.]*) *(?<fsizeunits>[kMGTB]*) *\| +(?<events>[0-9]*) +\|");
             bool bad = false;
             connection.ExecuteCommand(string.Format("rucio list-files {0}", datasetName), l =>
             {
@@ -419,7 +419,10 @@ namespace AtlasSSH
             var n = double.Parse(number);
             if (units == "")
             {
-                return (n/1024/1024);
+                return (n / 1024 / 1024);
+            } else if (units == "kB")
+            {
+                return n / 1024;
             } else if (units == "MB")
             {
                 return n;

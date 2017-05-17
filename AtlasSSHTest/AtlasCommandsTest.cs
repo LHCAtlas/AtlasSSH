@@ -161,6 +161,27 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        public void getDSFileListdata15()
+        {
+            // Seen in the wild.
+            var s = new dummySSHConnection(new Dictionary<string, string>()
+                .AddsetupATLASResponses()
+                .AddsetupRucioResponses("bogus")
+                .AddRucioListFiles("data15_13TeV:data15_13TeV.00266904.physics_Main.merge.DAOD_EXOT15.r7600_p2521_p2950")
+                );
+            var r = s
+                .setupATLAS()
+                .setupRucio("bogus")
+                .FilelistFromGRID("data15_13TeV:data15_13TeV.00266904.physics_Main.merge.DAOD_EXOT15.r7600_p2521_p2950");
+
+            foreach (var fname in r)
+            {
+                Console.WriteLine(fname);
+            }
+            Assert.AreEqual(228, r.Length);
+        }
+
+        [TestMethod]
         public void getDSFileListInfoNoEventsBytes()
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()
