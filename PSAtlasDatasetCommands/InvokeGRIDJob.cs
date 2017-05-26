@@ -90,7 +90,8 @@ namespace PSAtlasDatasetCommands
 
                 // Get the expected resulting dataset name. Since this will be a personal
                 // dataset, we need to get the GRID info.
-                string ds = job.ResultingDatasetName(DatasetName, _gridCredentials);
+                var originalDatasetName = DatasetName.Trim();
+                string ds = job.ResultingDatasetName(originalDatasetName, _gridCredentials);
 
                 // See if there is already a job defined that will produce this
                 var pandaJob = (ds + "/").FindPandaJobWithTaskName();
@@ -119,15 +120,15 @@ namespace PSAtlasDatasetCommands
                     // setup, I suppose.
                     var files = _connection
                         .Apply(() => DisplayStatus("Checking dataset exists on the GRID"))
-                        .FilelistFromGRID(DatasetName, failNow: () => Stopping, dumpOnly: WhatIf.IsPresent);
+                        .FilelistFromGRID(originalDatasetName, failNow: () => Stopping, dumpOnly: WhatIf.IsPresent);
                     if (files.Length == 0 && !WhatIf.IsPresent)
                     {
-                        throw new ArgumentException($"Dataset '{DatasetName}' has zero files - won't submit a job against it!");
+                        throw new ArgumentException($"Dataset '{originalDatasetName}' has zero files - won't submit a job against it!");
                     }
 
                     // Submit the job
                     _connection
-                        .SubmitJob(job, DatasetName, ds, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob, dumpOnly: WhatIf.IsPresent);
+                        .SubmitJob(job, originalDatasetName, ds, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob, dumpOnly: WhatIf.IsPresent);
 
                     // Try to find the job again if requested. The submission can take a very long time to show up in
                     // big panda, so skip unless requested.
