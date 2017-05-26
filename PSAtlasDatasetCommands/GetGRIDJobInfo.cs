@@ -75,11 +75,13 @@ namespace PSAtlasDatasetCommands
                     t = (ds + "/").FindPandaJobWithTaskName();
                 }
 
+                // We really can't deal with a bad task below. The returned objects are sufficiently complex.
                 if (t == null)
                 {
-                    throw new ArgumentException("Unable to find the task!");
+                    throw new ArgumentException("Unable to find the task in panda: was it ever submitted?");
                 }
 
+                // Dump the info to the output pipeline as requested.
                 if (JobStatus.IsPresent)
                 {
                     WriteObject(t.status);
