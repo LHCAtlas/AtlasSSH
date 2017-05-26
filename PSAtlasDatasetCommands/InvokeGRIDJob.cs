@@ -91,10 +91,10 @@ namespace PSAtlasDatasetCommands
                 // Get the expected resulting dataset name. Since this will be a personal
                 // dataset, we need to get the GRID info.
                 var originalDatasetName = DatasetName.Trim();
-                string ds = job.ResultingDatasetName(originalDatasetName, _gridCredentials);
+                string resultDatasetName = job.ResultingDatasetName(originalDatasetName, _gridCredentials);
 
                 // See if there is already a job defined that will produce this
-                var pandaJob = (ds + "/").FindPandaJobWithTaskName();
+                var pandaJob = (resultDatasetName + "/").FindPandaJobWithTaskName();
 
                 if (pandaJob == null)
                 {
@@ -128,7 +128,7 @@ namespace PSAtlasDatasetCommands
 
                     // Submit the job
                     _connection
-                        .SubmitJob(job, originalDatasetName, ds, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob, dumpOnly: WhatIf.IsPresent);
+                        .SubmitJob(job, originalDatasetName, resultDatasetName, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob, dumpOnly: WhatIf.IsPresent);
 
                     // Try to find the job again if requested. The submission can take a very long time to show up in
                     // big panda, so skip unless requested.
@@ -138,7 +138,7 @@ namespace PSAtlasDatasetCommands
                             .Handle<InvalidOperationException>()
                             .WaitAndRetryForever(nthRetry => TimeSpan.FromMinutes(1),
                                                  (e, ts) => { WriteWarning($"Failed to find the submitted panda job on bigpanda: {e.Message}. Will wait one minute and try again."); })
-                            .ExecuteAndCapture(() => FindPandaJobForDS(ds));
+                            .ExecuteAndCapture(() => FindPandaJobForDS(resultDatasetName));
                         if (pandJobResult.Outcome != OutcomeType.Successful)
                         {
                             throw pandJobResult.FinalException;
