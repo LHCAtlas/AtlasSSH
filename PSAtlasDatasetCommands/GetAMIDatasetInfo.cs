@@ -78,7 +78,8 @@ namespace PSAtlasDatasetCommands
         protected override void ProcessRecord()
         {
             // Clean up the name. If it has a Rucio scope on it, then we want to ignore that.
-            var dsName = DatasetName.Contains(":") ? DatasetName.Substring(DatasetName.IndexOf(":") + 1) : DatasetName;
+            var dsName = (DatasetName.Contains(":") ? DatasetName.Substring(DatasetName.IndexOf(":") + 1) : DatasetName)
+                .Trim();
 
             // Check for a cache hit
             var r = _AMIInfoCache[dsName];

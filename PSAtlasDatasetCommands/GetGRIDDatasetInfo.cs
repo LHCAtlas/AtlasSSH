@@ -81,7 +81,8 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void ProcessRecord()
         {
-            var cHit = _resultsCache.Value[DatasetName] as PSGRIDDatasetInfo;
+            var trimmedDSName = DatasetName.Trim();
+            var cHit = _resultsCache.Value[trimmedDSName] as PSGRIDDatasetInfo;
             if (cHit != null)
             {
                 WriteObject(cHit);
@@ -111,18 +112,18 @@ namespace PSAtlasDatasetCommands
 
                     // Great - get the info on this dataset.
                     var fileInfo = _connection
-                        .Apply(() => DisplayStatus($"Checking for info on {DatasetName}."))
-                        .FileInfoFromGRID(DatasetName, failNow: () => Stopping);
+                        .Apply(() => DisplayStatus($"Checking for info on {trimmedDSName}."))
+                        .FileInfoFromGRID(trimmedDSName, failNow: () => Stopping);
 
                     // Next, build the resulting thingy.
                     var r = new PSGRIDDatasetInfo()
                     {
-                        DatasetName = DatasetName,
+                        DatasetName = trimmedDSName,
                         nFiles = fileInfo.Count,
                         TotalSizeMB = (int)fileInfo.Sum(fi => fi.size),
                         FileInfo = fileInfo.ToArray()
                     };
-                    _resultsCache.Value[DatasetName] = r;
+                    _resultsCache.Value[trimmedDSName] = r;
                     using (var pp = listener.PauseListening())
                     {
                         WriteObject(r);

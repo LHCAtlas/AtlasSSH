@@ -69,7 +69,7 @@ namespace PSAtlasDatasetCommands
                 {
                     // Get the job and resulting dataset name.
                     var job = JobParser.FindJob(JobName, JobVersion);
-                    var ds = job.ResultingDatasetName(DatasetName);
+                    var ds = job.ResultingDatasetName(DatasetName.Trim());
 
                     // Now, look up the job itself.
                     t = (ds + "/").FindPandaJobWithTaskName();

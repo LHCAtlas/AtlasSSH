@@ -78,7 +78,7 @@ namespace PSAtlasDatasetCommands
             try
             {
                 // Get the actual dataset name.
-                var dataset = DatasetName;
+                var dataset = DatasetName.Trim();
                 if (ParameterSetName == "job")
                 {
                     // Get the job, see if it is finished, and then get the output dataset.
