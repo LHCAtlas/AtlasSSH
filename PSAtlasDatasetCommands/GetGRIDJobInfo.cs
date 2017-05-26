@@ -1,11 +1,9 @@
 ﻿using AtlasWorkFlows.Jobs;
 using AtlasWorkFlows.Panda;
+using PSAtlasDatasetCommands.Utils;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PSAtlasDatasetCommands
 {
@@ -47,47 +45,56 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void ProcessRecord()
         {
-            PandaTask t = null;
-            bool needdatasets = OutputContainerNames.IsPresent || InputContainerNames.IsPresent;
+            // Setup for verbosity if we need it.
+            var listener = new PSListener(this);
+            Trace.Listeners.Add(listener);
+            try
+            {
+                PandaTask t = null;
+                bool needdatasets = OutputContainerNames.IsPresent || InputContainerNames.IsPresent;
 
-            if (ParameterSetName == "TaskID")
-            {
-                t = TaskID.FindPandaJobWithTaskName(needdatasets);
-            }
-            if (ParameterSetName == "TaskObject")
-            {
-                t = PandaTaskObject.ID.FindPandaJobWithTaskName(needdatasets);
-            }
-            if (ParameterSetName == "TaskName")
-            {
-                t = TaskName.FindPandaJobWithTaskName(needdatasets);
-            }
-            if (ParameterSetName == "DatasetGRIDJob")
-            {
-                // Get the job and resulting dataset name.
-                var job = JobParser.FindJob(JobName, JobVersion);
-                var ds = job.ResultingDatasetName(DatasetName);
+                if (ParameterSetName == "TaskID")
+                {
+                    t = TaskID.FindPandaJobWithTaskName(needdatasets);
+                }
+                if (ParameterSetName == "TaskObject")
+                {
+                    t = PandaTaskObject.ID.FindPandaJobWithTaskName(needdatasets);
+                }
+                if (ParameterSetName == "TaskName")
+                {
+                    t = TaskName.FindPandaJobWithTaskName(needdatasets);
+                }
+                if (ParameterSetName == "DatasetGRIDJob")
+                {
+                    // Get the job and resulting dataset name.
+                    var job = JobParser.FindJob(JobName, JobVersion);
+                    var ds = job.ResultingDatasetName(DatasetName);
 
-                // Now, look up the job itself.
-                t = (ds + "/").FindPandaJobWithTaskName();
-            }
+                    // Now, look up the job itself.
+                    t = (ds + "/").FindPandaJobWithTaskName();
+                }
 
-            if (t == null)
-            {
-                throw new ArgumentException("Unable to find the task!");
-            }
+                if (t == null)
+                {
+                    throw new ArgumentException("Unable to find the task!");
+                }
 
-            if (JobStatus.IsPresent)
+                if (JobStatus.IsPresent)
+                {
+                    WriteObject(t.status);
+                }
+                if (InputContainerNames.IsPresent)
+                {
+                    WriteObject(t.DatasetNamesIN());
+                }
+                if (OutputContainerNames.IsPresent)
+                {
+                    WriteObject(t.DatasetNamesOUT());
+                }
+            } finally
             {
-                WriteObject(t.status);
-            }
-            if (InputContainerNames.IsPresent)
-            {
-                WriteObject(t.DatasetNamesIN());
-            }
-            if (OutputContainerNames.IsPresent)
-            {
-                WriteObject(t.DatasetNamesOUT());
+                Trace.Listeners.Remove(listener);
             }
         }
     }
