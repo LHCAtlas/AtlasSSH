@@ -70,41 +70,11 @@ namespace PSAtlasDatasetCommands
             Trace.Listeners.Add(listener);
             try
             {
-                // Get the actual dataset name.
-                var dataset = DatasetName.Trim();
-                if (ParameterSetName == "job")
-                {
-                    // Get the job, see if it is finished, and then get the output dataset.
-                    var job = JobParser.FindJob(JobName, JobVersion);
-                    if (job == null)
-                    {
-                        throw new ArgumentException($"Job {JobName} v{JobVersion} is not known to the system!");
-                    }
-
-                    // Get the resulting job name for this guy.
-                    var pandaJobName = job.ResultingDatasetName(JobSourceDatasetName) + "/";
-
-                    // Now, to get the output dataset, we need to fetch the job.
-                    var pandaTask = pandaJobName.FindPandaJobWithTaskName(true);
-                    if (pandaTask == null)
-                    {
-                        throw new ArgumentException($"No panda task found with name '{pandaJobName}' for job '{JobName}' v{JobVersion}.");
-                    }
-                    if (pandaTask.status != "finished" && pandaTask.status != "done")
-                    {
-                        throw new ArgumentException($"Panda task {pandaTask.jeditaskid} has status {pandaTask.status} - which is not done or finished ({pandaJobName}).");
-                    }
-                    var containers = pandaTask.DatasetNamesOUT();
-                    if (containers.Length > 1)
-                    {
-                        throw new ArgumentException($"There are more than one output container for the panda task {pandaTask.jeditaskid} - can't decide. Need code upgrade!! Thanks for the fish!");
-                    }
-                    if (containers.Length == 0)
-                    {
-                        throw new ArgumentException($"There are no output containers for the panda task {pandaTask.jeditaskid} ({pandaJobName}) - so nothing to fetch!");
-                    }
-                    dataset = containers.First();
-                }
+                // Get the dataset name that we are to process. Depending on parameters, it can come
+                // from one of two places.
+                var dataset = ParameterSetName == "job"
+                    ? GetJobDatasetName()
+                    : DatasetName.Trim();
 
                 // Find all the members of this dataset.
                 var allFilesToCopy = DatasetManager.ListOfFilesInDataset(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping);
@@ -143,6 +113,41 @@ namespace PSAtlasDatasetCommands
             }
         }
 
+        private string GetJobDatasetName()
+        {
+            string dataset;
+            // Get the job, see if it is finished, and then get the output dataset.
+            var job = JobParser.FindJob(JobName, JobVersion);
+            if (job == null)
+            {
+                throw new ArgumentException($"Job {JobName} v{JobVersion} is not known to the system!");
+            }
+
+            // Get the resulting job name for this guy.
+            var pandaJobName = job.ResultingDatasetName(JobSourceDatasetName) + "/";
+
+            // Now, to get the output dataset, we need to fetch the job.
+            var pandaTask = pandaJobName.FindPandaJobWithTaskName(true);
+            if (pandaTask == null)
+            {
+                throw new ArgumentException($"No panda task found with name '{pandaJobName}' for job '{JobName}' v{JobVersion}.");
+            }
+            if (pandaTask.status != "finished" && pandaTask.status != "done")
+            {
+                throw new ArgumentException($"Panda task {pandaTask.jeditaskid} has status {pandaTask.status} - which is not done or finished ({pandaJobName}).");
+            }
+            var containers = pandaTask.DatasetNamesOUT();
+            if (containers.Length > 1)
+            {
+                throw new ArgumentException($"There are more than one output container for the panda task {pandaTask.jeditaskid} - can't decide. Need code upgrade!! Thanks for the fish!");
+            }
+            if (containers.Length == 0)
+            {
+                throw new ArgumentException($"There are no output containers for the panda task {pandaTask.jeditaskid} ({pandaJobName}) - so nothing to fetch!");
+            }
+            dataset = containers.First();
+            return dataset;
+        }
 
         private ProgressRecord _pr = null;
 
