@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
 using static AtlasWorkFlows.DatasetManager;
+using System.IO;
+using AtlasWorkFlows.Utils;
 
 namespace AtlasWorkFlowsTest
 {
@@ -176,6 +178,65 @@ namespace AtlasWorkFlowsTest
 
             Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
             Assert.AreEqual("bogusNonLocal -> *bogusLocal (2 files)", DummyPlace.CopyLogs[0]);
+        }
+
+        [TestMethod]
+        public void LinuxGRIDWithLocalDNSParser()
+        {
+            SetupAndTestLinuxGRIDWithLocalDNSParser(() =>
+            {
+                // Set the location to be something that should match above
+                IPLocationTests.SetIpName("mynode.uw.edu");
+                var locations = DatasetManager.ValidLocations;
+                foreach (var l in locations)
+                {
+                    Console.WriteLine(l);
+                }
+                Assert.AreEqual(3, locations.Length);
+            });
+        }
+
+        [TestMethod]
+        public void LinuxGRIDWithLocalDNSParserNotLocal()
+        {
+            SetupAndTestLinuxGRIDWithLocalDNSParser(() =>
+            {
+                // Set the location to be something that should match above
+                IPLocationTests.SetIpName("mynode.uww.edu");
+                var locations = DatasetManager.ValidLocations;
+                foreach (var l in locations)
+                {
+                    Console.WriteLine(l);
+                }
+                Assert.AreEqual(2, locations.Length);
+            });
+        }
+
+        /// <summary>
+        /// Harness to run a test with a surrounding file for configuration.
+        /// </summary>
+        /// <param name="test"></param>
+        private static void SetupAndTestLinuxGRIDWithLocalDNSParser(Action test)
+        {
+            // Creaet a dummy atlas config file. This will get read by the test code first.
+            DatasetManager.ResetDSM();
+            using (var o = File.CreateText(@".\AtlasSSHConfig.txt"))
+            {
+                o.WriteLine("TeV.Name = MyLocation");
+                o.WriteLine("TeV.LocationType = LinuxWithLocalAndGRID");
+                o.WriteLine("TeV.WindowsAccessibleDNSEndString = .washington.edu, .uw.edu");
+                o.WriteLine(@"TeV.WindowsPaths = c:\users");
+                o.WriteLine("TeV.LinuxPath = /usr/myname/bogus/GRIDDS");
+                o.WriteLine("TeV.LinuxHost = user@node.com");
+            }
+            try
+            {
+                test();
+            }
+            finally
+            {
+                File.Delete(@".\AtlasSSHConfig.txt");
+            }
         }
 
         [TestMethod]
