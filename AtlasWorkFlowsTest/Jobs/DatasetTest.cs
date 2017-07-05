@@ -20,6 +20,14 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
+        public void xAODMCDatasetWithIteration()
+        {
+            var j = new AtlasJob() { Name = "DiVertAnalysis", Version = 22 };
+            var ds = j.ResultingDatasetName("mc15_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.merge.AOD.e3569_s2576_s2132_r6765_r6282", "user.bogus", 5);
+            Assert.IsTrue(ds.StartsWith("user.bogus.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.s2132_r6765_r6282.DiVertAnalysis_v22.5_3B233454"), ds);
+        }
+
+        [TestMethod]
         public void DxAODDatasetFromEmma()
         {
             var j = new AtlasJob() { Name = "DiVertAnalysis", Version = 22 };
