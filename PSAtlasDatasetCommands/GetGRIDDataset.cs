@@ -19,6 +19,7 @@ namespace PSAtlasDatasetCommands
         public GetGRIDDataset()
         {
             Timeout = 60;
+            JobIteration = 0;
         }
 
         /// <summary>
@@ -35,6 +36,9 @@ namespace PSAtlasDatasetCommands
 
         [Parameter(Mandatory = true, HelpMessage = "Version of the job that was run on the dataset", ParameterSetName = "job")]
         public int JobVersion { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Job iteration number", ParameterSetName = "job")]
+        public int JobIteration { get; set; }
 
         /// <summary>
         /// Number of minutes for a timeout
@@ -124,7 +128,7 @@ namespace PSAtlasDatasetCommands
             }
 
             // Get the resulting job name for this guy.
-            var pandaJobName = job.ResultingDatasetName(JobSourceDatasetName) + "/";
+            var pandaJobName = job.ResultingDatasetName(JobSourceDatasetName, JobIteration) + "/";
 
             // Now, to get the output dataset, we need to fetch the job.
             var pandaTask = pandaJobName.FindPandaJobWithTaskName(true);
