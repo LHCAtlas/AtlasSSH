@@ -96,6 +96,16 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         /// <summary>
+        /// Add a file to the dataset - the physical file.
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        internal void AddFileToDS(string dsname, string fname)
+        {
+            Connection.ExecuteLinuxCommand($"touch {RemotePath}/{dsname}/files/{fname}");
+        }
+
+        /// <summary>
         /// Create a fresh, clean, repro on the remote machine
         /// </summary>
         public void CreateRepro(string remote_path = null)
