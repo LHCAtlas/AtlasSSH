@@ -3,6 +3,7 @@ using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using static AtlasSSH.DiskCacheTypedHelpers;
@@ -401,6 +402,7 @@ namespace AtlasWorkFlows
                         : true;
                     if (localVisible)
                     {
+                        Trace.WriteLine($"Linux-GRID-Local {name} is locally visible.", "ParseSingleConfig");
                         // Create the local disk - but this is a big server, so a copy confirmation isn't needed
                         yield return CreateWindowsFilesystemPlace(info, needsCopyConfirmation: false);
                     }
@@ -441,6 +443,8 @@ namespace AtlasWorkFlows
 
             if (goodPath == null)
             {
+                var wp = info["WindowsPaths"];
+                Trace.WriteLine($"No good path was found for a Local directory when I looked at {wp}.", "CreateWindowsFilesystemPlace");
                 return null;
             }
 

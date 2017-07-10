@@ -36,9 +36,19 @@ namespace PSAtlasDatasetCommands
         [Parameter(Mandatory = true, HelpMessage = "Job name to apply to the dataset", Position = 2)]
         public int JobVersion { get; set; }
 
-        [Parameter(HelpMessage = "Wait for the job to be registered in Panda. This can take many minutes")]
+        [Parameter(Mandatory = false, HelpMessage = "Job iteration. Defaults to 0, add 1, 2, etc., to re-run same job with slightly different output dataset.")]
+        public int JobIteration { get; set; }
+
+        /// <summary>
+        /// Set this switch if you want to wait for the job to show up in panda. This can take a very long time, so it is
+        /// not recommended.
+        /// </summary>
+        [Parameter(HelpMessage = "Wait for the job to be registered in Panda. This can take many minutes. Not recommended that you use this. Will also cause the command to return the panda info object.")]
         public SwitchParameter WaitForPandaRegistration { get; set; }
 
+        /// <summary>
+        /// Debug and see what might happen.
+        /// </summary>
         [Parameter(HelpMessage = "The final submit command will not be issued, but will be written to Host output instead. Everything else will be run.")]
         public SwitchParameter WhatIf { get; set; }
 
@@ -51,6 +61,14 @@ namespace PSAtlasDatasetCommands
         /// Hold onto the grid credentials
         /// </summary>
         private Credential _gridCredentials = null;
+
+        /// <summary>
+        /// Initialize common command defaults.
+        /// </summary>
+        public InvokeGRIDJob()
+        {
+            JobIteration = 0;
+        }
 
         /// <summary>
         /// Setup a few things for running. Much of what we need
@@ -91,7 +109,7 @@ namespace PSAtlasDatasetCommands
                 // Get the expected resulting dataset name. Since this will be a personal
                 // dataset, we need to get the GRID info.
                 var originalDatasetName = DatasetName.Trim();
-                string resultDatasetName = job.ResultingDatasetName(originalDatasetName, _gridCredentials);
+                string resultDatasetName = job.ResultingDatasetName(originalDatasetName, _gridCredentials, JobIteration);
 
                 // See if there is already a job defined that will produce this
                 var pandaJob = (resultDatasetName + "/").FindPandaJobWithTaskName();

@@ -26,7 +26,7 @@ namespace AtlasWorkFlows.Jobs
         /// Truncate the ds name if it gets too long (rucio has some limits)
         /// Make sure that the uniqueness of the lost dataset name is not lost.
         /// </returns>
-        public static string ResultingDatasetName (this AtlasJob job, string originalDSName, string scopeDSName)
+        public static string ResultingDatasetName (this AtlasJob job, string originalDSName, string scopeDSName, int jobIteration = 0)
         {
             // Remove the scope if it is there.
             var sanitizedDSName = originalDSName.RemoveBefore(":");
@@ -70,7 +70,10 @@ namespace AtlasWorkFlows.Jobs
             string dsNew = "";
             while (!shortEnough)
             {
-                dsNew = $"{scopeDSName}.{dsParts.AsSingleString(".")}.{job.Name}_v{job.Version}_{job.Hash()}_{originalHash}";
+                var jobVersionString = jobIteration == 0
+                    ? job.Version.ToString()
+                    : $"{job.Version}.{jobIteration}";
+                dsNew = $"{scopeDSName}.{dsParts.AsSingleString(".")}.{job.Name}_v{jobVersionString}_{job.Hash()}_{originalHash}";
                 shortEnough = (dsNew + "_hist-output.root/").Length <= 133;
                 if (!shortEnough)
                 {
@@ -83,7 +86,7 @@ namespace AtlasWorkFlows.Jobs
                 }
             }
 
-            Trace.WriteLine($"Job {job.Name} v{job.Version} run on dataset {sanitizedDSName} will be sent to the dataset {dsNew}.");
+            Trace.WriteLine($"Job {job.Name} v{job.Version} (iteration {jobIteration} run on dataset {sanitizedDSName} will be sent to the dataset {dsNew}.");
 
             return dsNew;
         }
@@ -95,10 +98,10 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="origDSName"></param>
         /// <param name="gridCredentials"></param>
         /// <returns></returns>
-        public static string ResultingDatasetName(this AtlasJob job, string origDSName, Credential gridCredentials)
+        public static string ResultingDatasetName(this AtlasJob job, string origDSName, Credential gridCredentials, int jobIteration = 0)
         {
             var scope = string.Format("user.{0}", gridCredentials.Username);
-            return job.ResultingDatasetName(origDSName, scope);
+            return job.ResultingDatasetName(origDSName, scope, jobIteration);
         }
 
         /// <summary>
@@ -107,14 +110,14 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="job"></param>
         /// <param name="origDSName"></param>
         /// <returns></returns>
-        public static string ResultingDatasetName(this AtlasJob job, string origDSName)
+        public static string ResultingDatasetName(this AtlasJob job, string origDSName, int jobIteration = 0)
         {
             var gridCredentials = new CredentialSet("GRID").Load().FirstOrDefault();
             if (gridCredentials == null)
             {
                 throw new ArgumentException("Please create a generic windows credential with the target 'GRID' with the user name as the rucio grid user name and the password to be used with voms proxy init");
             }
-            return job.ResultingDatasetName(origDSName, gridCredentials);
+            return job.ResultingDatasetName(origDSName, gridCredentials, jobIteration);
         }
 
         /// <summary>

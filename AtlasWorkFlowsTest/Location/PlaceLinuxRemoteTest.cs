@@ -101,6 +101,17 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void HasPartFileInDataset()
+        {
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            _ssh.RemoveFileInDS("ds1", "f1.root");
+            _ssh.AddFileToDS("ds1", "f1.root.part");
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
+        }
+
+        [TestMethod]
         public void HasFileMissingFileInGoodDatastTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
@@ -191,6 +202,117 @@ namespace AtlasWorkFlowsTest.Location
             p1.CopyTo(p2, fileList);
 
             Assert.IsTrue(p2.HasFile(fileList[0]));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(MissingLinuxFileException))]
+        public void CopyToWithMissingFile()
+        {
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            _ssh.RemoveFileInDS("ds1", "f1.root");
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(MissingLinuxFileException))]
+        public void CopyToWithFileAsPart()
+        {
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            _ssh.RemoveFileInDS("ds1", "f1.root");
+            _ssh.AddFileToDS("ds1", "f1.root.part");
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+        }
+
+        [TestMethod]
+        public void CopyWhenAlreadyThere()
+        {
+            // The whole thing is already there.
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+
+            var ssh2 = new UtilsForBuildingLinuxDatasets();
+            ssh2.RemotePath += "2";
+            ssh2.CreateRepro();
+            ssh2.CreateDS("ds1", "f1.root", "f2.root");
+
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+
+            var allfiles = ssh2.GetAllFilesInRepro("ds1");
+            foreach (var f in allfiles)
+            {
+                Console.WriteLine(f);
+            }
+
+            Assert.AreEqual(1, allfiles.Where(l => l.Contains("f1.root")).Count());
+        }
+
+        [TestMethod]
+        public void CopyWhenOneAlreadyThere()
+        {
+            // The whole thing is already there.
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+
+            var ssh2 = new UtilsForBuildingLinuxDatasets();
+            ssh2.RemotePath += "2";
+            ssh2.CreateRepro();
+            ssh2.CreateDS("ds1", "f1.root", "f2.root");
+            ssh2.RemoveFileInDS("ds1", "f1.root");
+
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsTrue(p2.HasFile(fileList[1]));
+        }
+
+        [TestMethod]
+        public void CopyWhenOneAlreadyThereAsPart()
+        {
+            // The whole thing is already there.
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+
+            var ssh2 = new UtilsForBuildingLinuxDatasets();
+            ssh2.RemotePath += "2";
+            ssh2.CreateRepro();
+            ssh2.CreateDS("ds1", "f1.root", "f2.root");
+            ssh2.RemoveFileInDS("ds1", "f1.root");
+            ssh2.AddFileToDS("ds1", "f1.root.part");
+
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsTrue(p2.HasFile(fileList[1]));
+            var allfiles = ssh2.GetAllFilesInRepro("ds1");
+            Assert.AreEqual(0, allfiles.Where(l => l.EndsWith(".part")).Count());
         }
 
         [TestMethod]

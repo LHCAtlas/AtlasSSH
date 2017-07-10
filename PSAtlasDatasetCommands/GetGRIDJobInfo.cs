@@ -28,6 +28,9 @@ namespace PSAtlasDatasetCommands
         [Parameter(Mandatory = true, HelpMessage = "Input dataset name", ValueFromPipeline = false, ParameterSetName = "DatasetGRIDJob")]
         public int JobVersion { get; set; }
 
+        [Parameter(Mandatory = false, HelpMessage = "Job Iteration number", ParameterSetName = "DatasetGRIDJob")]
+        public int JobIteration { get; set; }
+
         [Parameter(Mandatory = true, HelpMessage = "Input dataset name", ValueFromPipeline = false, ParameterSetName = "DatasetGRIDJob")]
         public string JobName { get; set; }
 
@@ -39,7 +42,15 @@ namespace PSAtlasDatasetCommands
 
         [Parameter(HelpMessage = "Get the job's input container names")]
         public SwitchParameter InputContainerNames { get; set; }
-        
+
+        /// <summary>
+        /// Setup defaults for running
+        /// </summary>
+        public GetGRIDJobInfo()
+        {
+            JobIteration = 0;
+        }
+
         /// <summary>
         /// Do the lookup!
         /// </summary>
@@ -69,7 +80,7 @@ namespace PSAtlasDatasetCommands
                 {
                     // Get the job and resulting dataset name.
                     var job = JobParser.FindJob(JobName, JobVersion);
-                    var ds = job.ResultingDatasetName(DatasetName.Trim());
+                    var ds = job.ResultingDatasetName(DatasetName.Trim(), JobIteration);
 
                     // Now, look up the job itself.
                     t = (ds + "/").FindPandaJobWithTaskName();

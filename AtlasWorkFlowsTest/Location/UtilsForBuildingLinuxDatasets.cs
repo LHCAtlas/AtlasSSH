@@ -96,6 +96,16 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         /// <summary>
+        /// Add a file to the dataset - the physical file.
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        internal void AddFileToDS(string dsname, string fname)
+        {
+            Connection.ExecuteLinuxCommand($"touch {RemotePath}/{dsname}/files/{fname}");
+        }
+
+        /// <summary>
         /// Create a fresh, clean, repro on the remote machine
         /// </summary>
         public void CreateRepro(string remote_path = null)
@@ -114,6 +124,18 @@ namespace AtlasWorkFlowsTest.Location
             _tunnelInfo = connectionInfo.Item2;
             Connection.ExecuteLinuxCommand($"rm -rf {remote_path}")
                 .ExecuteLinuxCommand($"mkdir -p {remote_path}");
+        }
+
+        /// <summary>
+        /// Get a list of all files in the repro.
+        /// </summary>
+        /// <param name="repro"></param>
+        /// <returns></returns>
+        public string[] GetAllFilesInRepro(string repro)
+        {
+            var lines = new List<string>();
+            Connection.ExecuteLinuxCommand($"find {RemotePath}/{repro} -print", l => lines.Add(l));
+            return lines.ToArray();
         }
     }
 }

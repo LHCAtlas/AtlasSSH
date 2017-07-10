@@ -14,6 +14,18 @@ using System.Diagnostics;
 
 namespace AtlasWorkFlows.Locations
 {
+
+    [Serializable]
+    public class MissingLinuxFileException : Exception
+    {
+        public MissingLinuxFileException() { }
+        public MissingLinuxFileException(string message) : base(message) { }
+        public MissingLinuxFileException(string message, Exception inner) : base(message, inner) { }
+        protected MissingLinuxFileException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     /// <summary>
     /// This is a remote linux machine.
     /// - Files are accessible only as a repository - copy in or out
@@ -423,7 +435,7 @@ namespace AtlasWorkFlows.Locations
                 .FirstOrDefault();
             if (file == null)
             {
-                throw new ArgumentException($"Place {Name} was expected to have file {f}, but does not!");
+                throw new MissingLinuxFileException($"Place {Name} was expected to have file {f}, but does not!");
             }
 
             return file;
