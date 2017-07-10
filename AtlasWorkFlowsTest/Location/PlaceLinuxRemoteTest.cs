@@ -311,6 +311,8 @@ namespace AtlasWorkFlowsTest.Location
 
             Assert.IsTrue(p2.HasFile(fileList[0]));
             Assert.IsTrue(p2.HasFile(fileList[1]));
+            var allfiles = ssh2.GetAllFilesInRepro("ds1");
+            Assert.AreEqual(0, allfiles.Where(l => l.EndsWith(".part")).Count());
         }
 
         [TestMethod]
