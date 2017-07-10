@@ -238,6 +238,74 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        public void CopyWhenAlreadyThere()
+        {
+            // The whole thing is already there.
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+
+            var ssh2 = new UtilsForBuildingLinuxDatasets();
+            ssh2.RemotePath += "2";
+            ssh2.CreateRepro();
+            ssh2.CreateDS("ds1", "f1.root", "f2.root");
+
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+        }
+
+        [TestMethod]
+        public void CopyWhenOneAlreadyThere()
+        {
+            // The whole thing is already there.
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+
+            var ssh2 = new UtilsForBuildingLinuxDatasets();
+            ssh2.RemotePath += "2";
+            ssh2.CreateRepro();
+            ssh2.CreateDS("ds1", "f1.root", "f2.root");
+            ssh2.RemoveFileInDS("ds1", "f1.root");
+
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsTrue(p2.HasFile(fileList[1]));
+        }
+
+        [TestMethod]
+        public void CopyWhenOneAlreadyThereAsPart()
+        {
+            // The whole thing is already there.
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+
+            var ssh2 = new UtilsForBuildingLinuxDatasets();
+            ssh2.RemotePath += "2";
+            ssh2.CreateRepro();
+            ssh2.CreateDS("ds1", "f1.root", "f2.root");
+            ssh2.RemoveFileInDS("ds1", "f1.root");
+            ssh2.AddFileToDS("ds1", "f1.root.part");
+
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
+
+            var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            p1.CopyTo(p2, fileList);
+
+            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsTrue(p2.HasFile(fileList[1]));
+        }
+
+        [TestMethod]
         public void CopyToViaTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
