@@ -256,6 +256,14 @@ namespace AtlasWorkFlowsTest.Location
             p1.CopyTo(p2, fileList);
 
             Assert.IsTrue(p2.HasFile(fileList[0]));
+
+            var allfiles = ssh2.GetAllFilesInRepro("ds1");
+            foreach (var f in allfiles)
+            {
+                Console.WriteLine(f);
+            }
+
+            Assert.AreEqual(1, allfiles.Where(l => l.Contains("f1.root")).Count());
         }
 
         [TestMethod]

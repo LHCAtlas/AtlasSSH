@@ -125,5 +125,17 @@ namespace AtlasWorkFlowsTest.Location
             Connection.ExecuteLinuxCommand($"rm -rf {remote_path}")
                 .ExecuteLinuxCommand($"mkdir -p {remote_path}");
         }
+
+        /// <summary>
+        /// Get a list of all files in the repro.
+        /// </summary>
+        /// <param name="repro"></param>
+        /// <returns></returns>
+        public string[] GetAllFilesInRepro(string repro)
+        {
+            var lines = new List<string>();
+            Connection.ExecuteLinuxCommand($"find {RemotePath}/{repro} -print", l => lines.Add(l));
+            return lines.ToArray();
+        }
     }
 }
