@@ -711,6 +711,21 @@ kinit: Preauthentication failed while getting initial credentials")
         }
 
         [TestMethod]
+        public void ExecuteRealLinuxCommandRepeatedly()
+        {
+            var info = util.GetUsernameAndPassword();
+            // We have seen suprious failures where the "bash" prompt from a command isn't correctly
+            // captured.
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                foreach (var i in Enumerable.Range(0, 1000))
+                {
+                    s.ExecuteLinuxCommand("ls /tmp", secondsTimeout: 5, refreshTimeout: true);
+                }
+            }
+        }
+
+        [TestMethod]
         public void ExecuteGoodLinuxCommand()
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()
