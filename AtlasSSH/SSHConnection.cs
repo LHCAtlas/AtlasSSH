@@ -221,11 +221,11 @@ namespace AtlasSSH
                     throw new SSHCommandInterruptedException("Calling routine requested termination of command");
                 }
             }
+            lb.DumpRest();
             if (!gotmatch)
             {
                 throw new TimeoutException(string.Format("Waiting for '{0}' back from host and it was not seen inside of {1} seconds.", matchText, secondsTimeout));
             }
-            lb.DumpRest();
         }
 
         /// <summary>
@@ -262,17 +262,25 @@ namespace AtlasSSH
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             if (!dumpOnly)
             {
+                var buf = new CircularStringBuffer(1024);
                 try
                 {
                     _shell.Value.WriteLine(command);
                     DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)), crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
                     if (WaitForCommandResult)
                     {
-                        DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
+                        DumpTillFind(_shell.Value, _prompt, s => {
+                            buf.Add(s);
+                            if (output != null)
+                            {
+                                output(s);
+                            }
+                            },
+                            secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
                     }
                 } catch (TimeoutException e)
                 {
-                    throw new TimeoutException($"{e.Message} - occured while executing command {command}.", e);
+                    throw new TimeoutException($"{e.Message} - occured while executing command {command}. Last text we saw was {buf.ToString()}", e);
                 }
             }
             return this;
