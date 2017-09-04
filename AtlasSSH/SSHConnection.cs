@@ -266,7 +266,10 @@ namespace AtlasSSH
                 try
                 {
                     _shell.Value.WriteLine(command);
-                    DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)), crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
+                    DumpTillFind(_shell.Value,
+                        command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)),
+                        ongo: s => buf.Add(s),
+                        crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
                     if (WaitForCommandResult)
                     {
                         DumpTillFind(_shell.Value, _prompt, s => {
@@ -280,7 +283,7 @@ namespace AtlasSSH
                     }
                 } catch (TimeoutException e)
                 {
-                    throw new TimeoutException($"{e.Message} - occured while executing command {command}. Last text we saw was {buf.ToString()}", e);
+                    throw new TimeoutException($"{e.Message} - occured while executing command {command}. Last text we saw was '{buf.ToString()}'", e);
                 }
             }
             return this;
