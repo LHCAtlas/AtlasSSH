@@ -59,7 +59,7 @@ namespace AtlasWorkFlows.Panda
         {
             // If it is located in the cache, then pull it.
             var cached = PullFromCache(url);
-            if (cached != null && useCacheIfPossible)
+            if (cached != null || useCacheIfPossible || cached[0].status == "done")
             {
                 return cached;
             }
