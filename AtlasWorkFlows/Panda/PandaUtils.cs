@@ -17,12 +17,12 @@ namespace AtlasWorkFlows.Panda
         /// <param name="taskName">Name of the task. Must be the complete name or this will fail.</param>
         /// <param name="withDetailedDSInfo">If we want detailed dataset info</param>
         /// <returns></returns>
-        public static PandaTask FindPandaJobWithTaskName(this string taskName, bool withDetailedDSInfo = false)
+        public static PandaTask FindPandaJobWithTaskName(this string taskName, bool withDetailedDSInfo = false, bool useCacheIfPossible = true)
         {
             var url = BuildTaskUri(string.Format("tasks/?taskname={0}", taskName));
 
             // Now we do the query...
-            var tasks = GetTaskDataFromPanda(url);
+            var tasks = GetTaskDataFromPanda(url, useCacheIfPossible);
             var mytask = tasks.Where(t => t.taskname == taskName).FirstOrDefault();
 
             // Next, see if we need detailed info
@@ -55,11 +55,11 @@ namespace AtlasWorkFlows.Panda
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        private static PandaTask[] GetTaskDataFromPanda(Uri url)
+        private static PandaTask[] GetTaskDataFromPanda(Uri url, bool useCacheIfPossible = true)
         {
             // If it is located in the cache, then pull it.
             var cached = PullFromCache(url);
-            if (cached != null)
+            if (cached != null && useCacheIfPossible)
             {
                 return cached;
             }
