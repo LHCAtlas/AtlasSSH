@@ -58,8 +58,9 @@ namespace AtlasWorkFlows.Panda
         private static PandaTask[] GetTaskDataFromPanda(Uri url, bool useCacheIfPossible = true)
         {
             // If it is located in the cache, then pull it.
+            // If we aren't spposed to used the cache, then ignore it - unless the status is "done".
             var cached = PullFromCache(url);
-            if (cached != null || useCacheIfPossible || cached[0].status == "done")
+            if (cached != null && (useCacheIfPossible || cached[0].status == "done"))
             {
                 return cached;
             }
