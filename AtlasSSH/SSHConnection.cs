@@ -374,7 +374,7 @@ namespace AtlasSSH
             }
             if (shellStatus != "0")
             {
-                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel (ssh command returned {shellStatus}. Error text from the command: {cmdResult.ToString()}");
+                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel to {username}@{host} (ssh command returned {shellStatus}). Error text from the command: {cmdResult.ToString()}");
             }
 
             // Return the old context so we can restore ourselves when we exit the thing.
