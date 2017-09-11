@@ -364,7 +364,14 @@ namespace AtlasSSH
 
             // Now make sure we successfully went down a step to look at what was going on.
             string shellStatus = "";
-            ExecuteCommand("echo $?", l => shellStatus = l, secondsTimeout: 30);
+            try
+            {
+                ExecuteCommand("echo $?", l => shellStatus = l, secondsTimeout: 30);
+            }
+            catch (Exception e)
+            {
+                shellStatus = e.Message;
+            }
             if (shellStatus != "0")
             {
                 throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel (ssh command returned {shellStatus}. Error text from the command: {cmdResult.ToString()}");
