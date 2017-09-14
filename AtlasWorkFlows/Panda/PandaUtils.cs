@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using AtlasWorkFlows.Utils;
 using System.Diagnostics;
+using Polly;
 
 namespace AtlasWorkFlows.Panda
 {
@@ -66,33 +67,41 @@ namespace AtlasWorkFlows.Panda
             }
 
             // Do a full web request.
+            // We've seen some 
             Trace.WriteLine($"GetTaskDataFromPanda: Querying PandDA at {url.OriginalString}.", "PandaUtils");
             var wr = WebRequest.CreateHttp(url);
             wr.Accept = "application/json";
 
-            using (var data = wr.GetResponse())
-            {
-                using (var rdr = data.GetResponseStream())
+            return Policy
+                .Handle<WebException>()
+                .WaitAndRetry(5, cnt => TimeSpan.FromSeconds(5))
+                .Execute(() =>
                 {
-                    using (var r = new StreamReader(rdr))
+                    using (var data = wr.GetResponse())
                     {
-                        var text = r.ReadToEnd();
-                        try
+                        using (var rdr = data.GetResponseStream())
                         {
-                            var result = JsonConvert.DeserializeObject<PandaTask[]>(text);
-                            if (!result.Where(t => t.status != "done" && t.status != "finished").Any())
+                            using (var r = new StreamReader(rdr))
                             {
-                                SendToCache(url, result);
+                                var text = r.ReadToEnd();
+                                try
+                                {
+                                    var result = JsonConvert.DeserializeObject<PandaTask[]>(text);
+                                    if (!result.Where(t => t.status != "done" && t.status != "finished").Any())
+                                    {
+                                        SendToCache(url, result);
+                                    }
+                                    return result;
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine($"Error parsing JSON back from {url.OriginalString}. JSON was: '{text}' (error: {e.Message}).");
+                                    throw;
+                                }
                             }
-                            return result;
-                        } catch (Exception e)
-                        {
-                            Console.WriteLine($"Error parsing JSON back from {url.OriginalString}. JSON was: '{text}' (error: {e.Message}).");
-                            throw;
                         }
                     }
-                }
-            }
+                });
         }
 
         /// <summary>
