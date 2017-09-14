@@ -320,7 +320,7 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Ssh to another machine. This implies we have to deal with a new prompt.
+        /// ssh to another machine. This implies we have to deal with a new prompt.
         /// </summary>
         /// <param name="host">host of remote machine to ssh to</param>
         /// <param name="username">username to use when we ssh there</param>
@@ -374,6 +374,7 @@ namespace AtlasSSH
             }
             if (shellStatus != "0")
             {
+                // The whole connection is borked. We have to dump this connection totally.
                 throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel to {username}@{host} (ssh command returned {shellStatus}). Error text from the command: {cmdResult.ToString()}");
             }
 
