@@ -74,7 +74,7 @@ namespace AtlasWorkFlows.Panda
 
             return Policy
                 .Handle<WebException>()
-                .WaitAndRetry(5, cnt => TimeSpan.FromSeconds(5))
+                .WaitAndRetry(10, cnt => TimeSpan.FromSeconds(5))
                 .Execute(() =>
                 {
                     using (var data = wr.GetResponse())
