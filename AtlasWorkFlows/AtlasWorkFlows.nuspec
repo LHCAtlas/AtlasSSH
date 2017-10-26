@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>AtlasSSH</id>
-    <version>3.3.2</version>
+    <version>3.4.0</version>
     <title>Atlas SSH</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/LHCAtlas/AtlasSSH</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Added Copy-GRIDDataset to move from and to a specific location.</releaseNotes>
+    <releaseNotes>Added the SSHConnectionTunnel object to make it easier to build tunnels</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>GRID Atlas LHC CERN</tags>
   </metadata>
