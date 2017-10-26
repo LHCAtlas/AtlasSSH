@@ -1,9 +1,11 @@
 ﻿using AtlasSSH;
 using AtlasWorkFlows.Utils;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using static AtlasSSH.SSHConnection;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -25,21 +27,28 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public static Tuple<SSHConnection, List<IDisposable>> MakeConnection(this SSHHostPair[] connectionInfo)
         {
-            SSHConnection r = null;
-            var l = new List<IDisposable>();
-            foreach (var pair in connectionInfo)
-            {
-                if (r == null)
+            return Policy
+                .Handle<UnableToCreateSSHTunnelException>()
+                .WaitAndRetry(new [] { TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30) })
+                .Execute(() =>
                 {
-                    Trace.WriteLine($"Creating new connection to {pair.Username}@{pair.Host}");
-                    r = new SSHConnection(pair.Host, pair.Username);
-                } else
-                {
-                    Trace.WriteLine($"MakeConnection: Running ssh to tunnel through to {pair.Username}@{pair.Host}.");
-                    l.Add(r.SSHTo(pair.Host, pair.Username));
-                }
-            }
-            return Tuple.Create(r, l);
+                    SSHConnection r = null;
+                    var l = new List<IDisposable>();
+                    foreach (var pair in connectionInfo)
+                    {
+                        if (r == null)
+                        {
+                            Trace.WriteLine($"Creating new connection to {pair.Username}@{pair.Host}");
+                            r = new SSHConnection(pair.Host, pair.Username);
+                        }
+                        else
+                        {
+                            Trace.WriteLine($"MakeConnection: Running ssh to tunnel through to {pair.Username}@{pair.Host}.");
+                            l.Add(r.SSHTo(pair.Host, pair.Username));
+                        }
+                    }
+                    return Tuple.Create(r, l);
+                });
         }
 
         /// <summary>

@@ -221,11 +221,11 @@ namespace AtlasSSH
                     throw new SSHCommandInterruptedException("Calling routine requested termination of command");
                 }
             }
+            lb.DumpRest();
             if (!gotmatch)
             {
                 throw new TimeoutException(string.Format("Waiting for '{0}' back from host and it was not seen inside of {1} seconds.", matchText, secondsTimeout));
             }
-            lb.DumpRest();
         }
 
         /// <summary>
@@ -262,17 +262,28 @@ namespace AtlasSSH
             Trace.WriteLine("ExecuteCommand: " + command, "SSHConnection");
             if (!dumpOnly)
             {
+                var buf = new CircularStringBuffer(1024);
                 try
                 {
                     _shell.Value.WriteLine(command);
-                    DumpTillFind(_shell.Value, command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)), crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
+                    DumpTillFind(_shell.Value,
+                        command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)),
+                        ongo: s => buf.Add(s),
+                        crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
                     if (WaitForCommandResult)
                     {
-                        DumpTillFind(_shell.Value, _prompt, output, secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
+                        DumpTillFind(_shell.Value, _prompt, s => {
+                            buf.Add(s);
+                            if (output != null)
+                            {
+                                output(s);
+                            }
+                            },
+                            secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
                     }
                 } catch (TimeoutException e)
                 {
-                    throw new TimeoutException($"{e.Message} - occured while executing command {command}.", e);
+                    throw new TimeoutException($"{e.Message} - occured while executing command {command}. Last text we saw was '{buf.ToString()}'", e);
                 }
             }
             return this;
@@ -309,7 +320,7 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Ssh to another machine. This implies we have to deal with a new prompt.
+        /// ssh to another machine. This implies we have to deal with a new prompt.
         /// </summary>
         /// <param name="host">host of remote machine to ssh to</param>
         /// <param name="username">username to use when we ssh there</param>
@@ -353,10 +364,18 @@ namespace AtlasSSH
 
             // Now make sure we successfully went down a step to look at what was going on.
             string shellStatus = "";
-            ExecuteCommand("echo $?", l => shellStatus = l);
+            try
+            {
+                ExecuteCommand("echo $?", l => shellStatus = l, secondsTimeout: 30);
+            }
+            catch (Exception e)
+            {
+                shellStatus = e.Message;
+            }
             if (shellStatus != "0")
             {
-                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel (ssh command returned {shellStatus}. Error text from the command: {cmdResult.ToString()}");
+                // The whole connection is borked. We have to dump this connection totally.
+                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel to {username}@{host} (ssh command returned {shellStatus}). Error text from the command: {cmdResult.ToString()}");
             }
 
             // Return the old context so we can restore ourselves when we exit the thing.

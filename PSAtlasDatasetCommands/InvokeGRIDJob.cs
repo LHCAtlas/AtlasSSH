@@ -52,6 +52,9 @@ namespace PSAtlasDatasetCommands
         [Parameter(HelpMessage = "The final submit command will not be issued, but will be written to Host output instead. Everything else will be run.")]
         public SwitchParameter WhatIf { get; set; }
 
+        [Parameter(HelpMessage = "Defaults to using the local panda task cache")]
+        public SwitchParameter DoNotUsePandaTaskCache { get; set; }
+
         /// <summary>
         /// Hold onto the connection
         /// </summary>
@@ -112,7 +115,7 @@ namespace PSAtlasDatasetCommands
                 string resultDatasetName = job.ResultingDatasetName(originalDatasetName, _gridCredentials, JobIteration);
 
                 // See if there is already a job defined that will produce this
-                var pandaJob = (resultDatasetName + "/").FindPandaJobWithTaskName();
+                var pandaJob = (resultDatasetName + "/").FindPandaJobWithTaskName(useCacheIfPossible: !DoNotUsePandaTaskCache.IsPresent);
 
                 if (pandaJob == null)
                 {

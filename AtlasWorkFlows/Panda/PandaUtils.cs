@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using AtlasWorkFlows.Utils;
 using System.Diagnostics;
+using Polly;
 
 namespace AtlasWorkFlows.Panda
 {
@@ -17,12 +18,12 @@ namespace AtlasWorkFlows.Panda
         /// <param name="taskName">Name of the task. Must be the complete name or this will fail.</param>
         /// <param name="withDetailedDSInfo">If we want detailed dataset info</param>
         /// <returns></returns>
-        public static PandaTask FindPandaJobWithTaskName(this string taskName, bool withDetailedDSInfo = false)
+        public static PandaTask FindPandaJobWithTaskName(this string taskName, bool withDetailedDSInfo = false, bool useCacheIfPossible = true)
         {
             var url = BuildTaskUri(string.Format("tasks/?taskname={0}", taskName));
 
             // Now we do the query...
-            var tasks = GetTaskDataFromPanda(url);
+            var tasks = GetTaskDataFromPanda(url, useCacheIfPossible);
             var mytask = tasks.Where(t => t.taskname == taskName).FirstOrDefault();
 
             // Next, see if we need detailed info
@@ -55,43 +56,52 @@ namespace AtlasWorkFlows.Panda
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        private static PandaTask[] GetTaskDataFromPanda(Uri url)
+        private static PandaTask[] GetTaskDataFromPanda(Uri url, bool useCacheIfPossible = true)
         {
             // If it is located in the cache, then pull it.
+            // If we aren't spposed to used the cache, then ignore it - unless the status is "done".
             var cached = PullFromCache(url);
-            if (cached != null)
+            if (cached != null && (useCacheIfPossible || cached[0].status == "done"))
             {
                 return cached;
             }
 
             // Do a full web request.
+            // We've seen some 
             Trace.WriteLine($"GetTaskDataFromPanda: Querying PandDA at {url.OriginalString}.", "PandaUtils");
             var wr = WebRequest.CreateHttp(url);
             wr.Accept = "application/json";
 
-            using (var data = wr.GetResponse())
-            {
-                using (var rdr = data.GetResponseStream())
+            return Policy
+                .Handle<WebException>()
+                .WaitAndRetry(10, cnt => TimeSpan.FromSeconds(5))
+                .Execute(() =>
                 {
-                    using (var r = new StreamReader(rdr))
+                    using (var data = wr.GetResponse())
                     {
-                        var text = r.ReadToEnd();
-                        try
+                        using (var rdr = data.GetResponseStream())
                         {
-                            var result = JsonConvert.DeserializeObject<PandaTask[]>(text);
-                            if (!result.Where(t => t.status != "done" && t.status != "finished").Any())
+                            using (var r = new StreamReader(rdr))
                             {
-                                SendToCache(url, result);
+                                var text = r.ReadToEnd();
+                                try
+                                {
+                                    var result = JsonConvert.DeserializeObject<PandaTask[]>(text);
+                                    if (!result.Where(t => t.status != "done" && t.status != "finished").Any())
+                                    {
+                                        SendToCache(url, result);
+                                    }
+                                    return result;
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine($"Error parsing JSON back from {url.OriginalString}. JSON was: '{text}' (error: {e.Message}).");
+                                    throw;
+                                }
                             }
-                            return result;
-                        } catch (Exception e)
-                        {
-                            Console.WriteLine($"Error parsing JSON back from {url.OriginalString}. JSON was: '{text}' (error: {e.Message}).");
-                            throw;
                         }
                     }
-                }
-            }
+                });
         }
 
         /// <summary>
