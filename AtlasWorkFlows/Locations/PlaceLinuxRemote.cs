@@ -350,7 +350,7 @@ namespace AtlasWorkFlows.Locations
                             .Where(uf => uf.Split('/').Last() == u.DatasetFilename())
                             .FirstOrDefault()
                             .ThrowIfNull(() => new ArgumentException("Unable to find one of the files at this location!")))
-                .Select(p => new Uri($"file://{Name}/{p}"));
+                .Select(p => new Uri($"file://{Name}{p}"));
         }
 
         /// <summary>

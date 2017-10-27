@@ -59,7 +59,7 @@ namespace AtlasWorkFlowsTest.Location
             var files = p.GetLocalFileLocations(new [] { new Uri("gridds://ds1/f1.root")});
             Assert.IsNotNull(files);
             Assert.AreEqual(1, files.Count());
-            Assert.AreEqual("file://test//phys/users/gwatts/bogus_ds_repro/ds1/files/f1.root", files.First().ToString());
+            Assert.AreEqual("file://test/phys/users/gwatts/bogus_ds_repro/ds1/files/f1.root", files.First().ToString());
         }
 
         [TestMethod]
@@ -257,6 +257,9 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsTrue(p2.HasFile(fileList[0]));
         }
 
+#if false
+        // The CopyTo is not meant to check first - whatever is calling it is meant to make sure that
+        // there is no duplication going on. So this test is no longer relavent.
         [TestMethod]
         public void CopyWhenAlreadyThere()
         {
@@ -285,6 +288,7 @@ namespace AtlasWorkFlowsTest.Location
 
             Assert.AreEqual(1, allfiles.Where(l => l.Contains("f1.root")).Count());
         }
+#endif
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
@@ -332,8 +336,6 @@ namespace AtlasWorkFlowsTest.Location
 
             Assert.IsTrue(p2.HasFile(fileList[0]));
             Assert.IsTrue(p2.HasFile(fileList[1]));
-            var allfiles = ssh2.GetAllFilesInRepro("ds1");
-            Assert.AreEqual(0, allfiles.Where(l => l.EndsWith(".part")).Count());
         }
 
         [TestMethod]
@@ -446,7 +448,7 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsTrue(p1.HasFile(fileList[0]));
         }
         
-        #region Helper Items
+#region Helper Items
 
         /// <summary>
         /// Dummy that implements the target.
