@@ -187,6 +187,30 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_unc.txt")]
+        [DeploymentItem("location_test_params.txt")]
+        public void TestUNCLocation()
+        {
+            // Create a UNC repro
+            string uncRoot = File.ReadLines("location_test_unc.txt").First();
+            var repro1 = new DirectoryInfo(uncRoot);
+            if (repro1.Exists)
+            {
+                repro1.Delete(true);
+            }
+            repro1.Create();
+            repro1.Refresh();
+
+            // Now build a dataset there.
+            BuildDatset(repro1, "ds1", "f1.root", "f2.root");
+            var place1 = new PlaceLocalWindowsDisk("test1", repro1);
+            var files = place1.GetLocalFileLocations(new[] { new Uri("gridds://ds1/f1.root") }).ToArray();
+            Assert.AreEqual(1, files.Length);
+            Assert.AreEqual($"{uncRoot}\\d1\\files\\f1.root", files[0].LocalPath);
+
+        }
+
+        [TestMethod]
         [DeploymentItem("location_test_params.txt")]
         public void CantCopyFromAnotherTypeOfRepro()
         {

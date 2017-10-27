@@ -200,3 +200,4 @@ AtlasWorkFlowsTest/location_test_params.txt
 /AtlasSSHTest/testMachineTwo.txt
 /AtlasSSH/testMachineOne.txt
 /AtlasSSH/testMachineTwo.txt
+/AtlasSSHTest/location_test_unc.txt
