@@ -48,6 +48,19 @@ namespace AtlasWorkFlowsTest.Location
             var files = p.GetListOfFilesForDataset("ds2");
             Assert.IsNull(files);
         }
+
+        [TestMethod]
+        public void GetLocalFileURIsOnLinux()
+        {
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var files = p.GetLocalFileLocations(new [] { new Uri("gridds://ds1/f1.root")});
+            Assert.IsNotNull(files);
+            Assert.AreEqual(1, files.Count());
+            Assert.AreEqual("file://test//phys/users/gwatts/bogus_ds_repro/ds1/files/f1.root", files.First().ToString());
+        }
+
         [TestMethod]
         public void GetReproDatasetFileListForBadDSTunnel()
         {

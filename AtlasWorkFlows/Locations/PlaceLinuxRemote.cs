@@ -345,7 +345,12 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
         {
-            throw new NotSupportedException($"The Linux dataset repository {Name} can't furnish local paths as it is on a remote machine!");
+            return uris
+                .Select(u => this.GetAbosluteLinuxFilePaths(u.DatasetName())
+                            .Where(uf => uf.Split('/').Last() == u.DatasetFilename())
+                            .FirstOrDefault()
+                            .ThrowIfNull(() => new ArgumentException("Unable to find one of the files at this location!")))
+                .Select(p => new Uri($"file://{Name}/{p}"));
         }
 
         /// <summary>

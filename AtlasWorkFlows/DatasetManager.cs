@@ -91,6 +91,48 @@ namespace AtlasWorkFlows
         }
 
         /// <summary>
+        /// For a given set of files, find all places we know about that contian the complete list.
+        /// </summary>
+        /// <param name="dsfiles"></param>
+        /// <returns></returns>
+        public static string[] ListOfPlacesHoldingAllFiles (IEnumerable<Uri> dsfiles)
+        {
+            return _places.Value
+                .Where(p => dsfiles.All(f => p.HasFile(f)))
+                .OrderBy(p => p.DataTier)
+                .Select(p => p.Name)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Return the path from the local place where the file can be found
+        /// </summary>
+        /// <param name="place"></param>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public static Uri LocalPathToFile (string place, Uri file)
+        {
+            return LocalPathToFiles(place, new[] { file }).First();
+        }
+
+        /// <summary>
+        /// Find the path on the local machine for a particlar place. This means the URI returned will often
+        /// be useless on the current machine as it may refer to a file on another machine!
+        /// </summary>
+        /// <param name="place"></param>
+        /// <param name="files"></param>
+        /// <returns></returns>
+        public static IEnumerable<Uri> LocalPathToFiles(string place, IEnumerable<Uri> files)
+        {
+            var p = _places.Value
+                .Where(pl => pl.Name == place)
+                .FirstOrDefault()
+                .ThrowIfNull(() => new ArgumentException($"I do not know about place {place}, so I can't find file {files.First().ToString()} on it!"));
+
+            return p.GetLocalFileLocations(files);
+        }
+
+        /// <summary>
         /// Given a list of files in (one or more datasets) return the list of local file system URI's that
         /// point to the files. We will do real work here - copying files if we need to.
         /// </summary>

@@ -73,6 +73,48 @@ namespace AtlasWorkFlowsTest
             Assert.AreEqual(0, DummyPlace.CopyLogs.Count);
         }
 
+        [TestMethod]
+        public void MakeSureHasAllFiles()
+        {
+            DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
+            var u1 = new Uri("gridds://ds1/f1");
+            var places = DatasetManager.ListOfPlacesHoldingAllFiles(new[] { u1 });
+            Assert.IsNotNull(places);
+            Assert.AreEqual(1, places.Length);
+            Assert.AreEqual("bogus", places[0]);
+        }
+
+        [TestMethod]
+        public void PlaceTwoHaveFiles()
+        {
+            DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } },
+                new DummyPlace("bogus1") { { "ds1", "f1", "f2" } });
+            var u1 = new Uri("gridds://ds1/f1");
+            var places = DatasetManager.ListOfPlacesHoldingAllFiles(new[] { u1 });
+            Assert.IsNotNull(places);
+            Assert.AreEqual(2, places.Length);
+        }
+
+        [TestMethod]
+        public void NoPlaceHasAllFiles()
+        {
+            DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
+            var u1 = new Uri("gridds://ds2/f1");
+            var places = DatasetManager.ListOfPlacesHoldingAllFiles(new[] { u1 });
+            Assert.IsNotNull(places);
+            Assert.AreEqual(0, places.Length);
+        }
+
+        [TestMethod]
+        public void PlaceLocalFilePaths()
+        {
+            DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
+            var u1 = new Uri("gridds://ds1/f1");
+            var file = DatasetManager.LocalPathToFile("bogus", u1);
+            Assert.IsNotNull(file);
+            Assert.AreEqual("file:///c:/junk/f1.txt", file.ToString());
+        }
+
         /// <summary>
         /// Seen in the wild. We have a single file request, and it is already local. But
         /// system still queries other non-local locatoins.
