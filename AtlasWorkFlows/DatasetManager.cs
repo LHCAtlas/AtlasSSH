@@ -94,10 +94,12 @@ namespace AtlasWorkFlows
         /// For a given set of files, find all places we know about that contian the complete list.
         /// </summary>
         /// <param name="dsfiles"></param>
+        /// <param name="maxDataTier">Don't look at any places with a data teir at or above this number</param>
         /// <returns></returns>
-        public static string[] ListOfPlacesHoldingAllFiles (IEnumerable<Uri> dsfiles)
+        public static string[] ListOfPlacesHoldingAllFiles (IEnumerable<Uri> dsfiles, int maxDataTier = 1000)
         {
             return _places.Value
+                .Where(p => p.DataTier <= maxDataTier)
                 .Where(p => dsfiles.All(f => p.HasFile(f)))
                 .OrderBy(p => p.DataTier)
                 .Select(p => p.Name)
