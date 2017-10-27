@@ -345,7 +345,7 @@ namespace AtlasWorkFlows.Locations
         {
             var dir = BuildDSRootDirectory(dsName);
             return dir.EnumerateFiles("*", SearchOption.AllDirectories)
-                .Select(f => new Uri(f.FullName))
+                .Select(f => new UriBuilder() { Scheme = "file", Host="", Path = f.FullName }.Uri)
                 .ToArray();
         }
 
