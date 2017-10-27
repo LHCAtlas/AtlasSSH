@@ -658,10 +658,16 @@ namespace AtlasSSH
             Dictionary<string, string> seeAndRespond = null)
         {
             string rtnValue = "";
-            processLine = processLine == null ? l => { } : processLine; 
-            connection
-                .ExecuteCommand(command, processLine, failNow: failNow, dumpOnly: dumpOnly, seeAndRespond: seeAndRespond, refreshTimeout: refreshTimeout, secondsTimeout: secondsTimeout)
-                .ExecuteCommand("echo $?", l => rtnValue = l, dumpOnly: dumpOnly);
+            processLine = processLine == null ? l => { } : processLine;
+            try
+            {
+                connection
+                    .ExecuteCommand(command, processLine, failNow: failNow, dumpOnly: dumpOnly, seeAndRespond: seeAndRespond, refreshTimeout: refreshTimeout, secondsTimeout: secondsTimeout)
+                    .ExecuteCommand("echo $?", l => rtnValue = l, dumpOnly: dumpOnly);
+            } catch (TimeoutException te)
+            {
+                throw new TimeoutException($"{te.Message} - While executing command {command}.", te);
+            }
 
             if (rtnValue != "0" && !dumpOnly)
             {

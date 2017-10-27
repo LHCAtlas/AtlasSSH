@@ -113,6 +113,7 @@ namespace PSAtlasDatasetCommands
             }
             finally
             {
+                ClearStatus();
                 Trace.Listeners.Remove(listener);
             }
         }
@@ -164,6 +165,7 @@ namespace PSAtlasDatasetCommands
             if (_pr == null)
             {
                 _pr = new ProgressRecord(1, phase, message);
+                _pr.RecordType = ProgressRecordType.Processing;
             }
             else
             {
@@ -171,6 +173,18 @@ namespace PSAtlasDatasetCommands
                 _pr.StatusDescription = message;
             }
             WriteProgress(_pr);
+        }
+
+        /// <summary>
+        /// Called when we are done with the status updates.
+        /// </summary>
+        private void ClearStatus()
+        {
+            if (_pr != null)
+            {
+                _pr.RecordType = ProgressRecordType.Completed;
+                WriteProgress(_pr);
+            }
         }
 
         /// <summary>

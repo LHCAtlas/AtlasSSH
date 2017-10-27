@@ -320,7 +320,7 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Ssh to another machine. This implies we have to deal with a new prompt.
+        /// ssh to another machine. This implies we have to deal with a new prompt.
         /// </summary>
         /// <param name="host">host of remote machine to ssh to</param>
         /// <param name="username">username to use when we ssh there</param>
@@ -364,10 +364,18 @@ namespace AtlasSSH
 
             // Now make sure we successfully went down a step to look at what was going on.
             string shellStatus = "";
-            ExecuteCommand("echo $?", l => shellStatus = l);
+            try
+            {
+                ExecuteCommand("echo $?", l => shellStatus = l, secondsTimeout: 30);
+            }
+            catch (Exception e)
+            {
+                shellStatus = e.Message;
+            }
             if (shellStatus != "0")
             {
-                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel (ssh command returned {shellStatus}. Error text from the command: {cmdResult.ToString()}");
+                // The whole connection is borked. We have to dump this connection totally.
+                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel to {username}@{host} (ssh command returned {shellStatus}). Error text from the command: {cmdResult.ToString()}");
             }
 
             // Return the old context so we can restore ourselves when we exit the thing.

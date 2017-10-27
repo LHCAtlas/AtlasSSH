@@ -37,7 +37,7 @@ namespace PSAtlasDatasetCommands
             if (!_validLocations.Value.Contains(s))
             {
                 var err = _validLocations.Value.Aggregate(new StringBuilder(), (bld, loc) => bld.Append($" {loc}"));
-                throw new ValidationMetadataException($"Illegal value for Location - possible values:{err.ToString()}");
+                throw new ValidationMetadataException($"Illegal value for Location ({s}) - possible values:{err.ToString()}");
             }
         }
 
