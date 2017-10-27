@@ -198,3 +198,5 @@ nuget.exe
 AtlasWorkFlowsTest/location_test_params.txt
 /AtlasSSHTest/testMachineOne.txt
 /AtlasSSHTest/testMachineTwo.txt
+/AtlasSSH/testMachineOne.txt
+/AtlasSSH/testMachineTwo.txt

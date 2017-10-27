@@ -60,6 +60,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void BadFileInExistingDataset()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
@@ -95,6 +96,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void GetDSFileListForExistingDatasetButMissingOneFile()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
@@ -119,6 +121,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void GetLocalPathsForDSFiles()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
@@ -159,6 +162,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         [ExpectedException(typeof(DatasetDoesNotExistInThisReproException))]
         public void GetLocalPathsForMissingDS()
         {
@@ -169,6 +173,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanCopyFromAnotherLikeThis()
         {
             var repro1 = BuildRepro("repro1");
@@ -182,6 +187,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CantCopyFromAnotherTypeOfRepro()
         {
             var repro1 = BuildRepro("repro1");
@@ -194,6 +200,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanCopyFromAlwaysVisibleSCP()
         {
             var repro1 = BuildRepro("repro1");
@@ -206,6 +213,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanCopyFromNeverVisibleSCP()
         {
             var repro1 = BuildRepro("repro1");
@@ -234,6 +242,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyFromSCPTarget()
         {
             // Build remote dataset up on linux
@@ -254,6 +263,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyToSCPTarget()
         {
             // Build remote dataset up on linux

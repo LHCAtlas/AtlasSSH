@@ -157,10 +157,11 @@ namespace AtlasWorkFlows.Locations
                         int count = 0;
                         Policy
                             .Handle<IOException>()
-                            .WaitAndRetryForever(i => TimeSpan.FromSeconds(2), (e, t, c) =>
+                            .WaitAndRetryForever((i, ctx) =>
                             {
                                 count++;
-                                statusUpdate.PCall($"Copying {sourcePath.Name}: {source.Name} -> {Name} (retry ({count}): {e.Message})");
+                                statusUpdate.PCall($"Copying {sourcePath.Name}: {source.Name} -> {Name} (retry {count})");
+                                return TimeSpan.FromSeconds(2);
                             })
                             .Execute(() => {
                                 destPathPart.Refresh();
@@ -241,10 +242,11 @@ namespace AtlasWorkFlows.Locations
             int count = 0;
             Policy
                 .Handle<IOException>()
-                .WaitAndRetryForever(i => TimeSpan.FromSeconds(2), (e, t, c) =>
+                .WaitAndRetryForever((i, ctx) =>
                 {
                     count++;
-                    statusUpdate.PCall($"Reading catalog file ({Name}) (retry ({count}): {e.Message})");
+                    statusUpdate.PCall($"Reading catalog file ({Name}) (retry count {count})");
+                    return TimeSpan.FromSeconds(2);
                 })
                 .Execute(() =>
                 {

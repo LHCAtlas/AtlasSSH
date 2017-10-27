@@ -54,6 +54,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void GetExistingDatasetFileListTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
@@ -93,6 +94,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanCopyToProperLocation()
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
@@ -101,6 +103,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanCopyToProperLocationTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
@@ -108,6 +111,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanNotCopyToProperLocation()
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);

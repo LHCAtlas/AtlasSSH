@@ -40,6 +40,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void GetReproDatasetFileListForBadDS()
         {
             _ssh.CreateRepro();
@@ -149,6 +150,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanSourceCopyToISCPTarget()
         {
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
@@ -157,6 +159,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanNotSourceCopyToISCPTarget()
         {
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
@@ -165,6 +168,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanNotSourceCopyToNonISCPTarget()
         {
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
@@ -184,6 +188,7 @@ namespace AtlasWorkFlowsTest.Location
 #endif
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanSourceCopyFromSomeoneSomewhereElse()
         {
             var _ssh1 = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
@@ -194,6 +199,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CanNotSourceCopyFromSomeoneSomewhereElse()
         {
             var _ssh1 = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
@@ -204,6 +210,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyTo()
         {
             _ssh.CreateRepro();
@@ -280,6 +287,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyWhenOneAlreadyThere()
         {
             // The whole thing is already there.
@@ -329,6 +337,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyToViaTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
@@ -346,6 +355,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyToViaTunnelWithPassword()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnelBigData");
@@ -363,6 +373,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyToTwoStep()
         {
             _ssh.CreateRepro();
@@ -381,6 +392,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyFrom()
         {
             _ssh.CreateRepro();
@@ -397,6 +409,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyFromTwoStep()
         {
             DatasetManager.ResetDSM();
@@ -416,6 +429,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
         public void CopyFromViaTunnelWithPassword()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnelBigData");

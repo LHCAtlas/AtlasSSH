@@ -73,7 +73,7 @@ namespace AtlasSSHTest
         [DeploymentItem("testMachineTwo.txt")]
         public void SSHTunnelAddTwo()
         {
-            using (var t = new SSHConnectionTunnel(File.ReadLines("testmachineTwo.txt").First()))
+            using (var t = new SSHConnectionTunnel(File.ReadLines("testMachineTwo.txt").First()))
             {
                 var pid2 = GetPID(t.Connection);
                 Assert.IsTrue(pid2 != "");
