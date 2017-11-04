@@ -226,19 +226,23 @@ namespace AtlasSSH
                     break;
 
                 // Reset the timeout if data has come in and we are doing that.
-                if (refreshTimeout && streamDataLength.HasChanged)
+                if (streamDataLength.HasChanged)
                 {
-                    timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
+                    if (refreshTimeout)
+                    {
+                        timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
+                    }
+
+                    var data = s.ReadLine(TimeSpan.FromTicks(1));
+                    if (data != null && data.Length > 0)
+                    {
+                        // Archive the line
+                        Trace.WriteLine($"DumpTillFind: Read text: {data}");
+                        lb.Add(data + LineBuffer.CrLf);
+                    }
                 }
 
-                var data = s.ReadLine(TimeSpan.FromSeconds(1));
-                if (data != null && data.Length > 0)
-                {
-                    // Archive the line
-                    Trace.WriteLine($"DumpTillFind: Read text: {data}");
-                    lb.Add(data + LineBuffer.CrLf);
-                }
-
+                // Check to see if we should fail
                 if (failNow != null && failNow())
                 {
                     throw new SSHCommandInterruptedException("Calling routine requested termination of command");
