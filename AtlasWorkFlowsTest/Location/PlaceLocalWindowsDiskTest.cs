@@ -206,7 +206,7 @@ namespace AtlasWorkFlowsTest.Location
             var place1 = new PlaceLocalWindowsDisk("test1", repro1);
             var files = place1.GetLocalFileLocations(new[] { new Uri("gridds://ds1/f1.root") }).ToArray();
             Assert.AreEqual(1, files.Length);
-            Assert.AreEqual($"{uncRoot}\\d1\\files\\f1.root", files[0].LocalPath);
+            Assert.AreEqual($"{uncRoot}\\ds1\\files\\f1.root", files[0].LocalPath);
 
         }
 

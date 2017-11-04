@@ -54,6 +54,25 @@ namespace AtlasSSH
               System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
+        /// <summary>
+        /// Thrown when we can't make the initial connection.
+        /// </summary>
+        [Serializable]
+        public class SSHConnectFailureException : Exception
+        {
+            public SSHConnectFailureException() { }
+            public SSHConnectFailureException(string message) : base(message) { }
+            public SSHConnectFailureException(string message, Exception inner) : base(message, inner) { }
+            protected SSHConnectFailureException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        }
+
+        /// <summary>
+        /// Create the connection. The connection is not actually made until it is actually requested.
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="username"></param>
         public SSHConnection(string host, string username)
         {
             // Fetch the username and password.
@@ -68,7 +87,13 @@ namespace AtlasSSH
             _client = new Lazy<SshClient>(() => {
                 var c = new SshClient(host, username, passwordInfo.Password);
                 c.KeepAliveInterval = TimeSpan.FromSeconds(15);
-                c.Connect();
+                try
+                {
+                    c.Connect();
+                } catch (Exception e)
+                {
+                    throw new SSHConnectFailureException($"Unable to make the connection to {host}.", e);
+                }
                 return c;
             });
 
