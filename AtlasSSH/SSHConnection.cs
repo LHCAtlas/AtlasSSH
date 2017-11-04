@@ -86,7 +86,7 @@ namespace AtlasSSH
             _shell = new Lazy<ShellStream>(() =>
             {
                 var s = _client.Value.CreateShellStream("Commands", TerminalWidth, 200, 132, 80, 240 * 200);
-                _prompt = ExtractPromptText(s);
+                _prompt = ExtractPromptText(s, _client.Value);
                 return s;
             });
         }
@@ -96,11 +96,11 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        private string ExtractPromptText(ShellStream s)
+        private string ExtractPromptText(ShellStream s, SshClient c)
         {
             s.WaitTillPromptText();
             s.WriteLine("# this initialization");
-            DumpTillFind(s, "# this initialization");
+            DumpTillFind(s, c, "# this initialization");
             var prompt = s.ReadRemainingText(1000);
             if (prompt == null || prompt.Length == 0)
             {
@@ -134,6 +134,21 @@ namespace AtlasSSH
         private string _prompt;
 
         /// <summary>
+        /// Thrown when the SSH connection has dropped for whatever reason (e.g. the client is no longer
+        /// connected).
+        /// </summary>
+        [Serializable]
+        public class SSHConnectionDroppedException : Exception
+        {
+            public SSHConnectionDroppedException() { }
+            public SSHConnectionDroppedException(string message) : base(message) { }
+            public SSHConnectionDroppedException(string message, Exception inner) : base(message, inner) { }
+            protected SSHConnectionDroppedException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        }
+
+        /// <summary>
         /// Dump the input until we see a particular string in the returning text.
         /// </summary>
         /// <param name="s">The ssh stream to run against</param>
@@ -144,7 +159,8 @@ namespace AtlasSSH
         /// <param name="refreshTimeout">If we see something back from the host, reset the timeout counter</param>
         /// <param name="crlfExpectedAtEnd">If the crlf is expected, then eat it when we see it. A command line prompt, for example, will not have this.</param>
         /// <param name="seeAndRespond">Dictionary of strings to look for and to respond to with further input.</param>
-        private void DumpTillFind(ShellStream s,
+        private static void DumpTillFind(ShellStream s,
+            SshClient client,
             string matchText, 
             Action<string> ongo = null, 
             int secondsTimeout = 60*60, 
@@ -175,7 +191,7 @@ namespace AtlasSSH
                 .Concat(seeAndRespond == null
                         ? Enumerable.Empty<ExpectAction>()
                         : seeAndRespond
-                            .Select(sr => new ExpectAction(sr.Key, whatMatched => { Trace.WriteLine($"DumpTillFill: Found seeAndRespond: {whatMatched}"); lb.Add(whatMatched); _shell.Value.WriteLine(sr.Value); }))
+                            .Select(sr => new ExpectAction(sr.Key, whatMatched => { Trace.WriteLine($"DumpTillFill: Found seeAndRespond: {whatMatched}"); lb.Add(whatMatched); s.WriteLine(sr.Value); }))
                        )
                        .ToArray();
             if (seeAndRespond != null)
@@ -194,6 +210,13 @@ namespace AtlasSSH
 
             while (timeout > DateTime.Now)
             {
+                // Make sure the connection hasn't dropped. We won't get an exception later on if that hasn't happened.
+                if (!client.IsConnected)
+                {
+                    throw new SSHConnectionDroppedException($"Connection to {client.ConnectionInfo.Host} has been dropped.");
+                }
+
+                // Wait for some sort of interesting text to come back.
                 s.Expect(TimeSpan.FromMilliseconds(100), expect_actions);
                 if (!crlfExpectedAtEnd)
                 {
@@ -233,7 +256,7 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        private string SummarizeText(string str)
+        private static string SummarizeText(string str)
         {
             return str.Length > 50
                 ? str.Substring(0, 25) + ".." + str.Substring(str.Length - 25)
@@ -266,13 +289,13 @@ namespace AtlasSSH
                 try
                 {
                     _shell.Value.WriteLine(command);
-                    DumpTillFind(_shell.Value,
+                    DumpTillFind(_shell.Value, _client.Value,
                         command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)),
                         ongo: s => buf.Add(s),
                         crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
                     if (WaitForCommandResult)
                     {
-                        DumpTillFind(_shell.Value, _prompt, s => {
+                        DumpTillFind(_shell.Value, _client.Value, _prompt, s => {
                             buf.Add(s);
                             if (output != null)
                             {
