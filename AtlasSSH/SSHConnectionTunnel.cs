@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Polly;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static AtlasSSH.SSHConnection;
+using System.IO;
 
 namespace AtlasSSH
 {
@@ -23,8 +24,23 @@ namespace AtlasSSH
     /// 
     /// Each connection tunnel isn't a seeprate connection, so it doesn't make sense to iterate through them.
     /// </summary>
-    public class SSHConnectionTunnel : IEnumerable<SSHConnection>, IDisposable
+    public class SSHConnectionTunnel : ISSHConnection
     {
+        /// <summary>
+        /// Return the last connection in our list.
+        /// </summary>
+        public string MachineName { get; private set; }
+
+        /// <summary>
+        /// Return the username of the deepest tunnel
+        /// </summary>
+        public string Username { get; private set; }
+
+        /// <summary>
+        /// Return how many tunnels we have... (or will have). 0 if we will only have a connection to one machine.
+        /// </summary>
+        public int TunnelCount { get; private set; } = 0;
+
         /// <summary>
         /// Use a connection string like "user@machine1.com" or "user@machine1.com -> user@machine2.com" to
         /// make a connection via tunneling (or not!)
@@ -65,26 +81,18 @@ namespace AtlasSSH
         /// <param name="c"></param>
         private void AddSingleConnection(string c)
         {
+            var userMachineInfo = ExtractUserAndMachine(c);
+            MachineName = userMachineInfo.machine;
+            Username = userMachineInfo.user;
             if (_deepestConnection == null)
             {
                 _machineConnectionStrings.Add(c);
+                TunnelCount = _machineConnectionStrings.Count - 1;
             }
             else
             {
+                TunnelCount++;
                 MakeSSHTunnelConnection(c);
-            }
-        }
-
-        /// <summary>
-        /// Returns the SSH connection to the remote machine via tunnels. The first time this is accessed
-        /// the connection will be made.
-        /// </summary>
-        public SSHConnection Connection
-        {
-            get
-            {
-                var c = GetDeepestConnection();
-                return c;
             }
         }
 
@@ -119,17 +127,26 @@ namespace AtlasSSH
         {
             if (_deepestConnection == null && _machineConnectionStrings.Count > 0)
             {
-                _connectionStack = new List<IDisposable>();
-                var userMachineInfo = ExtractUserAndMachine(_machineConnectionStrings[0]);
-                _deepestConnection = new SSHConnection(userMachineInfo.Item2, userMachineInfo.Item1);
-
-                foreach (var cinfo in _machineConnectionStrings.Skip(1))
+                Policy
+                    .Handle<UnableToCreateSSHTunnelException>()
+                .WaitAndRetry(new[] { TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30) })
+                .Execute(() =>
                 {
-                    MakeSSHTunnelConnection(cinfo);
-                }
+                    _connectionStack = new List<IDisposable>();
+                    var userMachineInfo = ExtractUserAndMachine(_machineConnectionStrings[0]);
+                    _deepestConnection = new SSHConnection(userMachineInfo.machine, userMachineInfo.user);
 
-                // We don't need to track the connection strings any more.
-                _machineConnectionStrings = null;
+                    foreach (var cinfo in _machineConnectionStrings.Skip(1))
+                    {
+                        MakeSSHTunnelConnection(cinfo);
+                    }
+
+                    // We don't need to track the connection strings any more.
+                    _machineConnectionStrings = null;
+                });
+            } else if (_deepestConnection == null && _machineConnectionStrings.Count == 0)
+            {
+                throw new InvalidOperationException("Attempt to form an SSH tunnel without specifying any destination.");
             }
         }
 
@@ -140,7 +157,21 @@ namespace AtlasSSH
         private void MakeSSHTunnelConnection(string cinfo)
         {
             var cUserMachine = ExtractUserAndMachine(cinfo);
-            _connectionStack.Add(_deepestConnection.SSHTo(cUserMachine.Item2, cUserMachine.Item1));
+            _connectionStack.Add(_deepestConnection.SSHTo(cUserMachine.machine, cUserMachine.user));
+        }
+
+        /// <summary>
+        /// Thrown if we can't figure out how to parse the username/host string.
+        /// </summary>
+        [Serializable]
+        public class InvalidHostSpecificationException : Exception
+        {
+            public InvalidHostSpecificationException() { }
+            public InvalidHostSpecificationException(string message) : base(message) { }
+            public InvalidHostSpecificationException(string message, Exception inner) : base(message, inner) { }
+            protected InvalidHostSpecificationException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
         /// <summary>
@@ -148,32 +179,14 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="v"></param>
         /// <returns>Tuple with 0 being the user and 1 the machine</returns>
-        private Tuple<string, string> ExtractUserAndMachine(string v)
+        private (string user, string machine) ExtractUserAndMachine(string v)
         {
             var t = v.Split('@');
             if (t.Length != 2)
             {
-                throw new ArgumentException($"Looking for a SSH connection in the form of user@machine, but found '{v}' instead!");
+                throw new InvalidHostSpecificationException($"Looking for a SSH connection in the form of user@machine, but found '{v}' instead!");
             }
-            return Tuple.Create(t[0].Trim(), t[1].Trim());
-        }
-
-        /// <summary>
-        /// Get the enumerator.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator<SSHConnection> GetEnumerator()
-        {
-            throw new InvalidOperationException("The tunnels are seperate SSH Connections, so you can't really enumerate through them");
-        }
-
-        /// <summary>
-        /// Return the enumerator
-        /// </summary>
-        /// <returns></returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            throw new InvalidOperationException("The tunnels are seperate SSH Connections, so you can't really enumerate through them");
+            return (t[0].Trim(), t[1].Trim());
         }
 
         /// <summary>
@@ -188,6 +201,42 @@ namespace AtlasSSH
                     c.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// Execute the command
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="output"></param>
+        /// <param name="secondsTimeout"></param>
+        /// <param name="refreshTimeout"></param>
+        /// <param name="failNow"></param>
+        /// <param name="dumpOnly"></param>
+        /// <param name="seeAndRespond"></param>
+        /// <param name="waitForCommandReponse"></param>
+        /// <returns></returns>
+        public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 3600, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null, bool waitForCommandReponse = true)
+        {
+            MakeConnections();
+            return _deepestConnection.ExecuteCommand(command, output, secondsTimeout, refreshTimeout, failNow, dumpOnly, seeAndRespond, waitForCommandReponse);
+        }
+
+        public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
+        {
+            MakeConnections();
+            return _deepestConnection.CopyRemoteDirectoryLocally(remotedir, localDir, statusUpdate);
+        }
+
+        public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            MakeConnections();
+            return _deepestConnection.CopyRemoteFileLocally(lx, localFile, statusUpdate, failNow);
+        }
+
+        public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            MakeConnections();
+            return _deepestConnection.CopyLocalFileRemotely(localFile, linuxPath, statusUpdate, failNow);
         }
     }
 }

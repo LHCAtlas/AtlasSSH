@@ -158,6 +158,8 @@ namespace AtlasSSH
         /// </summary>
         private string _prompt;
 
+        public string Username => throw new NotImplementedException();
+
         /// <summary>
         /// Thrown when the SSH connection has dropped for whatever reason (e.g. the client is no longer
         /// connected).

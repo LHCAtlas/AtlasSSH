@@ -14,7 +14,9 @@ using System.Diagnostics;
 
 namespace AtlasWorkFlows.Locations
 {
-
+    /// <summary>
+    /// File is missign up on Linux where we expected it.
+    /// </summary>
     [Serializable]
     public class MissingLinuxFileException : Exception
     {
@@ -35,62 +37,47 @@ namespace AtlasWorkFlows.Locations
     class PlaceLinuxRemote : IPlace, ISCPTarget, IDisposable
     {
         /// <summary>
-        /// How to get to the end point we are talking to. Might require some tunneling (if there are more than one).
-        /// </summary>
-        public SSHUtils.SSHHostPair[] RemoteHostInfo { get; private set; }
-
-        /// <summary>
         /// Path in the Linux side of things where everything is.
         /// </summary>
         private string _remote_path;
-        
+
         /// <summary>
-        /// Create a new repro located on a Linux machine.
+        /// Track the connection string to get to the remote host.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="remote_ipaddr"></param>
-        /// <param name="username"></param>
-        /// <param name="remote_path"></param>
-        public PlaceLinuxRemote(string name, string remote_ipaddr, string username, string remote_path)
-            : this(name, remote_path, new SSHUtils.SSHHostPair[] { new SSHUtils.SSHHostPair() { Host = remote_ipaddr, Username = username } })
-        {
-        }
+        private string _connection_string;
 
         /// <summary>
         /// Create the connection based on 
         /// </summary>
         /// <param name="name"></param>
         /// <param name="remote_path"></param>
-        /// <param name="remoteHostAndTunnels"></param>
-        public PlaceLinuxRemote(string name, string remote_path, SSHUtils.SSHHostPair[] remoteHostAndTunnels)
+        /// <param name="connection_string">String we should connect to "user@host -> user@host"</param>
+        public PlaceLinuxRemote(string name, string remote_path, string connection_string)
         {
             Name = name;
             _remote_path = remote_path;
             DataTier = 50;
 
-            RemoteHostInfo = remoteHostAndTunnels;
+            _connection_string = connection_string;
             _connection = null;
             ResetConnections();
         }
 
         /// <summary>
-        /// Track any sub-ssh shells we've formed.
+        /// Return a new SSH connection that points to the same place we are using
+        /// for the grid internally.
         /// </summary>
-        private List<IDisposable> _tunnelConnections = null;
+        /// <returns></returns>
+        internal ISSHConnection CloneConnection()
+        {
+            return new SSHConnectionTunnel(_connection_string);
+        }
 
         /// <summary>
         /// Close and reset the connection
         /// </summary>
         public void ResetConnections(bool reAlloc)
         {
-            if (_tunnelConnections != null)
-            {
-                foreach (var c in _tunnelConnections.Reverse<IDisposable>())
-                {
-                    c.Dispose();
-                }
-                _tunnelConnections = null;
-            }
             if (_connection != null && _connection.IsValueCreated)
             {
                 _connection.Value.Dispose();
@@ -98,11 +85,9 @@ namespace AtlasWorkFlows.Locations
             }
             if (reAlloc)
             {
-                _connection = new Lazy<SSHConnection>(() =>
+                _connection = new Lazy<SSHConnectionTunnel>(() =>
                 {
-                    var r = RemoteHostInfo.MakeConnection();
-                    _tunnelConnections = r.Item2;
-                    return r.Item1;
+                    return new SSHConnectionTunnel(_connection_string);
                 });
             }
         }
@@ -142,12 +127,12 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// The machine name for accessing this SCP end point.
         /// </summary>
-        public string SCPMachineName { get { return RemoteHostInfo.Last().Host; } }
+        public string SCPMachineName { get { return _connection.Value.MachineName; } }
 
         /// <summary>
         /// The username for accessing this machine via SCP
         /// </summary>
-        public string SCPUser { get { return RemoteHostInfo.Last().Username; } }
+        public string SCPUser { get { return _connection.Value.Username; } }
 
         /// <summary>
         /// We can start a copy from here to other places that have a SSH destination available.
@@ -298,7 +283,7 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// Track the connection to the remote computer. Once opened we keep it open.
         /// </summary>
-        private Lazy<SSHConnection> _connection;
+        private Lazy<SSHConnectionTunnel> _connection;
 
         /// <summary>
         /// The full list of all files that belong to a particular dataset. This is regardless
@@ -425,7 +410,7 @@ namespace AtlasWorkFlows.Locations
         public bool SCPIsVisibleFrom(string internetLocation)
         {
             // If we are globally visible. Currently we use a heuristic.
-            return RemoteHostInfo.Length == 1; 
+            return _connection.Value.TunnelCount == 0; 
         }
 
         /// <summary>

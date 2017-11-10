@@ -16,7 +16,7 @@ namespace AtlasWorkFlowsTest.Location
         /// <summary>
         /// internet name of machine we will be accessing to run tests against.
         /// </summary>
-        public SSHUtils.SSHHostPair[] RemoteHostInfo;
+        public string RemoteHostInfo;
 
         /// <summary>
         /// Absolute path on that machine of where the repro is to be put.
@@ -24,10 +24,9 @@ namespace AtlasWorkFlowsTest.Location
         public string RemotePath;
 
         /// <summary>
-        /// Track the ssh tunnels we've built.
+        /// Initalize to a location.
         /// </summary>
-        private List<IDisposable> _tunnelInfo = null;
-
+        /// <param name="testMachineName"></param>
         public UtilsForBuildingLinuxDatasets(string testMachineName = "LinuxRemoteTest")
         {
             // Clean out all caches.
@@ -41,27 +40,20 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsTrue(p.ContainsKey("LinuxRemoteTest"), "Unable to find machine info in LinuxRemoteTest");
             var lrtInfo = p[testMachineName];
 
-            RemoteHostInfo = lrtInfo["LinuxHost"].ParseHostPairChain();
+            RemoteHostInfo = lrtInfo["LinuxHost"];
             RemotePath = lrtInfo["LinuxPath"];
         }
 
         /// <summary>
         /// The connection to the remote computer where we build and destroy datasets.
         /// </summary>
-        private SSHConnection Connection { get; set; }
+        private ISSHConnection Connection { get; set; }
 
         /// <summary>
         /// Close down the ssh connection
         /// </summary>
         public void TestCleanup()
         {
-            if (_tunnelInfo != null)
-            {
-                foreach (var c in _tunnelInfo.Reverse<IDisposable>())
-                {
-                    c.Dispose();
-                }
-            }
             if (Connection != null)
             {
                 Connection.Dispose();
@@ -119,9 +111,7 @@ namespace AtlasWorkFlowsTest.Location
             Assert.IsFalse(remote_path.Contains("*"));
 
             // Create the new repro
-            var connectionInfo = RemoteHostInfo.MakeConnection();
-            Connection = connectionInfo.Item1;
-            _tunnelInfo = connectionInfo.Item2;
+            Connection = new SSHConnectionTunnel(RemoteHostInfo);
             Connection.ExecuteLinuxCommand($"rm -rf {remote_path}")
                 .ExecuteLinuxCommand($"mkdir -p {remote_path}");
         }

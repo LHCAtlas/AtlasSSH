@@ -43,13 +43,6 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         public void ResetConnections(bool reAlloc)
         {
-            if (_tunnelConnections != null)
-            {
-                foreach (var c in _tunnelConnections.Reverse<IDisposable>())
-                {
-                    c.Dispose();
-                }
-            }
             if (_connection != null && _connection.IsValueCreated)
             {
                 _connection.Value.Dispose();
@@ -73,19 +66,15 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// Track the other tunnel connections.
         /// </summary>
-        private List<IDisposable> _tunnelConnections = null;
         private ISSHConnection InitConnection(Action<string> statusUpdater, Func<bool> failNow = null)
         {
             if (statusUpdater != null)
                 statusUpdater("Setting up GRID Environment");
-            var r = _linuxRemote.RemoteHostInfo.MakeConnection();
-            r.Item1
+            var r = _linuxRemote.CloneConnection();
+            return r
                 .setupATLAS()
-                .setupRucio(_linuxRemote.RemoteHostInfo.Last().Username)
+                .setupRucio(r.Username)
                 .VomsProxyInit("atlas", failNow: failNow);
-            _tunnelConnections = r.Item2;
-
-            return r.Item1;
         }
 
         /// <summary>

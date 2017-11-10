@@ -466,7 +466,7 @@ namespace AtlasWorkFlows
         /// <returns></returns>
         private static PlaceLinuxRemote CreateLinuxFilesystemPlace(string name, Dictionary<string, string> info)
         {
-            return new PlaceLinuxRemote(name, info["LinuxPath"], info["LinuxHost"].ParseHostPairChain());
+            return new PlaceLinuxRemote(name, info["LinuxPath"], info["LinuxHost"]);
         }
 
         /// <summary>

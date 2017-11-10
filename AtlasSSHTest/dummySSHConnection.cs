@@ -50,6 +50,8 @@ namespace AtlasSSHTest
         /// </summary>
         private Queue<CommandChangeInfo> _changeQueue = new Queue<CommandChangeInfo>();
 
+        public string Username => throw new NotImplementedException();
+
         /// <summary>
         /// After we see a command, then do the replace. We will allow the given command to "execute" first.
         /// These are Queued.
@@ -110,6 +112,16 @@ namespace AtlasSSHTest
 
         public void Dispose()
         {
+        }
+
+        public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }
