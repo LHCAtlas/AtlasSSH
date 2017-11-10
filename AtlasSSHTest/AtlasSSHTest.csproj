@@ -70,6 +70,7 @@
     <Compile Include="RawInteractions.cs" />
     <Compile Include="CircularStringBufferTest.cs" />
     <Compile Include="SSHConnectionTunnelTest.cs" />
+    <Compile Include="SSHRecoveringConnectionTest.cs" />
     <Compile Include="util.cs" />
   </ItemGroup>
   <ItemGroup>
