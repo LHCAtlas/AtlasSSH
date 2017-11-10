@@ -30,6 +30,10 @@ namespace AtlasSSH
         /// </summary>
         public string Username => ExecuteInConnection(c => c.Username);
 
+        public string MachineName => ExecuteInConnection(c => c.MachineName);
+
+        public bool GloballyVisible => ExecuteInConnection(c => c.GloballyVisible);
+
         [Serializable]
         public class NullSSHConnectionException : InvalidOperationException
         {
@@ -52,17 +56,17 @@ namespace AtlasSSH
 
         public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            throw new NotImplementedException();
+            return ExecuteInConnection(c => c.CopyLocalFileRemotely(localFile, linuxPath, statusUpdate, failNow));
         }
 
         public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
-            throw new NotImplementedException();
+            return ExecuteInConnection(c => c.CopyRemoteDirectoryLocally(remotedir, localDir, statusUpdate));
         }
 
         public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            throw new NotImplementedException();
+            return ExecuteInConnection(c => c.CopyRemoteFileLocally(lx, localFile, statusUpdate, failNow));
         }
 
         /// <summary>

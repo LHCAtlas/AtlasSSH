@@ -19,5 +19,15 @@ namespace AtlasSSH
         /// to the remote system.
         /// </summary>
         string Username { get; }
+
+        /// <summary>
+        /// Return the name of the machine we are connected to
+        /// </summary>
+        string MachineName { get; }
+
+        /// <summary>
+        /// True if the machine we are connected to is visible on the open internet.
+        /// </summary>
+        bool GloballyVisible { get; }
     }
 }

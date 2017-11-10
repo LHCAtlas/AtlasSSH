@@ -156,6 +156,10 @@ namespace AtlasSSHTest
             /// </summary>
             public string Username => "myname";
 
+            public string MachineName => throw new NotImplementedException();
+
+            public bool GloballyVisible => throw new NotImplementedException();
+
             public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();

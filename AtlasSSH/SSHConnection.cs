@@ -160,6 +160,13 @@ namespace AtlasSSH
 
         public string Username => throw new NotImplementedException();
 
+        public string MachineName => throw new NotImplementedException();
+
+        /// <summary>
+        /// Since we are connected, we assume we are always there.
+        /// </summary>
+        public bool GloballyVisible => true;
+
         /// <summary>
         /// Thrown when the SSH connection has dropped for whatever reason (e.g. the client is no longer
         /// connected).

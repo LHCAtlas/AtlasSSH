@@ -52,6 +52,10 @@ namespace AtlasSSHTest
 
         public string Username => throw new NotImplementedException();
 
+        public string MachineName => throw new NotImplementedException();
+
+        public bool GloballyVisible => throw new NotImplementedException();
+
         /// <summary>
         /// After we see a command, then do the replace. We will allow the given command to "execute" first.
         /// These are Queued.

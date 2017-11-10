@@ -85,9 +85,9 @@ namespace AtlasWorkFlows.Locations
             }
             if (reAlloc)
             {
-                _connection = new Lazy<SSHConnectionTunnel>(() =>
+                _connection = new Lazy<ISSHConnection>(() =>
                 {
-                    return new SSHConnectionTunnel(_connection_string);
+                    return new SSHRecoveringConnection(() => new SSHConnectionTunnel(_connection_string));
                 });
             }
         }
@@ -283,7 +283,7 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// Track the connection to the remote computer. Once opened we keep it open.
         /// </summary>
-        private Lazy<SSHConnectionTunnel> _connection;
+        private Lazy<ISSHConnection> _connection;
 
         /// <summary>
         /// The full list of all files that belong to a particular dataset. This is regardless
@@ -410,7 +410,7 @@ namespace AtlasWorkFlows.Locations
         public bool SCPIsVisibleFrom(string internetLocation)
         {
             // If we are globally visible. Currently we use a heuristic.
-            return _connection.Value.TunnelCount == 0; 
+            return _connection.Value.GloballyVisible; 
         }
 
         /// <summary>

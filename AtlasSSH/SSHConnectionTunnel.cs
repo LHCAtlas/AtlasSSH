@@ -42,6 +42,11 @@ namespace AtlasSSH
         public int TunnelCount { get; private set; } = 0;
 
         /// <summary>
+        /// Assume if we didn't have to tunnel, then we don't need to know about the globally visible guy.
+        /// </summary>
+        public bool GloballyVisible => TunnelCount == 0;
+
+        /// <summary>
         /// Use a connection string like "user@machine1.com" or "user@machine1.com -> user@machine2.com" to
         /// make a connection via tunneling (or not!)
         /// </summary>
