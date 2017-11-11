@@ -108,6 +108,22 @@ namespace AtlasSSHTest
             }
         }
 
+        [TestMethod]
+        public void SSHRecoverMakeSureCommandRetriedOnException()
+        {
+            using (var c = new SSHRecoveringConnection(() => new dummyConnection(failExecuteCommandForNTimes: 1)))
+            {
+                c.RetryWaitPeriod = TimeSpan.FromMilliseconds(5);
+                try
+                {
+                    c.ExecuteLinuxCommand("ls");
+                }
+                catch { }
+                Assert.AreEqual(2, dummyConnection.ListOfCommands.Count());
+                Assert.AreEqual("ls", dummyConnection.ListOfCommands[0]);
+            }
+        }
+
         /// <summary>
         /// A dummy connection to simulate errors (or not)
         /// </summary>
@@ -116,7 +132,13 @@ namespace AtlasSSHTest
             public static void Reset()
             {
                 CalledExecuteLinuxCommand = 0;
+                ListOfCommands.Clear();
             }
+
+            /// <summary>
+            /// List of commands
+            /// </summary>
+            public static List<string> ListOfCommands = new List<string>();
 
             /// <summary>
             /// How many times have we been called?
@@ -204,6 +226,7 @@ namespace AtlasSSHTest
                     throw new ArgumentException($"Dictionary doesn't have command '{command}'.");
                 }
                 output?.Invoke(_responses[command]);
+                ListOfCommands.Add(command);
                 return this;
             }
         }
