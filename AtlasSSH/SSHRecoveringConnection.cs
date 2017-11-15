@@ -148,6 +148,7 @@ namespace AtlasSSH
                 return Policy
                     .Handle<SshConnectionException>(e => e.Message.Contains("Client not connected"))
                     .Or<SSHConnectionDroppedException>()
+                    .Or<TimeoutException>(e => e.Message.Contains("back from host"))
                     .WaitAndRetryForever(index => RetryWaitPeriod)
                     .Execute(() =>
                     {
