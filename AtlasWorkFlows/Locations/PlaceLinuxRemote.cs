@@ -331,7 +331,7 @@ namespace AtlasWorkFlows.Locations
         public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
         {
             return uris
-                .Select(u => this.GetAbosluteLinuxFilePaths(u.DatasetName())
+                .Select(u => this.GetAbsoluteLinuxFilePaths(u.DatasetName())
                             .Where(uf => uf.Split('/').Last() == u.DatasetFilename())
                             .FirstOrDefault()
                             .ThrowIfNull(() => new ArgumentException("Unable to find one of the files at this location!")))
@@ -358,7 +358,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsname"></param>
         /// <returns>List of all Linux paths for files in the dataset. Returns the empty array if the dataset does not exist on the server.</returns>
-        private string[] GetAbosluteLinuxFilePaths(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        private string[] GetAbsoluteLinuxFilePaths(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             try
             {
@@ -396,7 +396,7 @@ namespace AtlasWorkFlows.Locations
                 throw new UnknownUriSchemeException($"The uri '{u.OriginalString}' is not a gridds:// uri - can't map it to a file!");
             }
 
-            return GetAbosluteLinuxFilePaths(u.DatasetName(), statusUpdate, failNow)
+            return GetAbsoluteLinuxFilePaths(u.DatasetName(), statusUpdate, failNow)
                 .Select(f => f.Split('/').Last())
                 .Where(f => f == u.DatasetFilename())
                 .Any();
@@ -420,7 +420,7 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public string GetSCPFilePath(Uri f)
         {
-            var file = GetAbosluteLinuxFilePaths(f.DatasetName())
+            var file = GetAbsoluteLinuxFilePaths(f.DatasetName())
                 .Where(rf => rf.EndsWith("/" + f.DatasetFilename()))
                 .FirstOrDefault();
             if (file == null)
@@ -494,7 +494,7 @@ namespace AtlasWorkFlows.Locations
         public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Turn them into linux file locations by doing matching. The files should be identical.
-            var linuxLocations = GetAbosluteLinuxFilePaths(dsName, statusUpdate, failNow);
+            var linuxLocations = GetAbsoluteLinuxFilePaths(dsName, statusUpdate, failNow);
             var linuxFiles = files
                 .Select(f => linuxLocations.Where(lx => lx.EndsWith("/" + f)).FirstOrDefault())
                 .Throw<string>(s => s == null, s => new DatasetFileNotLocalException($"File '{s}' is not in place {Name}, so we can't copy it locally!"));

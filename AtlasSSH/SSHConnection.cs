@@ -42,7 +42,6 @@ namespace AtlasSSH
             { }
         }
 
-
         [Serializable]
         public class UnableToCreateSSHTunnelException : Exception
         {
@@ -330,7 +329,7 @@ namespace AtlasSSH
                     DumpTillFind(_shell.Value, _client.Value,
                         command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)),
                         ongo: s => buf.Add(s),
-                        crlfExpectedAtEnd: true, secondsTimeout: 10, failNow: failNow); // The command is (normally) repeated back to us...
+                        crlfExpectedAtEnd: true, secondsTimeout: 20, failNow: failNow); // The command is (normally) repeated back to us...
                     if (WaitForCommandResult)
                     {
                         DumpTillFind(_shell.Value, _client.Value, _prompt, s => {
