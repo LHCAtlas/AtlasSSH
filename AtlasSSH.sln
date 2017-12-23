@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2006
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1DA2630F-569B-4CF7-AC32-61769CA849A6}"
 	ProjectSection(SolutionItems) = preProject
@@ -82,14 +82,12 @@ Global
 		{A5F8C6C6-86E7-407E-9B7B-88FDF2E499C7}.Release|x64.Build.0 = Release|Any CPU
 		{A5F8C6C6-86E7-407E-9B7B-88FDF2E499C7}.Release|x86.ActiveCfg = Release|Any CPU
 		{A5F8C6C6-86E7-407E-9B7B-88FDF2E499C7}.Release|x86.Build.0 = Release|Any CPU
-		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Debug|x64.ActiveCfg = Debug|x64
 		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Debug|x64.Build.0 = Debug|x64
 		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Debug|x86.ActiveCfg = Debug|x86
 		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Debug|x86.Build.0 = Debug|x86
-		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Release|Any CPU.ActiveCfg = Release|x86
 		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Release|x64.ActiveCfg = Release|x64
 		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Release|x64.Build.0 = Release|x64
 		{FACBC793-B9DA-480D-81E4-FD2B0E260E86}.Release|x86.ActiveCfg = Release|x64
