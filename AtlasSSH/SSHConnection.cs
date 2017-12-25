@@ -1,4 +1,5 @@
 ﻿using CredentialManagement;
+using Nito.AsyncEx;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
@@ -107,10 +108,10 @@ namespace AtlasSSH
 
             // And create a shell stream. Initialize to find the prompt so we can figure out, later, when
             // a task has finished.
-            _shell = new Lazy<ShellStream>(() =>
+            _shell = new AsyncLazy<ShellStream>(async () =>
             {
                 var s = _client.Value.CreateShellStream("Commands", TerminalWidth, 200, 132, 80, 240 * 200);
-                _prompt = ExtractPromptText(s, _client.Value);
+                _prompt = await ExtractPromptText(s, _client.Value);
                 return s;
             });
         }
@@ -120,12 +121,12 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        private string ExtractPromptText(ShellStream s, SshClient c)
+        private async Task<string> ExtractPromptText(ShellStream s, SshClient c)
         {
-            s.WaitTillPromptText();
+            await s.WaitTillPromptText();
             s.WriteLine("# this initialization");
-            DumpTillFind(s, c, "# this initialization");
-            var prompt = s.ReadRemainingText(1000);
+            await DumpTillFind(s, c, "# this initialization");
+            var prompt = await s.ReadRemainingText(1000);
             if (prompt == null || prompt.Length == 0)
             {
                 throw new LinuxCommandErrorException("Did not find the shell prompt! I will not be able to properly interact with this shell!");
@@ -147,7 +148,7 @@ namespace AtlasSSH
         /// <summary>
         /// Hold onto a shell stream. By referencing it the first time it will be created.
         /// </summary>
-        private Lazy<ShellStream> _shell;
+        private AsyncLazy<ShellStream> _shell;
 
         private Lazy<ScpClient> _scp;
 
@@ -192,7 +193,7 @@ namespace AtlasSSH
         /// <param name="refreshTimeout">If we see something back from the host, reset the timeout counter</param>
         /// <param name="crlfExpectedAtEnd">If the crlf is expected, then eat it when we see it. A command line prompt, for example, will not have this.</param>
         /// <param name="seeAndRespond">Dictionary of strings to look for and to respond to with further input.</param>
-        private static void DumpTillFind(ShellStream s,
+        private static async Task DumpTillFind(ShellStream s,
             SshClient client,
             string matchText, 
             Action<string> ongo = null, 
@@ -250,7 +251,11 @@ namespace AtlasSSH
                 }
 
                 // Wait for some sort of interesting text to come back.
-                s.Expect(TimeSpan.FromMilliseconds(100), expect_actions);
+                await Task.Factory.FromAsync(
+                    s.BeginExpect(TimeSpan.FromMilliseconds(100), null, null, expect_actions),
+                    s.EndExpect);
+
+                // If a crlf is not expected, then if we have a match we are done.
                 if (!crlfExpectedAtEnd)
                 {
                     gotmatch = gotmatch || lb.Match(matchText);
@@ -301,6 +306,28 @@ namespace AtlasSSH
         }
 
         /// <summary>
+        /// Execute a single command syncrohonsly. Output from that command will be sent back via the output call-back.
+        /// action.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="output"></param>
+        /// <param name="failNow">If this ever returns true, fail as fast as possible.</param>
+        /// <param name="dumpOnly">If true, print to the Trace machnism all commands, but do not execute them.</param>
+        /// <param name="refreshTimeout">If true, reset the the timeout counter every time some new input shows up.</param>
+        /// <param name="WaitForCommandResult">If false don't attempt to get the output from the command.</param>
+        /// <returns></returns>
+        public ISSHConnection ExecuteCommand(string command,
+            Action<string> output = null,
+            int secondsTimeout = 60 * 60, bool refreshTimeout = false,
+            Func<bool> failNow = null,
+            bool dumpOnly = false,
+            Dictionary<string, string> seeAndRespond = null,
+            bool WaitForCommandResult = true)
+        {
+            return ExecuteCommandAsync(command, output, secondsTimeout, refreshTimeout, failNow, dumpOnly, seeAndRespond, WaitForCommandResult).Result;
+        }
+
+        /// <summary>
         /// Execute a single command. Output from that command will be sent back via the output
         /// action.
         /// </summary>
@@ -311,7 +338,7 @@ namespace AtlasSSH
         /// <param name="refreshTimeout">If true, reset the the timeout counter every time some new input shows up.</param>
         /// <param name="WaitForCommandResult">If false don't attempt to get the output from the command.</param>
         /// <returns></returns>
-        public ISSHConnection ExecuteCommand(string command, 
+        public async Task<ISSHConnection> ExecuteCommandAsync(string command, 
             Action<string> output = null,
             int secondsTimeout = 60*60, bool refreshTimeout = false,
             Func<bool> failNow = null,
@@ -325,14 +352,14 @@ namespace AtlasSSH
                 var buf = new CircularStringBuffer(1024);
                 try
                 {
-                    _shell.Value.WriteLine(command);
-                    DumpTillFind(_shell.Value, _client.Value,
+                    (await _shell).WriteLine(command);
+                    await DumpTillFind((await _shell), _client.Value,
                         command.Substring(0, Math.Min(TerminalWidth - 30, command.Length)),
                         ongo: s => buf.Add(s),
                         crlfExpectedAtEnd: true, secondsTimeout: 20, failNow: failNow); // The command is (normally) repeated back to us...
                     if (WaitForCommandResult)
                     {
-                        DumpTillFind(_shell.Value, _client.Value, _prompt, s => {
+                        await DumpTillFind((await _shell), _client.Value, _prompt, s => {
                             buf.Add(s);
                             if (output != null)
                             {
@@ -379,13 +406,18 @@ namespace AtlasSSH
             }
         }
 
+        public IDisposable SSHTo (string host, string username)
+        {
+            return SSHToAsync(host, username).Result;
+        }
+
         /// <summary>
         /// ssh to another machine. This implies we have to deal with a new prompt.
         /// </summary>
         /// <param name="host">host of remote machine to ssh to</param>
         /// <param name="username">username to use when we ssh there</param>
         /// <returns>A context item. Dispose and it will exit the remote shell. If you let it garbage collect you might be caught by unexpected behavior!!</returns>
-        public IDisposable SSHTo(string host, string username)
+        public async Task<IDisposable> SSHToAsync(string host, string username)
         {
             // Archive the prompt for later use
             // Since getting the connection runing is lazy, the prompt won't be set
@@ -403,8 +435,8 @@ namespace AtlasSSH
             var cmdResult = new StringBuilder();
             while (_prompt == null)
             {
-                cmdResult.Append(_shell.Value.WaitTillPromptText());
-                var text = _shell.Value.Read();
+                cmdResult.Append(await (await _shell).WaitTillPromptText());
+                var text = (await _shell).Read();
                 cmdResult.Append(text);
                 if (text.StartsWith("Password"))
                 {
@@ -414,7 +446,7 @@ namespace AtlasSSH
                     {
                         throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));
                     }
-                    _shell.Value.WriteLine(passwordInfo.Password);
+                    (await _shell).WriteLine(passwordInfo.Password);
                 } else if (!string.IsNullOrWhiteSpace(text))
                 {
                     _prompt = text;
@@ -443,13 +475,25 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Copy a remote directory locally
+        /// Syncronously copy a remote directory to a local file.
+        /// </summary>
+        /// <param name="remotedir"></param>
+        /// <param name="localDir"></param>
+        /// <param name="statusUpdate"></param>
+        /// <returns></returns>
+        public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
+        {
+            return CopyRemoteDirectoryLocallyAsync(remotedir, localDir, statusUpdate).Result;
+        }
+
+        /// <summary>
+        /// Asyncronously Copy a remote directory locally
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="remotedir"></param>
         /// <param name="localDir"></param>
         /// <returns></returns>
-        public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
+        public async Task<ISSHConnection> CopyRemoteDirectoryLocallyAsync(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
             _scpError = null;
             EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
@@ -459,7 +503,7 @@ namespace AtlasSSH
             }
             try
             {
-                _scp.Value.Download(remotedir, localDir);
+                await Task.Factory.StartNew(() => _scp.Value.Download(remotedir, localDir));
                 if (_scpError != null)
                 {
                     throw _scpError;
@@ -487,13 +531,26 @@ namespace AtlasSSH
         }
 
         /// <summary>
+        /// Syncronously copy a file from a remote location to our local directory at a specific spot.
+        /// </summary>
+        /// <param name="lx"></param>
+        /// <param name="localFile"></param>
+        /// <param name="statusUpdate"></param>
+        /// <param name="failNow"></param>
+        /// <returns></returns>
+        public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            return CopyRemoteFileLocallyAsync(lx, localFile, statusUpdate, failNow).Result;
+        }
+
+        /// <summary>
         /// Copy a file from a remote location to our local directory at a speciic spot.
         /// </summary>
         /// <param name="lx"></param>
         /// <param name="localFile"></param>
         /// <param name="statusUpdate"></param>
         /// <returns></returns>
-        public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public async Task<ISSHConnection> CopyRemoteFileLocallyAsync(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Reset the global error value to null.
             _scpError = null;
@@ -519,7 +576,7 @@ namespace AtlasSSH
             try
             {
                 var lxFname = lx.Split('/').Last();
-                _scp.Value.Download(lx, localFile);
+                await Task.Factory.StartNew(() => _scp.Value.Download(lx, localFile));
                 if (_scpError != null)
                 {
                     throw _scpError;
@@ -536,11 +593,24 @@ namespace AtlasSSH
         }
 
         /// <summary>
+        /// Copy a local file to a remote location synchronosously.
+        /// </summary>
+        /// <param name="localFile"></param>
+        /// <param name="linuxPath"></param>
+        /// <param name="statusUpdate"></param>
+        /// <param name="failNow"></param>
+        /// <returns></returns>
+        public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            return CopyLocalFileRemotelyAsync(localFile, linuxPath, statusUpdate, failNow).Result;
+        }
+
+        /// <summary>
         /// Copy a file from the local directory up into the cloud
         /// </summary>
         /// <param name="localFile"></param>
         /// <param name="linuxPath"></param>
-        public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public async Task<ISSHConnection> CopyLocalFileRemotelyAsync(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Rest the global error catcher.
             _scpError = null;
@@ -563,7 +633,7 @@ namespace AtlasSSH
             // Run the download, pretected against the network breaking.
             try
             {
-                _scp.Value.Upload(localFile, linuxPath);
+                await Task.Factory.StartNew(() => _scp.Value.Upload(localFile, linuxPath));
                 if (_scpError != null)
                 {
                     throw _scpError;
@@ -584,9 +654,9 @@ namespace AtlasSSH
         /// </summary>
         public void Dispose()
         {
-            if (_shell.IsValueCreated)
+            if (_shell.IsStarted)
             {
-                _shell.Value.Dispose();
+                DisposeShell().Wait();
             }
 
             if (_scp.IsValueCreated)
@@ -598,6 +668,15 @@ namespace AtlasSSH
             {
                 _client.Value.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Helper function to dispose of the shell variable.
+        /// </summary>
+        /// <returns></returns>
+        private async Task DisposeShell()
+        {
+            (await _shell).Dispose();
         }
     }
 }

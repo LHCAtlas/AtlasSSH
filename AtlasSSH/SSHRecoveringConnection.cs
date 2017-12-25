@@ -21,6 +21,11 @@ namespace AtlasSSH
         private Func<ISSHConnection> _makeConnection;
 
         /// <summary>
+        /// Make the connection, but async.
+        /// </summary>
+        private Func<Task<ISSHConnection>> _makeConnectionAsync;
+
+        /// <summary>
         /// How long to wait between attempts. By default it is 10 seconds.
         /// </summary>
         public TimeSpan RetryWaitPeriod { get; set; } = TimeSpan.FromSeconds(10);
@@ -46,27 +51,50 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Create a recovering connection.
+        /// Create a recovering connection from a function taht builds teh connection.
         /// </summary>
         /// <param name="makeConnection">Function that makes the underlying connection. Will be called each time the connection breaks.</param>
+        public SSHRecoveringConnection(Func<Task<ISSHConnection>> makeConnection)
+        {
+            _makeConnectionAsync = makeConnection;
+            _makeConnection = () => _makeConnectionAsync().Result;
+        }
+
+        /// <summary>
+        /// Given a synchronos connection makeer.
+        /// </summary>
+        /// <param name="makeConnection"></param>
         public SSHRecoveringConnection(Func<ISSHConnection> makeConnection)
         {
             _makeConnection = makeConnection;
+            _makeConnectionAsync = () => Task.Factory.StartNew(() => makeConnection());
         }
 
         public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             return ExecuteInConnection(c => c.CopyLocalFileRemotely(localFile, linuxPath, statusUpdate, failNow));
         }
+        public Task<ISSHConnection> CopyLocalFileRemotelyAsync(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            return ExecuteInConnectionAsync(c => c.CopyLocalFileRemotelyAsync(localFile, linuxPath, statusUpdate, failNow));
+        }
 
         public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
             return ExecuteInConnection(c => c.CopyRemoteDirectoryLocally(remotedir, localDir, statusUpdate));
         }
+        public Task<ISSHConnection> CopyRemoteDirectoryLocallyAsync(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
+        {
+            return ExecuteInConnectionAsync(c => c.CopyRemoteDirectoryLocallyAsync(remotedir, localDir, statusUpdate));
+        }
 
         public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             return ExecuteInConnection(c => c.CopyRemoteFileLocally(lx, localFile, statusUpdate, failNow));
+        }
+        public Task<ISSHConnection> CopyRemoteFileLocallyAsync(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            return ExecuteInConnectionAsync(c => c.CopyRemoteFileLocallyAsync(lx, localFile, statusUpdate, failNow));
         }
 
         /// <summary>
@@ -92,6 +120,11 @@ namespace AtlasSSH
         public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 3600, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null, bool waitForCommandReponse = true)
         {
             return ExecuteInConnection(c => c.ExecuteCommand(command, output, secondsTimeout, refreshTimeout, failNow, dumpOnly, seeAndRespond, waitForCommandReponse));
+        }
+
+        public Task<ISSHConnection> ExecuteCommandAsync(string command, Action<string> output = null, int secondsTimeout = 3600, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null, bool waitForCommandReponse = true)
+        {
+            return ExecuteInConnectionAsync(c => c.ExecuteCommandAsync(command, output, secondsTimeout, refreshTimeout, failNow, dumpOnly, seeAndRespond, waitForCommandReponse));
         }
 
         /// <summary>
@@ -158,6 +191,32 @@ namespace AtlasSSH
         }
 
         /// <summary>
+        /// Execute the command, asynchronously.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="execute"></param>
+        /// <returns></returns>
+        private async Task<T> ExecuteInConnectionAsync<T>(Func<ISSHConnection, Task<T>> execute)
+        {
+            if (_lockCount > 0)
+            {
+                return await InternalExecuteInConnectionAsync(execute);
+            }
+            else
+            {
+                return await Policy
+                    .Handle<SshConnectionException>(e => e.Message.Contains("Client not connected"))
+                    .Or<SSHConnectionDroppedException>()
+                    .Or<TimeoutException>(e => e.Message.Contains("back from host"))
+                    .WaitAndRetryForeverAsync(index => RetryWaitPeriod)
+                    .ExecuteAsync(async () =>
+                    {
+                        return await InternalExecuteInConnectionAsync(execute);
+                    });
+            }
+        }
+
+        /// <summary>
         /// Code that does the actual work.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -174,6 +233,25 @@ namespace AtlasSSH
                 }
             }
             return execute(_connection);
+        }
+
+        /// <summary>
+        /// Run an command function as a future.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="execute"></param>
+        /// <returns></returns>
+        private async Task<T> InternalExecuteInConnectionAsync<T>(Func<ISSHConnection, Task<T>> execute)
+        {
+            if (_connection == null)
+            {
+                _connection = await _makeConnectionAsync();
+                if (_connection == null)
+                {
+                    throw new NullSSHConnectionException("Attempted to create a recoverable SSHConnection, but was given a null value!");
+                }
+            }
+            return await execute(_connection);
         }
     }
 }

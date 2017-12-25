@@ -718,7 +718,7 @@ kinit: Preauthentication failed while getting initial credentials")
             // captured.
             using (var s = new SSHConnection(info.Item1, info.Item2))
             {
-                foreach (var i in Enumerable.Range(0, 1000))
+                foreach (var i in Enumerable.Range(0, 10))
                 {
                     s.ExecuteLinuxCommand("ls /tmp", secondsTimeout: 5, refreshTimeout: true);
                 }

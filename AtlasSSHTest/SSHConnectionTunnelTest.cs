@@ -16,9 +16,15 @@ namespace AtlasSSHTest
         [ExpectedException(typeof(InvalidOperationException))]
         public void SSHTunnelFailWithNoInitalization()
         {
-            using (var t = new SSHConnectionTunnel())
+            try
             {
-                var pid = GetPID(t);
+                using (var t = new SSHConnectionTunnel())
+                {
+                    var pid = GetPID(t);
+                }
+            } catch (Exception e)
+            {
+                throw e.UnrollAggregateExceptions();
             }
         }
 

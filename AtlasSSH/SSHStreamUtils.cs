@@ -19,7 +19,7 @@ namespace AtlasSSH
         /// <param name="shell">The shell stream to look for text</param>
         /// <param name="msToWaitAfterText">How long to wait after text appears in the buffer before reading everything.</param>
         /// <returns></returns>
-        public static string ReadRemainingText(this ShellStream shell, int msToWaitAfterText)
+        public static async Task<string> ReadRemainingText(this ShellStream shell, int msToWaitAfterText)
         {
             var timeout = DateTime.Now + TimeSpan.FromSeconds(10);
             while (shell.Length == 0 && timeout > DateTime.Now)
@@ -32,7 +32,7 @@ namespace AtlasSSH
                 throw new InvalidOperationException("Waited 10 seconds for any output from shell; nothing seen. Possible hang?");
             }
 
-            Thread.Sleep(msToWaitAfterText);
+            await Task.Delay(msToWaitAfterText);
 
             // Sometimes two lines are sent. No idea why.
             var r = shell.ReadLine(TimeSpan.FromMilliseconds(1));
@@ -50,7 +50,7 @@ namespace AtlasSSH
         /// Move through everything in the input stream until it looks like we are looking at a prompt.
         /// </summary>
         /// <param name="shell"></param>
-        public static string WaitTillPromptText(this ShellStream shell)
+        public static async Task<string> WaitTillPromptText(this ShellStream shell)
         {
             var timeout = DateTime.Now + TimeSpan.FromSeconds(10);
             var allText = new StringBuilder();
@@ -58,7 +58,7 @@ namespace AtlasSSH
             {
                 while (shell.Length == 0 && timeout > DateTime.Now)
                 {
-                    Thread.Sleep(10);
+                    await Task.Delay(10);
                 }
                 if (shell.Length == 0)
                 {
@@ -66,7 +66,7 @@ namespace AtlasSSH
                 }
 
                 string line;
-                while ((line = shell.ReadLine(TimeSpan.FromMilliseconds(10))) != null)
+                while ((line = await shell.ReadLineAsync(TimeSpan.FromMilliseconds(10))) != null)
                 {
                     Trace.WriteLine("WaitTillPromptText: read text: " + line, "SSHConnection");
                     allText.AppendLine(line);
@@ -75,6 +75,14 @@ namespace AtlasSSH
                 if (shell.Length > 0)
                     return allText.ToString();
             }
+        }
+    }
+
+    internal static class ShellStreamUtils
+    {
+        public static Task<string> ReadLineAsync(this ShellStream stream, TimeSpan timeout)
+        {
+            return Task.Factory.StartNew(() => stream.ReadLine(timeout));
         }
     }
 }

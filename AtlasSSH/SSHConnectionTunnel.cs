@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static AtlasSSH.SSHConnection;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace AtlasSSH
 {
@@ -68,7 +69,7 @@ namespace AtlasSSH
         /// Add a new tunnel. Use the format "user@machine.com" or "user@machine.com -> user@Machine2.com", etc.
         /// </summary>
         /// <param name="connection"></param>
-        public void Add(string connection)
+        public async Task AddAsync(string connection)
         {
             var mlist = connection
                 .Split(new[] { "->" }, StringSplitOptions.RemoveEmptyEntries)
@@ -76,15 +77,24 @@ namespace AtlasSSH
 
             foreach (var c in mlist)
             {
-                AddSingleConnection(c);
+                await AddSingleConnection(c);
             }
+        }
+
+        /// <summary>
+        /// Add a new tunnel. Use the format "user@machine.com" or "user@machine.com -> user@machine2.com", etc.
+        /// </summary>
+        /// <param name="connection"></param>
+        public void Add (string connection)
+        {
+            AddAsync(connection).Wait();
         }
 
         /// <summary>
         /// Add a single connection to the list. If we are already opened, then we add another one.
         /// </summary>
         /// <param name="c"></param>
-        private void AddSingleConnection(string c)
+        private async Task AddSingleConnection(string c)
         {
             var userMachineInfo = ExtractUserAndMachine(c);
             MachineName = userMachineInfo.machine;
@@ -97,7 +107,7 @@ namespace AtlasSSH
             else
             {
                 TunnelCount++;
-                MakeSSHTunnelConnection(c);
+                await MakeSSHTunnelConnection(c);
             }
         }
 
@@ -115,9 +125,9 @@ namespace AtlasSSH
         /// Make the connection if it hasn't been made already
         /// </summary>
         /// <returns></returns>
-        private SSHConnection GetDeepestConnection()
+        private async Task<SSHConnection> GetDeepestConnection()
         {
-            MakeConnections();
+            await MakeConnections();
             if (_deepestConnection == null)
             {
                 throw new InvalidOperationException("Attempt to use the SSHTunnelConnection without initalizing any connections");
@@ -128,27 +138,27 @@ namespace AtlasSSH
         /// <summary>
         /// Called to make the connections
         /// </summary>
-        private void MakeConnections()
+        private async Task MakeConnections()
         {
             if (_deepestConnection == null && _machineConnectionStrings.Count > 0)
             {
-                Policy
+                await Policy
                     .Handle<UnableToCreateSSHTunnelException>()
-                .WaitAndRetry(new[] { TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30) })
-                .Execute(() =>
-                {
-                    _connectionStack = new List<IDisposable>();
-                    var userMachineInfo = ExtractUserAndMachine(_machineConnectionStrings[0]);
-                    _deepestConnection = new SSHConnection(userMachineInfo.machine, userMachineInfo.user);
-
-                    foreach (var cinfo in _machineConnectionStrings.Skip(1))
+                    .WaitAndRetryAsync(new[] { TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30) })
+                    .ExecuteAsync(async () =>
                     {
-                        MakeSSHTunnelConnection(cinfo);
-                    }
+                        _connectionStack = new List<IDisposable>();
+                        var userMachineInfo = ExtractUserAndMachine(_machineConnectionStrings[0]);
+                        _deepestConnection = new SSHConnection(userMachineInfo.machine, userMachineInfo.user);
 
-                    // We don't need to track the connection strings any more.
-                    _machineConnectionStrings = null;
-                });
+                        foreach (var cinfo in _machineConnectionStrings.Skip(1))
+                        {
+                            await MakeSSHTunnelConnection(cinfo);
+                        }
+
+                        // We don't need to track the connection strings any more.
+                        _machineConnectionStrings = null;
+                    });
             } else if (_deepestConnection == null && _machineConnectionStrings.Count == 0)
             {
                 throw new InvalidOperationException("Attempt to form an SSH tunnel without specifying any destination.");
@@ -159,10 +169,10 @@ namespace AtlasSSH
         /// Given the connections already are made, add one to the stack.
         /// </summary>
         /// <param name="cinfo"></param>
-        private void MakeSSHTunnelConnection(string cinfo)
+        private async Task MakeSSHTunnelConnection(string cinfo)
         {
             var cUserMachine = ExtractUserAndMachine(cinfo);
-            _connectionStack.Add(_deepestConnection.SSHTo(cUserMachine.machine, cUserMachine.user));
+            _connectionStack.Add(await _deepestConnection.SSHToAsync(cUserMachine.machine, cUserMachine.user));
         }
 
         /// <summary>
@@ -222,26 +232,50 @@ namespace AtlasSSH
         /// <returns></returns>
         public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 3600, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null, bool waitForCommandReponse = true)
         {
-            MakeConnections();
+            MakeConnections().Wait();
             return _deepestConnection.ExecuteCommand(command, output, secondsTimeout, refreshTimeout, failNow, dumpOnly, seeAndRespond, waitForCommandReponse);
         }
 
         public ISSHConnection CopyRemoteDirectoryLocally(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
-            MakeConnections();
+            MakeConnections().Wait();
             return _deepestConnection.CopyRemoteDirectoryLocally(remotedir, localDir, statusUpdate);
         }
 
         public ISSHConnection CopyRemoteFileLocally(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            MakeConnections();
+            MakeConnections().Wait();
             return _deepestConnection.CopyRemoteFileLocally(lx, localFile, statusUpdate, failNow);
         }
 
         public ISSHConnection CopyLocalFileRemotely(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            MakeConnections();
+            MakeConnections().Wait();
             return _deepestConnection.CopyLocalFileRemotely(localFile, linuxPath, statusUpdate, failNow);
+        }
+
+        public async Task<ISSHConnection> ExecuteCommandAsync(string command, Action<string> output = null, int secondsTimeout = 3600, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null, bool waitForCommandReponse = true)
+        {
+            await MakeConnections();
+            return await _deepestConnection.ExecuteCommandAsync(command, output, secondsTimeout, refreshTimeout, failNow, dumpOnly, seeAndRespond, waitForCommandReponse);
+        }
+
+        public async Task<ISSHConnection> CopyRemoteDirectoryLocallyAsync(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
+        {
+            await MakeConnections();
+            return await _deepestConnection.CopyRemoteDirectoryLocallyAsync(remotedir, localDir, statusUpdate);
+        }
+
+        public async Task<ISSHConnection> CopyRemoteFileLocallyAsync(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            await MakeConnections();
+            return await _deepestConnection.CopyRemoteFileLocallyAsync(lx, localFile, statusUpdate, failNow);
+        }
+
+        public async Task<ISSHConnection> CopyLocalFileRemotelyAsync(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            await MakeConnections();
+            return await _deepestConnection.CopyLocalFileRemotelyAsync(localFile, linuxPath, statusUpdate, failNow);
         }
     }
 }

@@ -135,17 +135,23 @@ namespace AtlasSSHTest
         [ExpectedException(typeof(UnableToCreateSSHTunnelException))]
         public void DoubleSSHToBadAddress()
         {
-            var infoOutter = util.GetUsernameAndPassword("CERNSSHTest");
-            var infoInner = Tuple.Create("bogus-pc.holidays.edu", "myusername");
-            string hostInner = null;
-            string hostOutter = null;
-            using (var s = new SSHConnection(infoOutter.Item1, infoOutter.Item2))
+            try
             {
-                using (var subShell = s.SSHTo(infoInner.Item1, infoInner.Item2))
+                var infoOutter = util.GetUsernameAndPassword("CERNSSHTest");
+                var infoInner = Tuple.Create("bogus-pc.holidays.edu", "myusername");
+                string hostInner = null;
+                string hostOutter = null;
+                using (var s = new SSHConnection(infoOutter.Item1, infoOutter.Item2))
                 {
-                    s.ExecuteCommand("echo $HOSTNAME", output: l => hostInner = l);
+                    using (var subShell = s.SSHTo(infoInner.Item1, infoInner.Item2))
+                    {
+                        s.ExecuteCommand("echo $HOSTNAME", output: l => hostInner = l);
+                    }
+                    s.ExecuteCommand("echo $HOSTNAME", output: l => hostOutter = l);
                 }
-                s.ExecuteCommand("echo $HOSTNAME", output: l => hostOutter = l);
+            } catch (Exception e)
+            {
+                throw e.UnrollAggregateExceptions();
             }
         }
 
@@ -188,18 +194,24 @@ namespace AtlasSSHTest
         [ExpectedException(typeof(ScpException))]
         public void copyBadRemoteDirectoryLocal()
         {
-            var info = util.GetUsernameAndPassword();
-            using (var s = new SSHConnection(info.Item1, info.Item2))
+            try
             {
-                // Do the copy
-                var d = new DirectoryInfo("./databogus");
-                if (d.Exists)
+                var info = util.GetUsernameAndPassword();
+                using (var s = new SSHConnection(info.Item1, info.Item2))
                 {
-                    d.Delete(true);
-                    d.Refresh();
+                    // Do the copy
+                    var d = new DirectoryInfo("./databogus");
+                    if (d.Exists)
+                    {
+                        d.Delete(true);
+                        d.Refresh();
+                    }
+                    d.Create();
+                    s.CopyRemoteDirectoryLocally("/tmp/usergwatts/databogusbogusbogusbogus", d);
                 }
-                d.Create();
-                s.CopyRemoteDirectoryLocally("/tmp/usergwatts/databogusbogusbogusbogus", d);
+            } catch (Exception e)
+            {
+                throw e.UnrollAggregateExceptions();
             }
         }
 

@@ -127,5 +127,25 @@ namespace AtlasSSHTest
         {
             throw new NotImplementedException();
         }
+
+        public Task<ISSHConnection> ExecuteCommandAsync(string command, Action<string> output = null, int secondsTimeout = 3600, bool refreshTimeout = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null, bool waitForCommandReponse = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ISSHConnection> CopyRemoteDirectoryLocallyAsync(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ISSHConnection> CopyRemoteFileLocallyAsync(string lx, FileInfo localFile, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ISSHConnection> CopyLocalFileRemotelyAsync(FileInfo localFile, string linuxPath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

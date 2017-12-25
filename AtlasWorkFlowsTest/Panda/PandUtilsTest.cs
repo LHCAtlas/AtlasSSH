@@ -18,7 +18,7 @@ namespace AtlasWorkFlowsTest.Panda
                 d.Delete(true);
         }
 
-        static string testingDSName = "user.gwatts.305588.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH125_mS5_lt5m.DiVertAnalysis_v10_35712B0E_E07C7B15/";
+        static string testingDSName = "user.gwatts.361032.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ12W.DAOD_EXOT15.p2711.DiVertAnalysis_v15_C448D50D_22DCBF53_hist/";
 
         [TestMethod]
         public void CacheHitAndMiss()
@@ -29,6 +29,7 @@ namespace AtlasWorkFlowsTest.Panda
 
             // Do a test.
             var task = testingDSName.FindPandaJobWithTaskName();
+            Assert.IsNotNull(task);
             cacheDir.Refresh();
             Assert.IsTrue(cacheDir.Exists);
             Assert.AreEqual(1, cacheDir.EnumerateFiles().Count());
