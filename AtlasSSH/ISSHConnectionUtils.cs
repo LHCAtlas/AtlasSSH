@@ -26,6 +26,23 @@ namespace AtlasSSH
         }
 
         /// <summary>
+        /// Apply a async function to a connection.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="connection"></param>
+        /// <param name="what"></param>
+        /// <param name="doit"></param>
+        /// <returns></returns>
+        public static async Task<ISSHConnection> ApplyAsync<T>(this ISSHConnection connection, IEnumerable<T> what, Func<ISSHConnection, T, Task> doit)
+        {
+            foreach (var w in what)
+            {
+                await doit(connection, w);
+            }
+            return connection;
+        }
+
+        /// <summary>
         /// Helper function to use in the middle of this thing
         /// </summary>
         /// <param name="connection"></param>

@@ -6,6 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Nito.AsyncEx.Synchronous;
+using System.Threading.Tasks;
+using Nito.AsyncEx;
 
 namespace AtlasSSH
 {
@@ -94,15 +97,29 @@ namespace AtlasSSH
     public static class AtlasCommands
     {
         /// <summary>
-        /// Run the setup ATLAS command
+        /// Run the setup ATLAS command.
         /// </summary>
         /// <param name="connection">The connection that will understand the setupATLAS command</param>
+        /// <param name="dumpOnly">If true, then tex tis dumpped to standard logging</param>
         /// <returns>A reconfigured SSH shell connection (same as what went in)</returns>
         public static ISSHConnection setupATLAS(this ISSHConnection connection, bool dumpOnly = false)
         {
+            return setupATLASAsync(connection, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Run the setup ATLAS command asyncronously.
+        /// </summary>
+        /// <param name="connection">The connection that will understand the setupATLAS command</param>
+        /// <param name="dumpOnly">If true, then tex tis dumpped to standard logging</param>
+        /// <returns>A reconfigured SSH shell connection (same as what went in)</returns>
+        public static async Task<ISSHConnection> setupATLASAsync(this ISSHConnection connection, bool dumpOnly = false)
+        {
             bool badCommand = false;
-            var r = connection
-                .ExecuteCommand("setupATLAS", dumpOnly: dumpOnly, output: l => badCommand = badCommand || l.Contains("command not found"));
+            var r = await connection
+                .ExecuteCommandAsync("setupATLAS", dumpOnly: dumpOnly, output: l => badCommand = badCommand || l.Contains("command not found"));
+
             if (badCommand)
             {
                 throw new LinuxConfigException("Unable to setupATLAS - command is not known!");
@@ -116,14 +133,27 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="connection">Connection on-which we will set everything up</param>
         /// <param name="rucioUsername">The user alias used on the grid</param>
+        /// <param name="dumpOnly">Dump output to the logging interface rather than actually executing anything</param>
         /// <returns>A shell on-which rucio has been setup (the same connection that went in)</returns>
         public static ISSHConnection setupRucio(this ISSHConnection connection, string rucioUsername, bool dumpOnly = false)
         {
+            return connection.setupRucioAsync(rucioUsername, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Setup Rucio. ATLAS must have been previously configured, or this will "crash". Execute Asyncrohonously.
+        /// </summary>
+        /// <param name="connection">Connection on-which we will set everything up</param>
+        /// <param name="rucioUsername">The user alias used on the grid</param>
+        /// <param name="dumpOnly">Dump output to the logging interface rather than actually executing anything</param>
+        /// <returns>A shell on-which rucio has been setup (the same connection that went in)</returns>
+        public static async Task<ISSHConnection> setupRucioAsync(this ISSHConnection connection, string rucioUsername, bool dumpOnly = false)
+        {
             int hashCount = 0;
-            connection
-                .ExecuteCommand(string.Format("export RUCIO_ACCOUNT={0}", rucioUsername), dumpOnly: dumpOnly)
-                .ExecuteCommand("lsetup rucio", dumpOnly: dumpOnly)
-                .ExecuteCommand("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly);
+            var r = await connection.ExecuteCommandAsync(string.Format("export RUCIO_ACCOUNT={0}", rucioUsername), dumpOnly: dumpOnly);
+            r = await r.ExecuteCommandAsync("lsetup rucio", dumpOnly: dumpOnly);
+            r = await r.ExecuteCommandAsync("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly);
 
             if (hashCount != 0 && !dumpOnly)
             {
@@ -139,8 +169,24 @@ namespace AtlasSSH
         /// <param name="connection">The configured SSH shell</param>
         /// <param name="GRIDUsername">The username to use to fetch the password for the voms proxy file</param>
         /// <param name="voms">The name of the voms to connect to</param>
+        /// <param name="dumpOnly">Only print out proposed commands</param>
         /// <returns>Connection on which the grid is setup and ready to go</returns>
         public static ISSHConnection VomsProxyInit(this ISSHConnection connection, string voms, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            return connection.VomsProxyInitAsync(voms, failNow, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Initializes the VOMS proxy for use on the GRID. The connection must have already been configured so that
+        /// the command voms-proxy-init works.
+        /// </summary>
+        /// <param name="connection">The configured SSH shell</param>
+        /// <param name="GRIDUsername">The username to use to fetch the password for the voms proxy file</param>
+        /// <param name="voms">The name of the voms to connect to</param>
+        /// <param name="dumpOnly">Only print out proposed commands</param>
+        /// <returns>Connection on which the grid is setup and ready to go</returns>
+        public static async Task<ISSHConnection> VomsProxyInitAsync(this ISSHConnection connection, string voms, Func<bool> failNow = null, bool dumpOnly = false)
         {
             // Get the GRID VOMS password
             var sclist = new CredentialSet("GRID");
@@ -154,8 +200,8 @@ namespace AtlasSSH
             bool goodProxy = false;
             var whatHappened = new List<string>();
 
-            connection
-                .ExecuteCommand(string.Format("echo {0} | voms-proxy-init -voms {1}", passwordInfo.Password, voms),
+            var r = await connection
+                .ExecuteCommandAsync(string.Format("echo {0} | voms-proxy-init -voms {1}", passwordInfo.Password, voms),
                     l =>
                     {
                         goodProxy = goodProxy || l.Contains("Your proxy is valid");
@@ -190,8 +236,31 @@ namespace AtlasSSH
         /// <param name="localDirectory">The local directory (on Linux) where the file should be downloaded</param>
         /// <param name="fileStatus">Gets updates as new files are downloaded. This will contain just the filename.</param>
         /// <param name="fileNameFilter">Filter function to alter the files that are to be downloaded</param>
-        /// <returns></returns>
+        /// <param name="failNow">Checked periodically, if ever returns true, then bail out</param>
+        /// <param name="timeout">How long before we should timeout in seconds</param>
+        /// <returns>The connections used so you can chain</returns>
         public static ISSHConnection DownloadFromGRID(this ISSHConnection connection, string datasetName, string localDirectory,
+            Action<string> fileStatus = null,
+            Func<string[], string[]> fileNameFilter = null,
+            Func<bool> failNow = null,
+            int timeout = 3600)
+        {
+            return connection.DownloadFromGRIDAsync(datasetName, localDirectory, fileStatus, fileNameFilter, failNow, timeout)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Fetch a dataset from the grid using Rucio to a local directory.
+        /// </summary>
+        /// <param name="connection">A previously configured connection with everything ready to go for GRID access.</param>
+        /// <param name="datasetName">The rucio dataset name</param>
+        /// <param name="localDirectory">The local directory (on Linux) where the file should be downloaded</param>
+        /// <param name="fileStatus">Gets updates as new files are downloaded. This will contain just the filename.</param>
+        /// <param name="fileNameFilter">Filter function to alter the files that are to be downloaded</param>
+        /// <param name="failNow">Checked periodically, if ever returns true, then bail out</param>
+        /// <param name="timeout">How long before we should timeout in seconds</param>
+        /// <returns>The connections used so you can chain</returns>
+        public static async Task<ISSHConnection> DownloadFromGRIDAsync(this ISSHConnection connection, string datasetName, string localDirectory,
             Action<string> fileStatus = null,
             Func<string[], string[]> fileNameFilter = null,
             Func<bool> failNow = null,
@@ -203,7 +272,7 @@ namespace AtlasSSH
                 fileStatus("Checking the dataset exists");
             }
             var response = new List<string>();
-            connection.ExecuteCommand(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
+            await connection.ExecuteCommandAsync(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
 
             var dsnames = response
                 .Where(l => l.Contains("DATASET") | l.Contains("CONTAINER"))
@@ -222,7 +291,7 @@ namespace AtlasSSH
             {
                 fileStatus("Getting the complete list of files from the dataset");
             }
-            var fileNameList = connection.FilelistFromGRID(datasetName, failNow: failNow);
+            var fileNameList = await connection.FilelistFromGRIDAsync(datasetName, failNow: failNow);
 
             // Filter them if need be.
             var goodFiles = fileNameFilter != null
@@ -231,11 +300,11 @@ namespace AtlasSSH
 
             // Create a file that contains all the files we want to download up on the host.
             var fileListName = string.Format("/tmp/{0}.filelist", datasetName.SantizeDSName());
-            connection.ExecuteCommand("rm -rf " + fileListName);
-            connection.Apply(goodFiles, (c, fname) => c.ExecuteCommand(string.Format("echo {0} >> {1}", fname, fileListName)));
+            await connection.ExecuteCommandAsync("rm -rf " + fileListName);
+            await connection.ApplyAsync(goodFiles, async (c, fname) => await c.ExecuteCommandAsync(string.Format("echo {0} >> {1}", fname, fileListName)));
 
             // We good on creating the directory?
-            connection.ExecuteCommand(string.Format("mkdir -p {0}", localDirectory),
+            await connection.ExecuteCommandAsync(string.Format("mkdir -p {0}", localDirectory),
                 l => { throw new ArgumentException("Error trying to create directory {0} for dataset on remote machine.", localDirectory); },
                 secondsTimeout: 20);
 
@@ -251,9 +320,9 @@ namespace AtlasSSH
             response.Clear();
             fileStatus?.Invoke($"Starting GRID download of {datasetName}...");
 
-            Policy
+            await Policy
                 .Handle<ClockSkewException>()
-                .WaitAndRetry(new[]
+                .WaitAndRetryAsync(new[]
                 {
                     TimeSpan.FromSeconds(10),
                     TimeSpan.FromMinutes(1),
@@ -261,16 +330,16 @@ namespace AtlasSSH
                     TimeSpan.FromMinutes(1),
                     TimeSpan.FromMinutes(1)
                 }, (e, ts) => { fileStatus?.Invoke("Clock Skew error - wait and re-try"); })
-                .Execute(() => DoRucioDownload(connection, localDirectory, fileStatus, failNow, timeout, fileListName));
+                .ExecuteAsync(() => DoRucioDownloadAsync(connection, localDirectory, fileStatus, failNow, timeout, fileListName));
             return connection;
         }
 
-        private static void DoRucioDownload(ISSHConnection connection, string localDirectory, Action<string> fileStatus, Func<bool> failNow, int timeout, string fileListName)
+        private static async Task DoRucioDownloadAsync(ISSHConnection connection, string localDirectory, Action<string> fileStatus, Func<bool> failNow, int timeout, string fileListName)
         {
             string filesThatFailedToDownload = "";
             bool foundClockSkewMessage = false;
             var messageNameMatch = new Regex(@"Starting the download of ([\w\.:]+)");
-            connection.ExecuteCommand($"rucio -T {timeout} download --dir {localDirectory} `cat {fileListName}`", l =>
+            await connection.ExecuteCommandAsync($"rucio -T {timeout} download --dir {localDirectory} `cat {fileListName}`", l =>
             {
                 // Look for something that indicates which file we are currently getting from the GRID.
                 if (fileStatus != null)
@@ -334,10 +403,24 @@ namespace AtlasSSH
         /// <param name="datasetName">The dataset that we are to query</param>
         /// <param name="failNow">Return true if long-running commands should quit right away</param>
         /// <param name="dumpOnly">If we are to only test-run, but not actually run.</param>
-        /// <returns></returns>
+        /// <returns>List of filenames for this GRID dataset</returns>
         public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow = null, bool dumpOnly = false)
         {
-            return connection.FileInfoFromGRID(datasetName, failNow, dumpOnly)
+            return connection.FilelistFromGRIDAsync(datasetName, failNow, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Returns the name of the files in a GRID dataset.
+        /// </summary>
+        /// <param name="connection">The already setup SSH connection</param>
+        /// <param name="datasetName">The dataset that we are to query</param>
+        /// <param name="failNow">Return true if long-running commands should quit right away</param>
+        /// <param name="dumpOnly">If we are to only test-run, but not actually run.</param>
+        /// <returns>List of filenames for this GRID dataset</returns>
+        public static async Task<string[]> FilelistFromGRIDAsync(this ISSHConnection connection, string datasetName, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            return (await connection.FileInfoFromGRIDAsync(datasetName, failNow, dumpOnly))
                 .Select(i => i.name)
                 .ToArray();
         }
@@ -352,8 +435,24 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="datasetName"></param>
+        /// <param name="dumpOnly">Dump only commands that are issues to standard logging interface.</param>
+        /// <param name="failNow">Returns true to bail out as quickly as possible</param>
         /// <returns></returns>
-        public static List<GRIDFileInfo> FileInfoFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow =null, bool dumpOnly = false)
+        public static List<GRIDFileInfo> FileInfoFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            return FileInfoFromGRIDAsync(connection, datasetName, failNow, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Returns the list of files associated with a dataset, as fetched from the grid.
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="datasetName"></param>
+        /// <param name="dumpOnly">Dump only commands that are issues to standard logging interface.</param>
+        /// <param name="failNow">Returns true to bail out as quickly as possible</param>
+        /// <returns></returns>
+        public static async Task<List<GRIDFileInfo>> FileInfoFromGRIDAsync(this ISSHConnection connection, string datasetName, Func<bool> failNow =null, bool dumpOnly = false)
         {
             // If we have a cache hit, then avoid the really slow lookup.
             var c = _GRIDFileInfoCache.Value[datasetName] as GRIDFileInfo[];
@@ -366,7 +465,7 @@ namespace AtlasSSH
             var fileNameList = new List<GRIDFileInfo>();
             var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +(?<fsize>[0-9\.]*) *(?<fsizeunits>[kMGTB]*) *\| +(?<events>[0-9]*) +\|");
             bool bad = false;
-            connection.ExecuteCommand(string.Format("rucio list-files {0}", datasetName), l =>
+            await connection.ExecuteCommandAsync(string.Format("rucio list-files {0}", datasetName), l =>
             {
                 if (l.Contains("Data identifier not found"))
                 {
@@ -442,8 +541,23 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="releaseName">Full release name (e.g. 'Base,2.3.30')</param>
         /// <param name="linuxLocation">Directory where the linux location can be found</param>
+        /// <param name="dumpOnly">Dump commands to standard logging, but do not execute anything</param>
         /// <returns></returns>
         public static ISSHConnection SetupRcRelease(this ISSHConnection connection, string linuxLocation, string releaseName, bool dumpOnly = false)
+        {
+            return connection.SetupRcReleaseAsync(linuxLocation, releaseName, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Setup a release. If it can't be found, error will be thrown
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="releaseName">Full release name (e.g. 'Base,2.3.30')</param>
+        /// <param name="linuxLocation">Directory where the linux location can be found</param>
+        /// <param name="dumpOnly">Dump commands to standard logging, but do not execute anything</param>
+        /// <returns></returns>
+        public static async Task<ISSHConnection> SetupRcReleaseAsync(this ISSHConnection connection, string linuxLocation, string releaseName, bool dumpOnly = false)
         {
             // Check the arguments for something dumb
             if (string.IsNullOrWhiteSpace(releaseName))
@@ -458,7 +572,7 @@ namespace AtlasSSH
             // First we have to create the directory.
             bool dirCreated = true;
             bool dirAlreadyExists = false;
-            connection.ExecuteCommand(string.Format("mkdir {0}", linuxLocation), l =>
+            await connection.ExecuteCommandAsync(string.Format("mkdir {0}", linuxLocation), l =>
             {
                 dirCreated = !dirCreated ? false : string.IsNullOrWhiteSpace(l);
                 dirAlreadyExists = dirAlreadyExists ? true : l.Contains("File exists");
@@ -469,11 +583,11 @@ namespace AtlasSSH
                 throw new LinuxMissingConfigurationException(string.Format("Unable to create release directory '{0}'.", linuxLocation));
 
             // Next, put our selves there
-            connection.ExecuteCommand(string.Format("cd {0}", linuxLocation), dumpOnly: dumpOnly);
+            await connection.ExecuteCommandAsync(string.Format("cd {0}", linuxLocation), dumpOnly: dumpOnly);
 
             // And then do the setup
             bool found = false;
-            connection.ExecuteCommand(string.Format("rcSetup {0}", releaseName), l => found = found ? true : l.Contains("Found ASG release with"), dumpOnly: dumpOnly);
+            await connection.ExecuteCommandAsync(string.Format("rcSetup {0}", releaseName), l => found = found ? true : l.Contains("Found ASG release with"), dumpOnly: dumpOnly);
             if (!found && !dumpOnly)
                 throw new LinuxMissingConfigurationException(string.Format("Unable to find release '{0}'", releaseName));
 
@@ -487,11 +601,26 @@ namespace AtlasSSH
         /// <param name="connection"></param>
         /// <param name="username"></param>
         /// <param name="password"></param>
+        /// <param name="dumpOnly">Dump commands to logging interface rather than execute them</param>
         /// <returns></returns>
-        public static ISSHConnection Kinit (this ISSHConnection connection, string username, string password, bool dumpOnly = false)
+        public static ISSHConnection Kinit(this ISSHConnection connection, string username, string password, bool dumpOnly = false)
+        {
+            return connection.KinitAsync(username, password, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Execute a kinit
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <param name="dumpOnly">Dump commands to logging interface rather than execute them</param>
+        /// <returns></returns>
+        public static async Task<ISSHConnection> KinitAsync (this ISSHConnection connection, string username, string password, bool dumpOnly = false)
         {
             var allStrings = new List<string>();
-            connection.ExecuteCommand(string.Format("echo {0} | kinit {1}", password, username), l => allStrings.Add(l), dumpOnly: dumpOnly);
+            await connection.ExecuteCommandAsync(string.Format("echo {0} | kinit {1}", password, username), l => allStrings.Add(l), dumpOnly: dumpOnly);
             var errorStrings = allStrings.Where(l => l.StartsWith("kinit:")).ToArray();
             if (errorStrings.Length > 0)
             {
@@ -513,10 +642,23 @@ namespace AtlasSSH
         /// <returns></returns>
         public static ISSHConnection CheckoutPackage(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
         {
+            return connection.CheckoutPackageAsync(scPackagePath, scRevision, failNow, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Check out SVN or a GIT package.
+        /// </summary>
+        /// <param name="connection">Connection on which we should be checking this out on</param>
+        /// <param name="scPackagePath">The svn path to the package. Basically what you would hand to the rc checkout command. Nohting like "tags" or "trunk" is permitted.</param>
+        /// <param name="scRevision">The revision number. A SVN revision number. If blank, then the version associated with the build is checked out.</param>
+        /// <returns></returns>
+        public static Task<ISSHConnection> CheckoutPackageAsync(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
+        {
             var isGit = scPackagePath.EndsWith(".git");
             return isGit
-                ? connection.CheckoutPackageGit(scPackagePath, scRevision, failNow, dumpOnly)
-                : connection.CheckoutPackageSVN(scPackagePath, scRevision, failNow, dumpOnly);
+                ? connection.CheckoutPackageGitAsync(scPackagePath, scRevision, failNow, dumpOnly)
+                : connection.CheckoutPackageSVNAsync(scPackagePath, scRevision, failNow, dumpOnly);
         }
 
         /// <summary>
@@ -529,6 +671,21 @@ namespace AtlasSSH
         /// <param name="dumpOnly">Just dump the commands output - don't actually do anything.</param>
         /// <returns></returns>
         public static ISSHConnection CheckoutPackageGit(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            return connection.CheckoutPackageGitAsync(scPackagePath, scRevision, failNow, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Check out a Git package from the CERN git repro, of what is pecified in the package.
+        /// </summary>
+        /// <param name="connection">Connection on which to do the checkout</param>
+        /// <param name="scPackagePath">Path to the package, perhaps a short-cut (see remarks)</param>
+        /// <param name="scRevision">Revision for the package, or empty to grab the head</param>
+        /// <param name="failNow">Fuction that returns true if we should bail right away</param>
+        /// <param name="dumpOnly">Just dump the commands output - don't actually do anything.</param>
+        /// <returns></returns>
+        public static async Task<ISSHConnection> CheckoutPackageGitAsync(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
         {
             // The revision must be specified.
             if (string.IsNullOrWhiteSpace(scRevision))
@@ -547,13 +704,13 @@ namespace AtlasSSH
             }
 
             // Do the check out
-            connection.ExecuteCommand($"git clone --recursive {scPackagePath}", refreshTimeout: true, secondsTimeout: 8*60, failNow: failNow, dumpOnly: dumpOnly);
+            await connection.ExecuteCommandAsync($"git clone --recursive {scPackagePath}", refreshTimeout: true, secondsTimeout: 8*60, failNow: failNow, dumpOnly: dumpOnly);
 
             // Now, we have to move to that revision.
             var pkgName = Path.GetFileNameWithoutExtension(scPackagePath.Split('/').Last());
 
             string error = "";
-            connection.ExecuteCommand($"cd {pkgName}; git checkout {scRevision}; cd ..", output: l => error = l.Contains("error") ? l : error);
+            await connection.ExecuteCommandAsync($"cd {pkgName}; git checkout {scRevision}; cd ..", output: l => error = l.Contains("error") ? l : error);
             if (error.Length > 0)
             {
                 throw new LinuxCommandErrorException($"Unable to check out package {scPackagePath} with SHA {scRevision}: {error}");
@@ -572,6 +729,21 @@ namespace AtlasSSH
         /// <param name="dumpOnly">Are we just dumping commands, or doing work?</param>
         /// <returns></returns>
         public static ISSHConnection CheckoutPackageSVN(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            return CheckoutPackageAsync(connection, scPackagePath, scRevision, failNow, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Check out a SVN package
+        /// </summary>
+        /// <param name="connection">Connection on which to check this guy out</param>
+        /// <param name="scPackagePath">Path to the package</param>
+        /// <param name="scRevision">tag/svn revision to check out</param>
+        /// <param name="failNow">Function retursn true when we should quit</param>
+        /// <param name="dumpOnly">Are we just dumping commands, or doing work?</param>
+        /// <returns></returns>
+        public static async Task<ISSHConnection> CheckoutPackageSVNAsync(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
         {
             // Has the user asked us to do something we won't do?
             if (scPackagePath.EndsWith("/tags"))
@@ -610,7 +782,7 @@ namespace AtlasSSH
             }
 
             var sawRevisionMessage = false;
-            connection.ExecuteCommand(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
+            await connection.ExecuteCommandAsync(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
             if (!sawRevisionMessage && !dumpOnly)
             {
                 throw new LinuxCommandErrorException(string.Format("Unable to check out svn package {0}.", scPackagePath));
@@ -622,7 +794,7 @@ namespace AtlasSSH
                 var packageName = scPackagePath.Split('/').Last();
                 var checkoutName = fullPackagePath.Split('/').Last();
                 bool lineSeen = false;
-                connection.ExecuteCommand(string.Format("mv {0} {1}", checkoutName, packageName), l => lineSeen = true, dumpOnly: dumpOnly);
+                await connection.ExecuteCommandAsync(string.Format("mv {0} {1}", checkoutName, packageName), l => lineSeen = true, dumpOnly: dumpOnly);
                 if (lineSeen && !dumpOnly)
                 {
                     throw new LinuxCommandErrorException("Unable to rename the downloaded trunk directory for package '" + scPackagePath + "'.");
@@ -649,6 +821,35 @@ namespace AtlasSSH
         /// We check the status by echoing the shell variable $? - so this actually runs two commands.
         /// </remarks>
         public static ISSHConnection ExecuteLinuxCommand(this ISSHConnection connection,
+            string command,
+            Action<string> processLine = null,
+            Func<bool> failNow = null,
+            bool dumpOnly = false,
+            int secondsTimeout = 60 * 60,
+            bool refreshTimeout = false,
+            Dictionary<string, string> seeAndRespond = null)
+        {
+            return connection.ExecuteLinuxCommandAsync(command, processLine, failNow, dumpOnly, secondsTimeout, refreshTimeout, seeAndRespond)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Execute a Linux command. Throw if the command does not return 0 to the shell. Provides for ways to capture (or ignore)
+        /// the output of the command.
+        /// </summary>
+        /// <param name="connection">The connection onwhich to execute the command.</param>
+        /// <param name="command">The command to execute</param>
+        /// <param name="dumpOnly">If true, then only print out the commands</param>
+        /// <param name="failNow">If true, attempt to bail out of the command early.</param>
+        /// <param name="processLine">A function called for each line read back while the command is executing</param>
+        /// <param name="seeAndRespond">If a string is seen in the output, then the given response is sent</param>
+        /// <param name="refreshTimeout">If we see text, reset the timeout counter</param>
+        /// <param name="secondsTimeout">How many seconds with no output or since beginning of command before we declare failure?</param>
+        /// <returns>The connection we ran this on. Enables fluent progreamming</returns>
+        /// <remarks>
+        /// We check the status by echoing the shell variable $? - so this actually runs two commands.
+        /// </remarks>
+        public static async Task<ISSHConnection> ExecuteLinuxCommandAsync(this ISSHConnection connection,
             string command, 
             Action<string> processLine = null,
             Func<bool> failNow = null,
@@ -661,9 +862,8 @@ namespace AtlasSSH
             processLine = processLine == null ? l => { } : processLine;
             try
             {
-                connection
-                    .ExecuteCommand(command, processLine, failNow: failNow, dumpOnly: dumpOnly, seeAndRespond: seeAndRespond, refreshTimeout: refreshTimeout, secondsTimeout: secondsTimeout)
-                    .ExecuteCommand("echo $?", l => rtnValue = l, dumpOnly: dumpOnly);
+                await connection.ExecuteCommandAsync(command, processLine, failNow: failNow, dumpOnly: dumpOnly, seeAndRespond: seeAndRespond, refreshTimeout: refreshTimeout, secondsTimeout: secondsTimeout);
+                await connection.ExecuteCommandAsync("echo $?", l => rtnValue = l, dumpOnly: dumpOnly);
             } catch (TimeoutException te)
             {
                 throw new TimeoutException($"{te.Message} - While executing command {command}.", te);
@@ -680,16 +880,30 @@ namespace AtlasSSH
         /// Build the work area
         /// </summary>
         /// <param name="connection"></param>
+        /// <param name="dumpOnly">Dump commands only to standard logging interface rather than execute them</param>
+        /// <param name="failNow">Return true to abort right away</param>
         /// <returns></returns>
         public static ISSHConnection BuildWorkArea(this ISSHConnection connection, Func<bool> failNow = null, bool dumpOnly = false)
+        {
+            return connection.BuildWorkAreaAsync(failNow, dumpOnly)
+                .WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Build the work area
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="dumpOnly">Dump commands only to standard logging interface rather than execute them</param>
+        /// <param name="failNow">Return true to abort right away</param>
+        /// <returns></returns>
+        public static async Task<ISSHConnection> BuildWorkAreaAsync(this ISSHConnection connection, Func<bool> failNow = null, bool dumpOnly = false)
         {
             string findPkgError = null;
             var buildLines = new List<string>();
             try
             {
-                return connection
-                    .ExecuteLinuxCommand("rc find_packages", l => findPkgError = l, failNow: failNow, dumpOnly: dumpOnly)
-                    .ExecuteLinuxCommand("rc compile", l => buildLines.Add(l), failNow: failNow, dumpOnly: dumpOnly);
+                await connection.ExecuteLinuxCommandAsync("rc find_packages", l => findPkgError = l, failNow: failNow, dumpOnly: dumpOnly);
+                return await connection.ExecuteLinuxCommandAsync("rc compile", l => buildLines.Add(l), failNow: failNow, dumpOnly: dumpOnly);
             } catch (LinuxCommandErrorException lerr)
             {
                 if (buildLines.Count > 0)
