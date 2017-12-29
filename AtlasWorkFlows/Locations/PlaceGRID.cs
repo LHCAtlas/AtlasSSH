@@ -115,7 +115,7 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public bool CanSourceCopy(IPlace destination)
         {
-            return destination == _linuxRemote;
+            return _linuxRemote.ApplyAsync(l => destination == l).Result;
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         public async Task CopyToAsync(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
         {
-            if (destination != _linuxRemote)
+            if (await _linuxRemote.ApplyAsync(l => destination != l))
             {
                 throw new ArgumentException($"Place {destination.Name} is not the correct partner for {Name}. Was expecting place {_linuxRemote.ApplyAsync(c => c.Name)}.");
             }
