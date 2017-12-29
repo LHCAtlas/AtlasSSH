@@ -118,7 +118,7 @@ namespace AtlasSSH
         {
             bool badCommand = false;
             var r = await connection
-                .ExecuteCommandAsync("setupATLAS", dumpOnly: dumpOnly, output: l => badCommand = badCommand || l.Contains("command not found"));
+                .ExecuteLinuxCommandAsync("setupATLAS", dumpOnly: dumpOnly, processLine: l => badCommand = badCommand || l.Contains("command not found"));
 
             if (badCommand)
             {
@@ -151,9 +151,9 @@ namespace AtlasSSH
         public static async Task<ISSHConnection> setupRucioAsync(this ISSHConnection connection, string rucioUsername, bool dumpOnly = false)
         {
             int hashCount = 0;
-            var r = await connection.ExecuteCommandAsync(string.Format("export RUCIO_ACCOUNT={0}", rucioUsername), dumpOnly: dumpOnly);
-            r = await r.ExecuteCommandAsync("lsetup rucio", dumpOnly: dumpOnly);
-            r = await r.ExecuteCommandAsync("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly);
+            var r = await connection.ExecuteLinuxCommandAsync(string.Format("export RUCIO_ACCOUNT={0}", rucioUsername), dumpOnly: dumpOnly);
+            r = await r.ExecuteLinuxCommandAsync("lsetup rucio", dumpOnly: dumpOnly);
+            r = await r.ExecuteLinuxCommandAsync("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly);
 
             if (hashCount != 0 && !dumpOnly)
             {
@@ -201,7 +201,7 @@ namespace AtlasSSH
             var whatHappened = new List<string>();
 
             var r = await connection
-                .ExecuteCommandAsync(string.Format("echo {0} | voms-proxy-init -voms {1}", passwordInfo.Password, voms),
+                .ExecuteLinuxCommandAsync(string.Format("echo {0} | voms-proxy-init -voms {1}", passwordInfo.Password, voms),
                     l =>
                     {
                         goodProxy = goodProxy || l.Contains("Your proxy is valid");
@@ -272,7 +272,7 @@ namespace AtlasSSH
                 fileStatus("Checking the dataset exists");
             }
             var response = new List<string>();
-            await connection.ExecuteCommandAsync(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
+            await connection.ExecuteLinuxCommandAsync(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
 
             var dsnames = response
                 .Where(l => l.Contains("DATASET") | l.Contains("CONTAINER"))
@@ -300,11 +300,11 @@ namespace AtlasSSH
 
             // Create a file that contains all the files we want to download up on the host.
             var fileListName = string.Format("/tmp/{0}.filelist", datasetName.SantizeDSName());
-            await connection.ExecuteCommandAsync("rm -rf " + fileListName);
-            await connection.ApplyAsync(goodFiles, async (c, fname) => await c.ExecuteCommandAsync(string.Format("echo {0} >> {1}", fname, fileListName)));
+            await connection.ExecuteLinuxCommandAsync("rm -rf " + fileListName);
+            await connection.ApplyAsync(goodFiles, async (c, fname) => await c.ExecuteLinuxCommandAsync(string.Format("echo {0} >> {1}", fname, fileListName)));
 
             // We good on creating the directory?
-            await connection.ExecuteCommandAsync(string.Format("mkdir -p {0}", localDirectory),
+            await connection.ExecuteLinuxCommandAsync(string.Format("mkdir -p {0}", localDirectory),
                 l => { throw new ArgumentException("Error trying to create directory {0} for dataset on remote machine.", localDirectory); },
                 secondsTimeout: 20);
 
@@ -339,7 +339,7 @@ namespace AtlasSSH
             string filesThatFailedToDownload = "";
             bool foundClockSkewMessage = false;
             var messageNameMatch = new Regex(@"Starting the download of ([\w\.:]+)");
-            await connection.ExecuteCommandAsync($"rucio -T {timeout} download --dir {localDirectory} `cat {fileListName}`", l =>
+            await connection.ExecuteLinuxCommandAsync($"rucio -T {timeout} download --dir {localDirectory} `cat {fileListName}`", l =>
             {
                 // Look for something that indicates which file we are currently getting from the GRID.
                 if (fileStatus != null)
@@ -465,34 +465,42 @@ namespace AtlasSSH
             var fileNameList = new List<GRIDFileInfo>();
             var filenameMatch = new Regex(@"\| +(?<fname>\S*) +\| +[^\|]+\| +[^\|]+\| +(?<fsize>[0-9\.]*) *(?<fsizeunits>[kMGTB]*) *\| +(?<events>[0-9]*) +\|");
             bool bad = false;
-            await connection.ExecuteCommandAsync(string.Format("rucio list-files {0}", datasetName), l =>
+            try
             {
-                if (l.Contains("Data identifier not found"))
+                await connection.ExecuteLinuxCommandAsync(string.Format("rucio list-files {0}", datasetName), l =>
                 {
-                    bad = true;
-                }
-                if (!bad)
-                {
-                    var m = filenameMatch.Match(l);
-                    if (m.Success)
+                    if (l.Contains("Data identifier not found"))
                     {
-                        var fname = m.Groups["fname"].Value;
-                        if (fname != "SCOPE:NAME")
+                        bad = true;
+                    }
+                    if (!bad)
+                    {
+                        var m = filenameMatch.Match(l);
+                        if (m.Success)
                         {
-                            // Parse it all out
-                            var gi = new GRIDFileInfo()
+                            var fname = m.Groups["fname"].Value;
+                            if (fname != "SCOPE:NAME")
                             {
-                                name = fname,
-                                eventCount = m.Groups["events"].Value == "" ? 0 : int.Parse(m.Groups["events"].Value),
-                                size = ConvertToMB(m.Groups["fsize"].Value, m.Groups["fsizeunits"].Value)
-                            };
-                            fileNameList.Add(gi);
+                                // Parse it all out
+                                var gi = new GRIDFileInfo()
+                                {
+                                    name = fname,
+                                    eventCount = m.Groups["events"].Value == "" ? 0 : int.Parse(m.Groups["events"].Value),
+                                    size = ConvertToMB(m.Groups["fsize"].Value, m.Groups["fsizeunits"].Value)
+                                };
+                                fileNameList.Add(gi);
+                            }
                         }
                     }
-                }
-            },
-            failNow: failNow, dumpOnly: dumpOnly
-            );
+                },
+                failNow: failNow, dumpOnly: dumpOnly
+                );
+            }
+            catch (LinuxCommandErrorException e)
+                when (e.Message.Contains("status error") && bad)
+            {
+                // Swallow a command status error that we "sort-of" know about.
+            }
 
             if (bad & !dumpOnly)
             {
@@ -572,7 +580,7 @@ namespace AtlasSSH
             // First we have to create the directory.
             bool dirCreated = true;
             bool dirAlreadyExists = false;
-            await connection.ExecuteCommandAsync(string.Format("mkdir {0}", linuxLocation), l =>
+            await connection.ExecuteLinuxCommandAsync(string.Format("mkdir {0}", linuxLocation), l =>
             {
                 dirCreated = !dirCreated ? false : string.IsNullOrWhiteSpace(l);
                 dirAlreadyExists = dirAlreadyExists ? true : l.Contains("File exists");
@@ -583,11 +591,11 @@ namespace AtlasSSH
                 throw new LinuxMissingConfigurationException(string.Format("Unable to create release directory '{0}'.", linuxLocation));
 
             // Next, put our selves there
-            await connection.ExecuteCommandAsync(string.Format("cd {0}", linuxLocation), dumpOnly: dumpOnly);
+            await connection.ExecuteLinuxCommandAsync(string.Format("cd {0}", linuxLocation), dumpOnly: dumpOnly);
 
             // And then do the setup
             bool found = false;
-            await connection.ExecuteCommandAsync(string.Format("rcSetup {0}", releaseName), l => found = found ? true : l.Contains("Found ASG release with"), dumpOnly: dumpOnly);
+            await connection.ExecuteLinuxCommandAsync(string.Format("rcSetup {0}", releaseName), l => found = found ? true : l.Contains("Found ASG release with"), dumpOnly: dumpOnly);
             if (!found && !dumpOnly)
                 throw new LinuxMissingConfigurationException(string.Format("Unable to find release '{0}'", releaseName));
 
@@ -620,7 +628,7 @@ namespace AtlasSSH
         public static async Task<ISSHConnection> KinitAsync (this ISSHConnection connection, string username, string password, bool dumpOnly = false)
         {
             var allStrings = new List<string>();
-            await connection.ExecuteCommandAsync(string.Format("echo {0} | kinit {1}", password, username), l => allStrings.Add(l), dumpOnly: dumpOnly);
+            await connection.ExecuteLinuxCommandAsync(string.Format("echo {0} | kinit {1}", password, username), l => allStrings.Add(l), dumpOnly: dumpOnly);
             var errorStrings = allStrings.Where(l => l.StartsWith("kinit:")).ToArray();
             if (errorStrings.Length > 0)
             {
@@ -704,13 +712,13 @@ namespace AtlasSSH
             }
 
             // Do the check out
-            await connection.ExecuteCommandAsync($"git clone --recursive {scPackagePath}", refreshTimeout: true, secondsTimeout: 8*60, failNow: failNow, dumpOnly: dumpOnly);
+            await connection.ExecuteLinuxCommandAsync($"git clone --recursive {scPackagePath}", refreshTimeout: true, secondsTimeout: 8*60, failNow: failNow, dumpOnly: dumpOnly);
 
             // Now, we have to move to that revision.
             var pkgName = Path.GetFileNameWithoutExtension(scPackagePath.Split('/').Last());
 
             string error = "";
-            await connection.ExecuteCommandAsync($"cd {pkgName}; git checkout {scRevision}; cd ..", output: l => error = l.Contains("error") ? l : error);
+            await connection.ExecuteLinuxCommandAsync($"cd {pkgName}; git checkout {scRevision}; cd ..", processLine: l => error = l.Contains("error") ? l : error);
             if (error.Length > 0)
             {
                 throw new LinuxCommandErrorException($"Unable to check out package {scPackagePath} with SHA {scRevision}: {error}");
@@ -782,7 +790,7 @@ namespace AtlasSSH
             }
 
             var sawRevisionMessage = false;
-            await connection.ExecuteCommandAsync(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
+            await connection.ExecuteLinuxCommandAsync(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
             if (!sawRevisionMessage && !dumpOnly)
             {
                 throw new LinuxCommandErrorException(string.Format("Unable to check out svn package {0}.", scPackagePath));
@@ -794,7 +802,7 @@ namespace AtlasSSH
                 var packageName = scPackagePath.Split('/').Last();
                 var checkoutName = fullPackagePath.Split('/').Last();
                 bool lineSeen = false;
-                await connection.ExecuteCommandAsync(string.Format("mv {0} {1}", checkoutName, packageName), l => lineSeen = true, dumpOnly: dumpOnly);
+                await connection.ExecuteLinuxCommandAsync(string.Format("mv {0} {1}", checkoutName, packageName), l => lineSeen = true, dumpOnly: dumpOnly);
                 if (lineSeen && !dumpOnly)
                 {
                     throw new LinuxCommandErrorException("Unable to rename the downloaded trunk directory for package '" + scPackagePath + "'.");

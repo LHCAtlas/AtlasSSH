@@ -104,6 +104,8 @@ namespace AtlasSSHTest
                 Assert.IsTrue(pid2 != "");
                 Assert.AreEqual(1, t.TunnelCount);
                 Console.WriteLine(pid2);
+
+                t.ExecuteLinuxCommand("export", l => Console.WriteLine(l));
             }
         }
     }

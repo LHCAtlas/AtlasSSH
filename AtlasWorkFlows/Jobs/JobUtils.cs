@@ -87,11 +87,11 @@ namespace AtlasWorkFlows.Jobs
             {
                 var linuxLocation = string.Format("/tmp/{0}", resultingDataset);
                 await connection.Apply(() => update("Removing old build directory"))
-                        .ExecuteCommandAsync("rm -rf " + linuxLocation, dumpOnly: dumpOnly);
+                        .ExecuteLinuxCommandAsync("rm -rf " + linuxLocation, dumpOnly: dumpOnly);
 
                 await connection
                     .Apply(() => update("Setting up panda"))
-                    .ExecuteCommandAsync("lsetup panda", dumpOnly: dumpOnly);
+                    .ExecuteLinuxCommandAsync("lsetup panda", dumpOnly: dumpOnly);
                 await connection.Apply(() => update("Setting up release"))
                     .SetupRcReleaseAsync(linuxLocation, job.Release.Name, dumpOnly: dumpOnly);
                 await connection.Apply(() => update("Getting CERN credentials"))

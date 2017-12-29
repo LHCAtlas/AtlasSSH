@@ -61,7 +61,7 @@ namespace PSAtlasDatasetCommands
             connection.Apply(() => DisplayStatus("Setting up ATLAS"))
                 .setupATLAS()
                 .Apply(() => DisplayStatus("Setting up pyAMI"))
-                .ExecuteCommand("lsetup pyami")
+                .ExecuteLinuxCommand("lsetup pyami")
                 .Apply(() => DisplayStatus("Acquiring GRID credentials"))
                 .VomsProxyInit("atlas", failNow: () => Stopping);
 
@@ -95,7 +95,7 @@ namespace PSAtlasDatasetCommands
                 // Get the dump from the command, which is a set of dictionary pairings
                 var responses = new List<string>();
                 DisplayStatus($"Getting info for {dsName}");
-                c.ExecuteCommand($"ami show dataset info {dsName}", l => responses.Add(l));
+                c.ExecuteLinuxCommand($"ami show dataset info {dsName}", l => responses.Add(l));
 
                 // Parse everything into name-value pairs.
                 var dict = responses

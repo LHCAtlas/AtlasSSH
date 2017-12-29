@@ -164,7 +164,8 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
             dict["setupATLAS"] = setupATLASGoodResponse;
             dict["alias"] = aliasResponse;
 
-            return dict;
+            return dict
+                .AddEntry("echo $?", "0");
         }
 
         /// <summary>
@@ -1837,12 +1838,14 @@ Good!! The already set ROOTSYS=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/x86_
         public static Dictionary<string, string> AddsetupKinit (this Dictionary<string, string> dict, string username, string password)
         {
             return dict
+                .AddEntry("echo $?", "0")
                 .AddEntry(string.Format("echo {1} | kinit {0}", username, password), @"Password for gwatts@CERN.CH:");
         }
 
         public static Dictionary<string, string> AddCheckoutFromRelease(this Dictionary<string,string> dict, string packageName)
         {
             return dict
+                .AddEntry("echo $?", "0")
                 .AddEntry(string.Format("rc checkout_pkg {0}", packageName), @"checking out xAODTrigger
 A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/xAODTrigger/test
 A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/xAODTrigger/test/ut_xaodtrigger_trigcomposite_test.cxx
@@ -1960,6 +1963,7 @@ Checked out revision 704382.");
         public static Dictionary<string,string> AddCheckoutFromRevision(this Dictionary<string, string> dict, string packagePath, string revision)
         {
             return dict
+                .AddEntry("echo $?", "0")
                 .AddEntry(string.Format("rc checkout_pkg {0}/trunk@{1}", packagePath, revision), @"checking out trunk@704382
 A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/test
 A    /home/gwatts/atlas/trigger/newEDMObjectsRootCore/trunk@704382/test/ut_xaodtrigger_trigcomposite_test.cxx
@@ -2221,10 +2225,10 @@ Checked out revision 704382.")
         /// </summary>
         /// <param name="dict"></param>
         /// <returns></returns>
-        public static Dictionary<string, string> AddGoodLinuxCommand(this Dictionary<string, string> dict)
+        public static Dictionary<string, string> AddGoodLinuxCommand(this Dictionary<string, string> dict, string v = "0")
         {
             return dict
-                .AddEntry("echo $?", "0");
+                .AddEntry("echo $?", v);
         }
 
         public static Dictionary<string, string> AddBuildCommandResponses(this Dictionary<string, string> dict)

@@ -30,9 +30,9 @@ namespace AtlasSSHTest
         public void setupATLASNosetupATLASThere()
         {
             var setupATLASBad = @"-bash: setupATLAS: command not found";
-            var s = new dummySSHConnection(new Dictionary<string, string>() { 
-            { "setupATLAS", setupATLASBad },
-            });
+            var s = new dummySSHConnection(new Dictionary<string, string>() {
+            { "setupATLAS", setupATLASBad }}.AddGoodLinuxCommand()
+            );
             util.CatchException(() => s.setupATLAS(), typeof(LinuxConfigException), "Unable to setupATLAS - command is not known!");
         }
 
@@ -44,6 +44,7 @@ namespace AtlasSSHTest
                 .AddsetupRucioResponses("bogus")
                 .AddEntry("lsetup rucio", "-bash: lsetup rucio: command not found")
                 .AddEntry("hash rucio", "-bash: hash: rucio: not found")
+                .AddGoodLinuxCommand()
                 );
 
             util.CatchException(() => s.setupRucio("bogus"), typeof(LinuxConfigException), "Unable to setup Rucio");
@@ -639,6 +640,7 @@ kinit: Preauthentication failed while getting initial credentials")
             // Check out a package that is in a sub-dir of trunk.
             var s = new dummySSHConnection(new Dictionary<string, string>()
                 .AddCheckoutFromRevisionTrunk("atlasoff/Event/xAOD/xAODTrigger/trunk/subpkg", "704382")
+                .AddGoodLinuxCommand()
                 );
 
             s.CheckoutPackage("atlasoff/Event/xAOD/xAODTrigger/trunk/subpkg", "704382");
@@ -671,6 +673,7 @@ kinit: Preauthentication failed while getting initial credentials")
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("rc checkout_pkg xAODForward", @"RootCore: Error unknown package xAODForward")
+                .AddGoodLinuxCommand()
                 );
 
             util.CatchException(() => s.CheckoutPackage("xAODForward", ""), typeof(LinuxCommandErrorException), "Unable to check out svn package xAODForward");
@@ -682,6 +685,7 @@ kinit: Preauthentication failed while getting initial credentials")
             var s = new dummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("git clone --recursive https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", @"RootCore: Error unknown package xAODForward")
                 .AddEntry("cd DiVertAnalysisCode; git checkout 77658117c62ac99610068228668563d29baa3912; cd ..", "Now using dude")
+                .AddGoodLinuxCommand()
                 );
 
             s.CheckoutPackage("atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", "77658117c62ac99610068228668563d29baa3912");
@@ -693,6 +697,7 @@ kinit: Preauthentication failed while getting initial credentials")
             var s = new dummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("git clone --recursive https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", @"RootCore: Error unknown package xAODForward")
                 .AddEntry("cd DiVertAnalysisCode; git checkout 77658117c62ac99610068228668563d29baa3912; cd ..", "error: pathspec '77658117c62ac99610068228668563d29baa39122' did not match any file(s) known to git.")
+                .AddGoodLinuxCommand()
                 );
 
             util.CatchException(() => s.CheckoutPackage("atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", "77658117c62ac99610068228668563d29baa3912"),
@@ -704,7 +709,7 @@ kinit: Preauthentication failed while getting initial credentials")
         {
             var s = new dummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("ls bogusduduefreak", @"ls: cannot access bogusduduefreak: No such file or directory")
-                .AddEntry("echo $?", "2")
+                .AddGoodLinuxCommand("1")
                 );
 
             util.CatchException(() => s.ExecuteLinuxCommand("ls bogusduduefreak"), typeof(LinuxCommandErrorException), "The remote command");
