@@ -7,8 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AtlasSSH
@@ -121,7 +119,7 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        private async Task<string> ExtractPromptText(ShellStream s, SshClient c)
+        private static async Task<string> ExtractPromptText(ShellStream s, SshClient c)
         {
             await s.WaitTillPromptText();
             s.WriteLine("# this initialization");

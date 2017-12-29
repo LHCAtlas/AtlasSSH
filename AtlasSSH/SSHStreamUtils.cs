@@ -1,8 +1,6 @@
 ﻿using Renci.SshNet;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,13 +44,26 @@ namespace AtlasSSH
             }
         }
 
+
+        [Serializable]
+        public class NoLinuxShellPromptSeenException : Exception
+        {
+            public NoLinuxShellPromptSeenException() { }
+            public NoLinuxShellPromptSeenException(string message) : base(message) { }
+            public NoLinuxShellPromptSeenException(string message, Exception inner) : base(message, inner) { }
+            protected NoLinuxShellPromptSeenException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        }
+
         /// <summary>
         /// Move through everything in the input stream until it looks like we are looking at a prompt.
         /// </summary>
         /// <param name="shell"></param>
         public static async Task<string> WaitTillPromptText(this ShellStream shell)
         {
-            var timeout = DateTime.Now + TimeSpan.FromSeconds(10);
+            const int promptTimeout = 20;
+            var timeout = DateTime.Now + TimeSpan.FromSeconds(promptTimeout);
             var allText = new StringBuilder();
             while (true)
             {
@@ -62,7 +73,7 @@ namespace AtlasSSH
                 }
                 if (shell.Length == 0)
                 {
-                    throw new InvalidOperationException("It could be that the remote machine isn't responding - didn't get anything that looked like a prompt in 10 seconds");
+                    throw new NoLinuxShellPromptSeenException($"It could be that the remote machine isn't responding - didn't get anything that looked like a prompt in {promptTimeout} seconds");
                 }
 
                 string line;
