@@ -43,11 +43,11 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        public void GetExistingDatasetFileList()
+        public async Task GetExistingDatasetFileList()
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            var files = grid_p.GetListOfFilesForDataset(_good_dsname);
+            var files = await grid_p.GetListOfFilesForDatasetAsync(_good_dsname);
             Assert.AreEqual(197, files.Length);
             // This might not be safe b.c. file order might not be idempotent, but try this for now.
             Assert.AreEqual(_good_dsfile_1, files[0]);
@@ -55,42 +55,42 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void GetExistingDatasetFileListTunnel()
+        public async Task GetExistingDatasetFileListTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
-            GetExistingDatasetFileList();
+            await GetExistingDatasetFileList();
         }
 
         [TestMethod]
-        public void GetNonDatasetFileList()
+        public async Task GetNonDatasetFileList()
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            var files = grid_p.GetListOfFilesForDataset("mc15_13TeV.361032.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ12W.merge.DAOD_EXOT15.bogus");
+            var files = await grid_p.GetListOfFilesForDatasetAsync("mc15_13TeV.361032.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ12W.merge.DAOD_EXOT15.bogus");
             Assert.IsNull(files);
         }
 
         [TestMethod]
-        public void HasExpectedFile()
+        public async Task HasExpectedFile()
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            Assert.IsTrue(grid_p.HasFile(new Uri($"gridds://{_good_dsname}/{_good_dsfile_1}")));
+            Assert.IsTrue(await grid_p.HasFileAsync(new Uri($"gridds://{_good_dsname}/{_good_dsfile_1}")));
         }
 
         [TestMethod]
-        public void DoesNotHaveWeirdFile()
+        public async Task DoesNotHaveWeirdFile()
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            Assert.IsFalse(grid_p.HasFile(new Uri($"gridds://{_good_dsname}/myfile.root")));
+            Assert.IsFalse(await grid_p.HasFileAsync(new Uri($"gridds://{_good_dsname}/myfile.root")));
         }
         [TestMethod]
-        public void DoesNotHaveWeirdDataset()
+        public async Task DoesNotHaveWeirdDataset()
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            Assert.IsFalse(grid_p.HasFile(new Uri($"gridds://{_good_dsname}_bogus/{_good_dsfile_1}")));
+            Assert.IsFalse(await grid_p.HasFileAsync(new Uri($"gridds://{_good_dsname}_bogus/{_good_dsfile_1}")));
         }
 
         [TestMethod]
@@ -126,7 +126,7 @@ namespace AtlasWorkFlowsTest.Location
         /// </summary>
         [TestMethod]
         [Ignore]
-        public void CopyTwoFiles()
+        public async Task CopyTwoFiles()
         {
             _ssh.CreateRepro();
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
@@ -138,12 +138,12 @@ namespace AtlasWorkFlowsTest.Location
                 new Uri($"gridds://{_good_dsname}/{_good_dsfile_2}"),
             };
 
-            grid_p.CopyTo(local_p, uris);
+            await grid_p.CopyToAsync(local_p, uris);
 
-            var files = local_p.GetListOfFilesForDataset(_good_dsname);
+            var files = await local_p.GetListOfFilesForDatasetAsync(_good_dsname);
             Assert.AreEqual(197, files.Length);
-            Assert.IsTrue(local_p.HasFile(uris[0]));
-            Assert.IsTrue(local_p.HasFile(uris[1]));
+            Assert.IsTrue(await local_p.HasFileAsync(uris[0]));
+            Assert.IsTrue(await local_p.HasFileAsync(uris[1]));
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace AtlasWorkFlowsTest.Location
         /// </summary>
         [TestMethod]
         [Ignore]
-        public void CopyOneFilesTunnel()
+        public async Task CopyOneFilesTunnel()
         {
             // Should be setup to deal with about 4 GB of data in one file.
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnelBigData");
@@ -165,11 +165,11 @@ namespace AtlasWorkFlowsTest.Location
                 new Uri($"gridds://{_good_dsname}/{_good_dsfile_1}"),
             };
 
-            grid_p.CopyTo(local_p, uris);
+            await grid_p.CopyToAsync(local_p, uris);
 
-            var files = local_p.GetListOfFilesForDataset(_good_dsname);
+            var files = await local_p.GetListOfFilesForDatasetAsync(_good_dsname);
             Assert.AreEqual(197, files.Length);
-            Assert.IsTrue(local_p.HasFile(uris[0]));
+            Assert.IsTrue(await local_p.HasFileAsync(uris[0]));
         }
     }
 }

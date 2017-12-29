@@ -2,11 +2,7 @@
 using AtlasWorkFlows.Utils;
 using CredentialManagement;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -67,7 +63,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="datasetToStartWith"></param>
         /// <param name="credSet">Set of credentials to load. Default to CERN</param>
         /// <returns></returns>
-        public static ISSHConnection SubmitJob(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false, string credSet = "CERN", bool dumpOnly = false)
+        public static async Task<ISSHConnection> SubmitJobAsync(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false, string credSet = "CERN", bool dumpOnly = false)
         {
             // Get the status update protected.
             Action<string> update = statusUpdate != null ? 
@@ -90,27 +86,29 @@ namespace AtlasWorkFlows.Jobs
             if (!sameJobAsLastTime)
             {
                 var linuxLocation = string.Format("/tmp/{0}", resultingDataset);
-                connection
-                    .Apply(() => update("Removing old build directory"))
-                    .ExecuteCommand("rm -rf " + linuxLocation, dumpOnly: dumpOnly);
+                await connection.Apply(() => update("Removing old build directory"))
+                        .ExecuteCommandAsync("rm -rf " + linuxLocation, dumpOnly: dumpOnly);
 
-                connection
-                .Apply(() => update("Setting up panda"))
-                .ExecuteCommand("lsetup panda", dumpOnly: dumpOnly)
-                .Apply(() => update("Setting up release"))
-                .SetupRcRelease(linuxLocation, job.Release.Name, dumpOnly: dumpOnly)
-                .Apply(() => update("Getting CERN credentials"))
-                .Kinit(cernCred.Username, cernCred.Password, dumpOnly: dumpOnly)
-                .Apply(job.Packages, (c, j) => c.Apply(() => update("Checking out package " + j.Name)).CheckoutPackage(j.Name, j.SCTag, failNow: failNow, dumpOnly: dumpOnly))
-                .Apply(job.Commands, (co, cm) => co.Apply(() => update("Running command " + cm.CommandLine)).ExecuteLinuxCommand(cm.CommandLine, failNow: failNow, dumpOnly: dumpOnly))
-                .Apply(() => update("Compiling release"))
-                .BuildWorkArea(failNow: failNow, dumpOnly: dumpOnly);
+                await connection
+                    .Apply(() => update("Setting up panda"))
+                    .ExecuteCommandAsync("lsetup panda", dumpOnly: dumpOnly);
+                await connection.Apply(() => update("Setting up release"))
+                    .SetupRcReleaseAsync(linuxLocation, job.Release.Name, dumpOnly: dumpOnly);
+                await connection.Apply(() => update("Getting CERN credentials"))
+                    .KinitAsync(cernCred.Username, cernCred.Password, dumpOnly: dumpOnly);
+                await connection
+                    .ApplyAsync(job.Packages, (c, j) => c.Apply(() => update("Checking out package " + j.Name)).CheckoutPackageAsync(j.Name, j.SCTag, failNow: failNow, dumpOnly: dumpOnly));
+                await connection
+                    .ApplyAsync(job.Commands, (co, cm) => co.Apply(() => update("Running command " + cm.CommandLine)).ExecuteLinuxCommandAsync(cm.CommandLine, failNow: failNow, dumpOnly: dumpOnly));
+                await connection
+                    .Apply(() => update("Compiling release"))
+                    .BuildWorkAreaAsync(failNow: failNow, dumpOnly: dumpOnly);
             }
 
             // We should now be in the directory where everything is - so submit!
-            return connection
+            return await connection
                 .Apply(() => update($"Running submit command ({inputDataset})"))
-                .ExecuteLinuxCommand(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow, dumpOnly: dumpOnly);
+                .ExecuteLinuxCommandAsync(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow, dumpOnly: dumpOnly);
         }
 
         /// <summary>

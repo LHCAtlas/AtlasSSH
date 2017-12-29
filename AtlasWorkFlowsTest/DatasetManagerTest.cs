@@ -30,16 +30,16 @@ namespace AtlasWorkFlowsTest
 
         [TestMethod]
         [ExpectedException(typeof(DatasetManager.DatasetDoesNotExistException))]
-        public void NoPlaces()
+        public async Task NoPlaces()
         {
-            var files = DatasetManager.ListOfFilesInDataset("bogus");
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("bogus");
         }
 
         [TestMethod]
-        public void PlaceWithDataset()
+        public async Task PlaceWithDataset()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual(2, files.Length);
             Assert.AreEqual("gridds://ds1/f1", files[0].OriginalString);
@@ -47,13 +47,13 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void PlaceWithSecondDataset()
+        public async Task PlaceWithSecondDataset()
         {
             DatasetManager.ResetDSM(
                 new DummyPlace("bogus1") { { "ds1", "f1", "f2" } },
                 new DummyPlace("bogus2") { { "ds2", "f1", "f2" } }
                 );
-            var files = DatasetManager.ListOfFilesInDataset("ds2");
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds2");
             Assert.IsNotNull(files);
             Assert.AreEqual(2, files.Length);
             Assert.AreEqual("gridds://ds2/f1", files[0].OriginalString);
@@ -61,11 +61,11 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void FindLocalDatasetThatIsLocal()
+        public async Task FindLocalDatasetThatIsLocal()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = DatasetManager.MakeFilesLocal(files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await DatasetManager.MakeFilesLocalAsync(files);
             Assert.IsNotNull(localFiles);
             Assert.AreEqual(2, localFiles.Length);
             Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
@@ -74,43 +74,43 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void MakeSureHasAllFiles()
+        public async Task MakeSureHasAllFiles()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
             var u1 = new Uri("gridds://ds1/f1");
-            var places = DatasetManager.ListOfPlacesHoldingAllFiles(new[] { u1 });
+            var places = await DatasetManager.ListOfPlacesHoldingAllFilesAsync(new[] { u1 });
             Assert.IsNotNull(places);
             Assert.AreEqual(1, places.Length);
             Assert.AreEqual("bogus", places[0]);
         }
 
         [TestMethod]
-        public void PlaceTwoHaveFiles()
+        public async Task PlaceTwoHaveFiles()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } },
                 new DummyPlace("bogus1") { { "ds1", "f1", "f2" } });
             var u1 = new Uri("gridds://ds1/f1");
-            var places = DatasetManager.ListOfPlacesHoldingAllFiles(new[] { u1 });
+            var places = await DatasetManager.ListOfPlacesHoldingAllFilesAsync(new[] { u1 });
             Assert.IsNotNull(places);
             Assert.AreEqual(2, places.Length);
         }
 
         [TestMethod]
-        public void NoPlaceHasAllFiles()
+        public async Task NoPlaceHasAllFiles()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
             var u1 = new Uri("gridds://ds2/f1");
-            var places = DatasetManager.ListOfPlacesHoldingAllFiles(new[] { u1 });
+            var places = await DatasetManager.ListOfPlacesHoldingAllFilesAsync(new[] { u1 });
             Assert.IsNotNull(places);
             Assert.AreEqual(0, places.Length);
         }
 
         [TestMethod]
-        public void PlaceLocalFilePaths()
+        public async Task PlaceLocalFilePaths()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
             var u1 = new Uri("gridds://ds1/f1");
-            var file = DatasetManager.LocalPathToFile("bogus", u1);
+            var file = await DatasetManager.LocalPathToFileAsync("bogus", u1);
             Assert.IsNotNull(file);
             Assert.AreEqual("file:///c:/junk/f1.txt", file.ToString());
         }
@@ -120,7 +120,7 @@ namespace AtlasWorkFlowsTest
         /// system still queries other non-local locatoins.
         /// </summary>
         [TestMethod]
-        public void LocalDatasetQueryDoesNotForceOtherQueries()
+        public async Task LocalDatasetQueryDoesNotForceOtherQueries()
         {
             var p1 = new DummyPlace("bogusLocal") { { "ds1", "f1", "f2" } };
             p1.IsLocal = true;
@@ -130,13 +130,13 @@ namespace AtlasWorkFlowsTest
             p2.DataTier = 10;
             DatasetManager.ResetDSM(p1, p2);
 
-            DatasetManager.MakeFilesLocal(new Uri[] { new Uri("gridds://ds1/f1") });
+            await DatasetManager.MakeFilesLocalAsync(new Uri[] { new Uri("gridds://ds1/f1") });
             Assert.AreEqual(0, p2.GetListOfFilesForDatasetCalled);
             Assert.AreEqual(0, p2.HasFileCalled);
         }
 
         [TestMethod]
-        public void LocalPartialDatasetQueryDoesNotForceOtherQueries()
+        public async Task LocalPartialDatasetQueryDoesNotForceOtherQueries()
         {
             var p1 = new DummyPlace("bogusLocal") { { "ds1", "f1", "f2" } };
             p1.IsLocal = true;
@@ -147,13 +147,13 @@ namespace AtlasWorkFlowsTest
             p2.DataTier = 10;
             DatasetManager.ResetDSM(p1, p2);
 
-            DatasetManager.MakeFilesLocal(new Uri[] { new Uri("gridds://ds1/f1") });
+            await DatasetManager.MakeFilesLocalAsync(new Uri[] { new Uri("gridds://ds1/f1") });
             Assert.AreEqual(0, p2.GetListOfFilesForDatasetCalled);
             Assert.AreEqual(0, p2.HasFileCalled);
         }
 
         [TestMethod]
-        public void LocalPartialDatasetQueryForcesOtherQueries()
+        public async Task LocalPartialDatasetQueryForcesOtherQueries()
         {
             var p1 = new DummyPlace("bogusLocal") { { "ds1", "f1", "f2" } };
             p1.IsLocal = true;
@@ -166,35 +166,35 @@ namespace AtlasWorkFlowsTest
             p2.DataTier = 10;
             DatasetManager.ResetDSM(p1, p2);
 
-            DatasetManager.MakeFilesLocal(new Uri[] { new Uri("gridds://ds1/f2") });
+            await DatasetManager.MakeFilesLocalAsync(new Uri[] { new Uri("gridds://ds1/f2") });
             Assert.AreEqual(0, p2.GetListOfFilesForDatasetCalled);
             Assert.AreEqual(1, p2.HasFileCalled);
         }
 
         [TestMethod]
         [ExpectedException(typeof(DatasetDoesNotExistException))]
-        public void FindLocalDatasetWhenNotAround()
+        public async Task FindLocalDatasetWhenNotAround()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
-            var localFiles = DatasetManager.MakeFilesLocal(new Uri[] { new Uri("gridds://ds2/f2") });
+            var localFiles = await DatasetManager.MakeFilesLocalAsync(new Uri[] { new Uri("gridds://ds2/f2") });
         }
 
         [TestMethod]
         [ExpectedException(typeof(UnknownUriSchemeException))]
-        public void FindLocalDatasetWithBadURIs()
+        public async Task FindLocalDatasetWithBadURIs()
         {
-            var localFiles = DatasetManager.MakeFilesLocal(new Uri[] { new Uri("http://www.nytimes.com") });
+            var localFiles = await DatasetManager.MakeFilesLocalAsync(new Uri[] { new Uri("http://www.nytimes.com") });
         }
 
         [TestMethod]
-        public void CopyToLocal()
+        public async Task CopyToLocal()
         {
             var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
             var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
             loc2.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2);
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = DatasetManager.MakeFilesLocal(files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await DatasetManager.MakeFilesLocalAsync(files);
             Assert.IsNotNull(localFiles);
             Assert.AreEqual(2, localFiles.Length);
             Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
@@ -205,14 +205,14 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void CopyFromSourceToDest()
+        public async Task CopyFromSourceToDest()
         {
             var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
             var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
             loc2.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2);
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = DatasetManager.CopyFiles(loc2, loc1, files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await DatasetManager.CopyFilesAsync(loc2, loc1, files);
             Assert.IsNotNull(localFiles);
             Assert.AreEqual(2, localFiles.Length);
             Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
@@ -282,7 +282,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void CopyFromSourceToDestButFilesThere()
+        public async Task CopyFromSourceToDestButFilesThere()
         {
             var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
             var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
@@ -290,8 +290,8 @@ namespace AtlasWorkFlowsTest
             loc1.BlockHasFileFor("f1");
             loc2.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2);
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = DatasetManager.CopyFiles(loc2, loc1, files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await DatasetManager.CopyFilesAsync(loc2, loc1, files);
             Assert.IsNotNull(localFiles);
             Assert.AreEqual(2, localFiles.Length);
             Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
@@ -303,26 +303,27 @@ namespace AtlasWorkFlowsTest
 
         [TestMethod]
         [ExpectedException(typeof(NoLocalPlaceToCopyToException))]
-        public void CopyToLocalWithNoNonConfirmLocalAvailable()
+        public async Task CopyToLocalWithNoNonConfirmLocalAvailable()
         {
             var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = true, CanSourceACopy = true };
             var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
             loc2.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2);
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = DatasetManager.MakeFilesLocal(files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await DatasetManager.MakeFilesLocalAsync(files);
         }
 
         [TestMethod]
-        public void CopyDatasetsWithSameFilenames()
+        public async Task CopyDatasetsWithSameFilenames()
         {
             var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
             var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
             loc2.Add("ds1", "f1", "f2");
             loc2.Add("ds2", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2);
-            var files = DatasetManager.ListOfFilesInDataset("ds1").Concat(DatasetManager.ListOfFilesInDataset("ds2")).ToArray();
-            var localFiles = DatasetManager.MakeFilesLocal(files);
+            var files = (await DatasetManager.ListOfFilesInDatasetAsync("ds1"))
+                .Concat(await DatasetManager.ListOfFilesInDatasetAsync("ds2")).ToArray();
+            var localFiles = await DatasetManager.MakeFilesLocalAsync(files);
 
             Assert.AreEqual(4, localFiles.Length);
             Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
@@ -332,15 +333,16 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void CopyToLocalFromMultipleDatasets()
+        public async Task CopyToLocalFromMultipleDatasets()
         {
             var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
             var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
             loc2.Add("ds1", "f1", "f2");
             loc2.Add("ds2", "f3", "f4");
             DatasetManager.ResetDSM(loc1, loc2);
-            var files = DatasetManager.ListOfFilesInDataset("ds1").Concat(DatasetManager.ListOfFilesInDataset("ds2")).ToArray();
-            var localFiles = DatasetManager.MakeFilesLocal(files);
+            var files = (await DatasetManager.ListOfFilesInDatasetAsync("ds1"))
+                .Concat(await DatasetManager.ListOfFilesInDatasetAsync("ds2")).ToArray();
+            var localFiles = await DatasetManager.MakeFilesLocalAsync(files);
 
             Assert.AreEqual(4, localFiles.Length);
             Assert.AreEqual(@"c:\junk\f1.txt", localFiles[0].OriginalString);
@@ -350,7 +352,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void CopyFromFireWalledPlace()
+        public async Task CopyFromFireWalledPlace()
         {
             // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
             var loc1 = new DummyPlace("LocalDisk") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
@@ -364,8 +366,8 @@ namespace AtlasWorkFlowsTest
 
             loc3.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2, loc3);
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = MakeFilesLocal(files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await MakeFilesLocalAsync(files);
             Assert.AreEqual(2, localFiles.Length);
 
             foreach (var c in DummyPlace.CopyLogs)
@@ -378,7 +380,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void CopyFromGRIDExample()
+        public async Task CopyFromGRIDExample()
         {
             // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
             var loc1 = new DummyPlace("LocalDisk") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
@@ -395,8 +397,8 @@ namespace AtlasWorkFlowsTest
             loc3.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2, loc3);
 
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = MakeFilesLocal(files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await MakeFilesLocalAsync(files);
             Assert.AreEqual(2, localFiles.Length);
 
             foreach (var c in DummyPlace.CopyLogs)
@@ -409,7 +411,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void CopyToFromGRIDWithConfirmation()
+        public async Task CopyToFromGRIDWithConfirmation()
         {
             // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
             var loc1 = new DummyPlace("LocalDisk") { IsLocal = true, NeedsConfirmationCopy = true, CanSourceACopy = true };
@@ -426,8 +428,8 @@ namespace AtlasWorkFlowsTest
             loc3.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2, loc3);
 
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = DatasetManager.CopyFilesTo(loc1, files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await DatasetManager.CopyFilesToAsync(loc1, files);
             Assert.AreEqual(2, localFiles.Length);
 
             foreach (var c in DummyPlace.CopyLogs)
@@ -440,7 +442,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void CopyFromGRIDWithTwoOptions()
+        public async Task CopyFromGRIDWithTwoOptions()
         {
             // Make sure it finds a 3 step routing, from CERN, to the tev machines, back to a local.
             var loc1 = new DummyPlace("LocalDisk") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
@@ -471,8 +473,8 @@ namespace AtlasWorkFlowsTest
             loc5.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2, loc3, loc4, loc5);
 
-            var files = DatasetManager.ListOfFilesInDataset("ds1");
-            var localFiles = MakeFilesLocal(files);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds1");
+            var localFiles = await MakeFilesLocalAsync(files);
             Assert.AreEqual(2, localFiles.Length);
 
             foreach (var c in DummyPlace.CopyLogs)
@@ -485,42 +487,42 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        public void CopyFromLocalPlaceToLocalPlace()
+        public async Task CopyFromLocalPlaceToLocalPlace()
         {
             var loc1 = new DummyPlace("l1") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
             var loc2 = new DummyPlace("l2") { IsLocal = true, NeedsConfirmationCopy = false, CanSourceACopy = true };
 
             loc1.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2);
-            var f = DatasetManager.CopyFilesTo(loc2, DatasetManager.ListOfFilesInDataset("ds1"));
+            var f = await DatasetManager.CopyFilesToAsync(loc2, await DatasetManager.ListOfFilesInDatasetAsync("ds1"));
             Assert.AreEqual(2, f.Length);
             Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
             Assert.AreEqual("*l1 -> l2 (2 files)", DummyPlace.CopyLogs[0]);
         }
 
         [TestMethod]
-        public void CopyFromNonLocalPlaceToNonLocalPlace()
+        public async Task CopyFromNonLocalPlaceToNonLocalPlace()
         {
             var loc1 = new DummyPlace("l1") { IsLocal = false, NeedsConfirmationCopy = false, CanSourceACopy = true };
             var loc2 = new DummyPlace("l2") { IsLocal = false, NeedsConfirmationCopy = false, CanSourceACopy = true };
 
             loc1.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2);
-            var f = DatasetManager.CopyFilesTo(loc2, DatasetManager.ListOfFilesInDataset("ds1"));
+            var f = await DatasetManager.CopyFilesToAsync(loc2, await DatasetManager.ListOfFilesInDatasetAsync("ds1"));
             Assert.AreEqual(2, f.Length);
             Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
             Assert.AreEqual("*l1 -> l2 (2 files)", DummyPlace.CopyLogs[0]);
         }
 
         [TestMethod]
-        public void CopyToLocalWithoutConfirm()
+        public async Task CopyToLocalWithoutConfirm()
         {
             var loc1 = new DummyPlace("l1") { IsLocal = true, NeedsConfirmationCopy = true, CanSourceACopy = true };
             var loc2 = new DummyPlace("l2") { IsLocal = true, NeedsConfirmationCopy = true, CanSourceACopy = true };
 
             loc1.Add("ds1", "f1", "f2");
             DatasetManager.ResetDSM(loc1, loc2);
-            var f = DatasetManager.CopyFilesTo(loc2, DatasetManager.ListOfFilesInDataset("ds1"));
+            var f = await DatasetManager.CopyFilesToAsync(loc2, await DatasetManager.ListOfFilesInDatasetAsync("ds1"));
             Assert.AreEqual(2, f.Length);
             Assert.AreEqual(1, DummyPlace.CopyLogs.Count);
             Assert.AreEqual("*l1 -> l2 (2 files)", DummyPlace.CopyLogs[0]);
@@ -543,46 +545,42 @@ namespace AtlasWorkFlowsTest
 
             public bool CanSourceCopy(IPlace destination)
             {
-                return false;
+                throw new NotImplementedException();
             }
 
-            public void Copy(IPlace origin, Uri[] uris)
+            public Task CopyDataSetInfoAsync(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task CopyFromAsync(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+            public Task CopyToAsync(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+            public Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            {
+                return Task.FromResult<string[]>(null);
+            }
+
+            public Task<IEnumerable<Uri>> GetLocalFileLocationsAsync(IEnumerable<Uri> uris)
             {
                 throw new NotImplementedException();
             }
 
-            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
-            {
-                return null;
-            }
-
-            public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
+            public Task<bool> HasFileAsync(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task ResetConnectionsAsync()
             {
-                throw new NotImplementedException();
-            }
-
-            public void ResetConnections()
-            {
+                return Task.FromResult(true);
             }
         }
 
@@ -620,14 +618,14 @@ namespace AtlasWorkFlowsTest
             {
                 _dataset_list[dsName] = files;
             }
-            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 GetListOfFilesForDatasetCalled++;
                 if (_dataset_list.ContainsKey(dsname))
                 {
-                    return _dataset_list[dsname];
+                    return Task.FromResult(_dataset_list[dsname]);
                 }
-                return null;
+                return Task.FromResult<string[]>(null);
             }
 
             public int DataTier { get; set; }
@@ -671,11 +669,11 @@ namespace AtlasWorkFlowsTest
             /// </summary>
             /// <param name="uris"></param>
             /// <returns></returns>
-            public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
+            public Task<IEnumerable<Uri>> GetLocalFileLocationsAsync(IEnumerable<Uri> uris)
             {
                 Assert.IsTrue(IsLocal, "Can't get local file locations unless this is a local repo!");
-                return uris
-                    .Select(u => new Uri($"c:\\junk\\{u.DatasetFilename()}.txt"));
+                return Task.FromResult(uris
+                    .Select(u => new Uri($"c:\\junk\\{u.DatasetFilename()}.txt")));
             }
 
             private List<string> _filesWeDontHaveLocally = new List<string>();
@@ -695,19 +693,19 @@ namespace AtlasWorkFlowsTest
             /// <param name="statusUpdate"></param>
             /// <param name="failNow"></param>
             /// <returns></returns>
-            public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task<bool> HasFileAsync(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 HasFileCalled++;
                 // Make sure the file is contained in one of our datasets
                 if (!_dataset_list.ContainsKey(u.DatasetName()))
-                    return false;
+                    return Task.FromResult(false);
 
                 if (_filesWeDontHaveLocally.Contains(u.DatasetFilename()))
                 {
-                    return false;
+                    return Task.FromResult(false);
                 }
 
-                return _dataset_list[u.DatasetName()].Any(fname => fname == u.DatasetFilename());
+                return Task.FromResult(_dataset_list[u.DatasetName()].Any(fname => fname == u.DatasetFilename()));
             }
 
             /// <summary>
@@ -715,24 +713,27 @@ namespace AtlasWorkFlowsTest
             /// </summary>
             /// <param name="origin"></param>
             /// <param name="uris"></param>
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
+            public Task CopyFromAsync(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
             {
                 Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"{origin.Name} -> *{Name} ({uris.Length} files)");
+                return Task.FromResult(true);
             }
-            public void CopyTo(IPlace dest, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
+            public Task CopyToAsync(IPlace dest, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
             {
                 Assert.AreEqual(1, uris.Select(u => u.DatasetName()).Distinct().Count(), "Number of different datasets");
                 CopyLogs.Add($"*{Name} -> {dest.Name} ({uris.Length} files)");
+                return Task.FromResult(true);
             }
 
-            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task CopyDataSetInfoAsync(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void ResetConnections()
+            public Task ResetConnectionsAsync()
             {
+                return Task.FromResult(true);
             }
         }
         #endregion

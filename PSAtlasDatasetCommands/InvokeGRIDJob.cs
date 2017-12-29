@@ -2,6 +2,7 @@
 using AtlasWorkFlows.Jobs;
 using AtlasWorkFlows.Panda;
 using CredentialManagement;
+using Nito.AsyncEx.Synchronous;
 using Polly;
 using PSAtlasDatasetCommands.Utils;
 using System;
@@ -149,7 +150,8 @@ namespace PSAtlasDatasetCommands
 
                     // Submit the job
                     _connection
-                        .SubmitJob(job, originalDatasetName, resultDatasetName, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob, dumpOnly: WhatIf.IsPresent);
+                        .SubmitJobAsync(job, originalDatasetName, resultDatasetName, DisplayStatus, failNow: () => Stopping, sameJobAsLastTime: !firstJob, dumpOnly: WhatIf.IsPresent)
+                        .WaitAndUnwrapException();
 
                     // Try to find the job again if requested. The submission can take a very long time to show up in
                     // big panda, so skip unless requested.

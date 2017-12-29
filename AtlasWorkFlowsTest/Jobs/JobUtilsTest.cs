@@ -90,37 +90,37 @@ namespace AtlasWorkFlowsTest.Jobs
         }
 
         [TestMethod]
-        public void SubmitCommandWithGlobal()
+        public async Task SubmitCommandWithGlobal()
         {
             AtlasJob j = MakeSimpleJob();
             var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j));
-            s.SubmitJob(j, "ds1", "ds1-out", credSet: "bogus");
+            await s.SubmitJobAsync(j, "ds1", "ds1-out", credSet: "bogus");
         }
 
         [TestMethod]
-        public void SubmitCommandWithGlobalPattern()
+        public async Task SubmitCommandWithGlobalPattern()
         {
             AtlasJob j = MakePatternJob();
             var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
-            s.SubmitJob(j, "ds1", "ds1-out", credSet: "bogus");
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(GRIDSubmitException))]
-        public void SubmitCommandWithAmbiguousPattern()
-        {
-            AtlasJob j = MakePatternJob();
-            var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
-            s.SubmitJob(j, "ds1ds2", "ds1-out", credSet: "bogus");
+            await s.SubmitJobAsync(j, "ds1", "ds1-out", credSet: "bogus");
         }
 
         [TestMethod]
         [ExpectedException(typeof(GRIDSubmitException))]
-        public void SubmitCommandWithMissingPattern()
+        public async Task SubmitCommandWithAmbiguousPattern()
         {
             AtlasJob j = MakePatternJob();
             var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
-            s.SubmitJob(j, "ds3", "ds1-out", credSet: "bogus");
+            await s.SubmitJobAsync(j, "ds1ds2", "ds1-out", credSet: "bogus");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(GRIDSubmitException))]
+        public async Task SubmitCommandWithMissingPattern()
+        {
+            AtlasJob j = MakePatternJob();
+            var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
+            await s.SubmitJobAsync(j, "ds3", "ds1-out", credSet: "bogus");
         }
     }
 

@@ -41,112 +41,112 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void GetReproDatasetFileListForBadDS()
+        public async Task GetReproDatasetFileListForBadDS()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            var files = p.GetListOfFilesForDataset("ds2");
+            var files = await p.GetListOfFilesForDatasetAsync("ds2");
             Assert.IsNull(files);
         }
 
         [TestMethod]
-        public void GetLocalFileURIsOnLinux()
+        public async Task GetLocalFileURIsOnLinux()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            var files = p.GetLocalFileLocations(new [] { new Uri("gridds://ds1/f1.root")});
+            var files = await p.GetLocalFileLocationsAsync(new [] { new Uri("gridds://ds1/f1.root")});
             Assert.IsNotNull(files);
             Assert.AreEqual(1, files.Count());
             Assert.AreEqual("file://test/phys/users/gwatts/bogus_ds_repro/ds1/files/f1.root", files.First().ToString());
         }
 
         [TestMethod]
-        public void GetReproDatasetFileListForBadDSTunnel()
+        public async Task GetReproDatasetFileListForBadDSTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
-            GetReproDatasetFileListForBadDS();
+            await GetReproDatasetFileListForBadDS();
         }
 
         [TestMethod]
-        public void GetReproDatasetFileList()
+        public async Task GetReproDatasetFileList()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            var files = p.GetListOfFilesForDataset("ds1");
+            var files = await p.GetListOfFilesForDatasetAsync("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual("f1.root", files[0]);
             Assert.AreEqual("f2.root", files[1]);
         }
 
         [TestMethod]
-        public void GetReproDatasetFileListTunnel()
+        public async Task GetReproDatasetFileListTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
-            GetReproDatasetFileList();
+            await GetReproDatasetFileList();
         }
 
         [TestMethod]
-        public void HasFileGoodFile()
+        public async Task HasFileGoodFile()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            Assert.IsTrue(p.HasFile(new Uri("gridds://ds1/f1.root")));
+            Assert.IsTrue(await p.HasFileAsync(new Uri("gridds://ds1/f1.root")));
         }
 
         [TestMethod]
-        public void HasGoodFileTunnel()
+        public async Task HasGoodFileTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
-            HasFileGoodFile();
+            await HasFileGoodFile();
         }
 
         [TestMethod]
-        public void HasFileMissingFileInGoodDataset()
+        public async Task HasFileMissingFileInGoodDataset()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             _ssh.RemoveFileInDS("ds1", "f1.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
+            Assert.IsFalse(await p.HasFileAsync(new Uri("gridds://ds1/f1.root")));
         }
 
         [TestMethod]
-        public void HasPartFileInDataset()
+        public async Task HasPartFileInDataset()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             _ssh.RemoveFileInDS("ds1", "f1.root");
             _ssh.AddFileToDS("ds1", "f1.root.part");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            Assert.IsFalse(p.HasFile(new Uri("gridds://ds1/f1.root")));
+            Assert.IsFalse(await p.HasFileAsync(new Uri("gridds://ds1/f1.root")));
         }
 
         [TestMethod]
-        public void HasFileMissingFileInGoodDatastTunnel()
+        public async Task HasFileMissingFileInGoodDatastTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
-            HasFileMissingFileInGoodDataset();
+            await HasFileMissingFileInGoodDataset();
         }
 
         [TestMethod]
-        public void HasFileMissingDataset()
+        public async Task HasFileMissingDataset()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             _ssh.RemoveFileInDS("ds1", "f1.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            Assert.IsFalse(p.HasFile(new Uri("gridds://ds2/f1.root")));
+            Assert.IsFalse(await p.HasFileAsync(new Uri("gridds://ds2/f1.root")));
         }
 
         [TestMethod]
-        public void HasFileMissingDatasetTunnel()
+        public async Task HasFileMissingDatasetTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
-            HasFileMissingDataset();
+            await HasFileMissingDataset();
         }
 
         [TestMethod]
@@ -211,7 +211,7 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyTo()
+        public async Task CopyTo()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
@@ -219,14 +219,14 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyTo(p2, fileList);
+            await p1.CopyToAsync(p2, fileList);
 
-            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
         }
 
         [TestMethod]
         [ExpectedException(typeof(MissingLinuxFileException))]
-        public void CopyToWithMissingFile()
+        public async Task CopyToWithMissingFile()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
@@ -235,14 +235,14 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyTo(p2, fileList);
+            await p1.CopyToAsync(p2, fileList);
 
-            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
         }
 
         [TestMethod]
         [ExpectedException(typeof(MissingLinuxFileException))]
-        public void CopyToWithFileAsPart()
+        public async Task CopyToWithFileAsPart()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
@@ -252,9 +252,9 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyTo(p2, fileList);
+            await p1.CopyToAsync(p2, fileList);
 
-            Assert.IsTrue(p2.HasFile(fileList[0]));
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
         }
 
 #if false
@@ -292,7 +292,7 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyWhenOneAlreadyThere()
+        public async Task CopyWhenOneAlreadyThere()
         {
             // The whole thing is already there.
             _ssh.CreateRepro();
@@ -308,14 +308,14 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyTo(p2, fileList);
+            await p1.CopyToAsync(p2, fileList);
 
-            Assert.IsTrue(p2.HasFile(fileList[0]));
-            Assert.IsTrue(p2.HasFile(fileList[1]));
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
+            Assert.IsTrue(await p2.HasFileAsync(fileList[1]));
         }
 
         [TestMethod]
-        public void CopyWhenOneAlreadyThereAsPart()
+        public async Task CopyWhenOneAlreadyThereAsPart()
         {
             // The whole thing is already there.
             _ssh.CreateRepro();
@@ -332,15 +332,15 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyTo(p2, fileList);
+            await p1.CopyToAsync(p2, fileList);
 
-            Assert.IsTrue(p2.HasFile(fileList[0]));
-            Assert.IsTrue(p2.HasFile(fileList[1]));
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
+            Assert.IsTrue(await p2.HasFileAsync(fileList[1]));
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyToViaTunnel()
+        public async Task CopyToViaTunnel()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnel");
             _ssh.CreateRepro();
@@ -352,13 +352,13 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyTo(p2, fileList);
-            Assert.IsTrue(p2.HasFile(fileList[0]));
+            await p1.CopyToAsync(p2, fileList);
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyToViaTunnelWithPassword()
+        public async Task CopyToViaTunnelWithPassword()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnelBigData");
             _ssh.CreateRepro();
@@ -370,13 +370,13 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyTo(p2, fileList);
-            Assert.IsTrue(p2.HasFile(fileList[0]));
+            await p1.CopyToAsync(p2, fileList);
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyToTwoStep()
+        public async Task CopyToTwoStep()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
@@ -385,17 +385,17 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyTo(p2, fileList.Take(1).ToArray());
-            Assert.IsTrue(p2.HasFile(fileList[0]));
-            Assert.IsFalse(p2.HasFile(fileList[1]));
+            await p1.CopyToAsync(p2, fileList.Take(1).ToArray());
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
+            Assert.IsFalse(await p2.HasFileAsync(fileList[1]));
 
-            p1.CopyTo(p2, fileList.Skip(1).ToArray());
-            Assert.IsTrue(p2.HasFile(fileList[1]));
+            await p1.CopyToAsync(p2, fileList.Skip(1).ToArray());
+            Assert.IsTrue(await p2.HasFileAsync(fileList[1]));
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyFrom()
+        public async Task CopyFrom()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
@@ -404,15 +404,15 @@ namespace AtlasWorkFlowsTest.Location
             DatasetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p2.CopyFrom(p1, fileList);
+            await p2.CopyFromAsync(p1, fileList);
 
-            Assert.IsTrue(p2.HasFile(fileList[0]));
-            Assert.AreEqual(2, p2.GetListOfFilesForDataset("ds1").Length);
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
+            Assert.AreEqual(2, (await p2.GetListOfFilesForDatasetAsync("ds1")).Length);
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyFromTwoStep()
+        public async Task CopyFromTwoStep()
         {
             DatasetManager.ResetDSM();
             _ssh.CreateRepro();
@@ -422,17 +422,17 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p2.CopyFrom(p1, fileList.Take(1).ToArray());
-            Assert.IsTrue(p2.HasFile(fileList[0]));
-            Assert.IsFalse(p2.HasFile(fileList[1]));
+            await p2.CopyFromAsync(p1, fileList.Take(1).ToArray());
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
+            Assert.IsFalse(await p2.HasFileAsync(fileList[1]));
 
-            p2.CopyFrom(p1, fileList.Skip(1).ToArray());
-            Assert.IsTrue(p2.HasFile(fileList[1]));
+            await p2.CopyFromAsync(p1, fileList.Skip(1).ToArray());
+            Assert.IsTrue(await p2.HasFileAsync(fileList[1]));
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyFromViaTunnelWithPassword()
+        public async Task CopyFromViaTunnelWithPassword()
         {
             _ssh = new UtilsForBuildingLinuxDatasets("LinuxRemoteTestTunnelBigData");
             _ssh.CreateRepro();
@@ -444,8 +444,8 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            p1.CopyFrom(p2, fileList);
-            Assert.IsTrue(p1.HasFile(fileList[0]));
+            await p1.CopyFromAsync(p2, fileList);
+            Assert.IsTrue(await p1.HasFileAsync(fileList[0]));
         }
         
 #region Helper Items
@@ -492,27 +492,27 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
 
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+            public Task CopyFromAsync(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+            public Task CopyToAsync(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
             {
                 throw new NotImplementedException();
             }
 
-            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
+            public Task<IEnumerable<Uri>> GetLocalFileLocationsAsync(IEnumerable<Uri> uris)
             {
                 throw new NotImplementedException();
             }
 
-            public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task<bool> HasFileAsync(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
@@ -553,33 +553,33 @@ namespace AtlasWorkFlowsTest.Location
                 return DoVisibility;
             }
 
-            public string GetSCPFilePath(Uri f)
+            public Task<string> GetSCPFilePathAsync(Uri f)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyDataSetInfo(string key, string[] v, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task CopyDataSetInfoAsync(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public string GetPathToCopyFiles(string key)
+            public Task<string> GetPathToCopyFilesAsync(string dsName)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task CopyFromRemoteToLocalAsync(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task CopyFromLocalToRemoteAsync(string dsName, IEnumerable<FileInfo> files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
-
-            public void ResetConnections()
+            public Task ResetConnectionsAsync()
             {
+                throw new NotImplementedException();
             }
         }
 #endregion

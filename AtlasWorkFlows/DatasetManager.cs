@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using static AtlasSSH.DiskCacheTypedHelpers;
 
 namespace AtlasWorkFlows
@@ -60,13 +61,14 @@ namespace AtlasWorkFlows
         /// <param name="failNow"></param>
         /// <param name="probabalLocation">The dataset is almost certainly here - look here first</param>
         /// <returns></returns>
-        internal static string[] ListOfFilenamesInDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null, IPlace probabalLocation = null)
+        internal static async Task<string[]> ListOfFilenamesInDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null, IPlace probabalLocation = null)
         {
-            return NonNullCacheInDisk("AtlasWorkFlows-ListOfFilenamesInDataset", dsname, () =>
+            return await NonNullCacheInDiskAsync("AtlasWorkFlows-ListOfFilenamesInDataset", dsname, async () =>
             {
-                return new IPlace[] { probabalLocation }.Concat(_places.Value)
+                var r = new IPlace[] { probabalLocation }.Concat(_places.Value)
                     .Where(p => p != null)
-                    .Select(p => p.GetListOfFilesForDataset(dsname.Dataset(), statusUpdate, failNow: failNow))
+                    .Select(async p => await p.GetListOfFilesForDatasetAsync(dsname.Dataset(), statusUpdate, failNow: failNow));
+                return (await Task.WhenAll(r))
                     .Where(fs => fs != null)
                     .FirstOrDefault()
                     .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset {dsname} could not be found at any place."));
@@ -83,9 +85,9 @@ namespace AtlasWorkFlows
         /// <remarks>
         /// Look through the list of places in tier order (from closests to furthest) until we find a good dataset.
         /// </remarks>
-        public static Uri[] ListOfFilesInDataset (string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public static async Task<Uri[]> ListOfFilesInDatasetAsync (string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            return ListOfFilenamesInDataset(dsname, statusUpdate, failNow)
+            return (await ListOfFilenamesInDatasetAsync(dsname, statusUpdate, failNow))
                     .Select(fs => new Uri($"gridds://{dsname.Dataset()}/{fs}"))
                     .ToArray();
         }
@@ -96,12 +98,20 @@ namespace AtlasWorkFlows
         /// <param name="dsfiles"></param>
         /// <param name="maxDataTier">Don't look at any places with a data teir at or above this number</param>
         /// <returns></returns>
-        public static string[] ListOfPlacesHoldingAllFiles (IEnumerable<Uri> dsfiles, int maxDataTier = 1000)
+        public static async Task<string[]> ListOfPlacesHoldingAllFilesAsync (IEnumerable<Uri> dsfiles, int maxDataTier = 1000)
         {
-            return _places.Value
-                .Where(p => p.DataTier <= maxDataTier)
-                .Where(p => dsfiles.All(f => p.HasFile(f)))
-                .OrderBy(p => p.DataTier)
+            // Because of the async nature of HasFileAsync, we can't use a nice three line LINQ expression, unfortunately.
+            List<IPlace> good_places = new List<IPlace>();
+            foreach (var p in _places.Value.Where(p => p.DataTier <= maxDataTier))
+            {
+                var r = await Task.WhenAll(dsfiles.Select(async f => await p.HasFileAsync(f)));
+                if (r.All(f => f))
+                {
+                    good_places.Add(p);
+                }
+            }
+            
+            return good_places.OrderBy(p => p.DataTier)
                 .Select(p => p.Name)
                 .ToArray();
         }
@@ -112,9 +122,9 @@ namespace AtlasWorkFlows
         /// <param name="place"></param>
         /// <param name="file"></param>
         /// <returns></returns>
-        public static Uri LocalPathToFile (string place, Uri file)
+        public static async Task<Uri> LocalPathToFileAsync (string place, Uri file)
         {
-            return LocalPathToFiles(place, new[] { file }).First();
+            return (await LocalPathToFilesAsync(place, new[] { file })).First();
         }
 
         /// <summary>
@@ -124,14 +134,23 @@ namespace AtlasWorkFlows
         /// <param name="place"></param>
         /// <param name="files"></param>
         /// <returns></returns>
-        public static IEnumerable<Uri> LocalPathToFiles(string place, IEnumerable<Uri> files)
+        public static Task<IEnumerable<Uri>> LocalPathToFilesAsync(string place, IEnumerable<Uri> files)
         {
             var p = _places.Value
                 .Where(pl => pl.Name == place)
                 .FirstOrDefault()
                 .ThrowIfNull(() => new ArgumentException($"I do not know about place {place}, so I can't find file {files.First().ToString()} on it!"));
 
-            return p.GetLocalFileLocations(files);
+            return p.GetLocalFileLocationsAsync(files);
+        }
+
+        /// <summary>
+        /// Light weight class to help with refactoring
+        /// </summary>
+        private struct RoutedFileInfo
+        {
+            public Route r;
+            public Uri f;
         }
 
         /// <summary>
@@ -143,7 +162,7 @@ namespace AtlasWorkFlows
         /// <param name="statusUpdate">Callback used to send out messages updating the progress.</param>
         /// <param name="timeout">How many minutes to allow things to progress without aborting</param>
         /// <returns>A list of local files that point to the file objects themselves.</returns>
-        public static Uri[] MakeFilesLocal(Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
+        public static async Task<Uri[]> MakeFilesLocalAsync(Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
         {
             // Simple checks
             var goodFiles = files
@@ -151,19 +170,37 @@ namespace AtlasWorkFlows
                 .Throw(u => u.Scheme != "gridds", u => new UnknownUriSchemeException($"Can only deal with gridds:// uris - found: {u.OriginalString}"));
 
             // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
-            var routedFiles = goodFiles
-                .Select(u => new { Route = FindRouteTo(u, p => p.IsLocal, statusUpdate: statusUpdate, failNow: failNow), File = u })
-                .GroupBy(info => info.Route.Name)
+            var routedFilesList = goodFiles
+                .Select(async u => new RoutedFileInfo { r = await FindRouteTo(u, p => p.IsLocal, statusUpdate: statusUpdate, failNow: failNow), f = u });
+            var routedFiles = (await Task.WhenAll(routedFilesList))
+                .GroupBy(info => info.r.Name)
                 .ToArray();
 
             // Next, we can execute the copy. We do it by grouping as often the route is more efficient when a group of files
             // are done rather than a single file.
-            var resultUris = from rtGrouping in routedFiles
-                             let rt = rtGrouping.First().Route
-                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow, timeout)
-                             select uri;
+            var resultUris = await GetListOfRoutedFiles(statusUpdate, failNow, timeout, routedFiles);
 
             return resultUris.ToArray();
+        }
+
+        /// <summary>
+        /// Get a list of routed files sorted by routes - taking the first one.
+        /// </summary>
+        /// <param name="statusUpdate"></param>
+        /// <param name="failNow"></param>
+        /// <param name="timeout"></param>
+        /// <param name="routedFiles"></param>
+        /// <returns></returns>
+        private static async Task<IEnumerable<Uri>> GetListOfRoutedFiles(Action<string> statusUpdate, Func<bool> failNow, int timeout, IGrouping<string, RoutedFileInfo>[] routedFiles)
+        {
+            var results = new List<Uri>();
+            foreach (var rtGrouping in routedFiles)
+            {
+                var rt = rtGrouping.First().r;
+                var uris = (await rt.ProcessFilesAsync(rtGrouping.Select(r => r.f), statusUpdate, failNow, timeout));
+                results.AddRange(uris);
+            }
+            return results;
         }
 
         /// <summary>
@@ -173,7 +210,7 @@ namespace AtlasWorkFlows
         /// <param name="files">List of gridds Uri's of the files that we should be moving</param>
         /// <param name="timeout">How many minutes before timeing out</param>
         /// <returns>List of local URI's if the <paramref name="destination"/> is local, otherwise the gridds type Uri's</returns>
-        public static Uri[] CopyFilesTo(IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
+        public static async Task<Uri[]> CopyFilesToAsync(IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
         {
             // Simple checks
             var goodFiles = files
@@ -190,16 +227,14 @@ namespace AtlasWorkFlows
             }
 
             // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
-            var routedFiles = goodFiles
-                .Select(u => new { Route = FindRouteTo(u, p => p == destination, p => p == destination, statusUpdate: statusUpdate, failNow: failNow), File = u })
-                .GroupBy(info => info.Route.Name)
+            var routedFilesList = goodFiles
+                .Select(async u => new RoutedFileInfo { r = await FindRouteTo(u, p => p == destination, p => p == destination, statusUpdate: statusUpdate, failNow: failNow), f = u });
+            var routedFiles = (await Task.WhenAll(routedFilesList))
+                .GroupBy(info => info.r.Name)
                 .ToArray();
 
             // To do the files, we need to first fine a routing from wherever they are to the final location.
-            var resultUris = from rtGrouping in routedFiles
-                             let rt = rtGrouping.First().Route
-                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow, timeout)
-                             select uri;
+            var resultUris = await GetListOfRoutedFiles(statusUpdate, failNow, timeout, routedFiles);
 
             return resultUris.ToArray();
         }
@@ -214,7 +249,7 @@ namespace AtlasWorkFlows
         /// <param name="failNow"></param>
         /// <param name="timeout">Minutes of no progress before canceling it</param>
         /// <returns></returns>
-        public static Uri[] CopyFiles (IPlace source, IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
+        public static async Task<Uri[]> CopyFilesAsync (IPlace source, IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
         {
             // Simple checks
             var goodFiles = files
@@ -239,26 +274,25 @@ namespace AtlasWorkFlows
                 throw new ArgumentException($"Place {source.Name} is not on our master list of places!");
             }
 
-            if (!files.All(f => source.HasFile(f, statusUpdate, failNow)))
+            var all_check = await Task.WhenAll(files.Select(async fl => await source.HasFileAsync(fl, statusUpdate, failNow)));
+            if (!all_check.All(f => f))
             {
                 throw new ArgumentException($"Place {source.Name} does not have all the requested files");
             }
 
             // Find a route to make them "local", and sort them by the route name (e.g. we can batch the file accesses).
             var routeSources = new IPlace[] { source };
-            var routedFiles = goodFiles
-                .Select(u => new {
-                    Route = FindRouteFromSources(destination.HasFile(u, statusUpdate, failNow) ? routeSources.Concat(new IPlace[] { destination }).ToArray() : routeSources, u, p => p == destination, p => p == destination),
-                    File = u
-                })
-                .GroupBy(info => info.Route.Name)
+            var routedFilesList = await Task.WhenAll(goodFiles
+                .Select(async u => new RoutedFileInfo {
+                    r = FindRouteFromSources((await destination.HasFileAsync(u, statusUpdate, failNow)) ? routeSources.Concat(new IPlace[] { destination }).ToArray() : routeSources, u, p => p == destination, p => p == destination),
+                    f = u
+                }));
+            var routedFiles = routedFilesList
+                .GroupBy(info => info.r.Name)
                 .ToArray();
 
             // To do the files, we need to first fine a routing from wherever they are to the final location.
-            var resultUris = from rtGrouping in routedFiles
-                             let rt = rtGrouping.First().Route
-                             from uri in rt.ProcessFiles(rtGrouping.Select(r => r.File), statusUpdate, failNow, timeout)
-                             select uri;
+            var resultUris = await GetListOfRoutedFiles(statusUpdate, failNow, timeout, routedFiles);
 
             return resultUris.ToArray();
         }
@@ -266,11 +300,11 @@ namespace AtlasWorkFlows
         /// <summary>
         /// Reset the connections on all of our places
         /// </summary>
-        public static void ResetConnections()
+        public static async Task ResetConnectionsAsync()
         {
             foreach (var p in _places.Value)
             {
-                p.ResetConnections();
+                await p.ResetConnectionsAsync();
             }
         }
 
@@ -281,16 +315,31 @@ namespace AtlasWorkFlows
         /// <param name="endCondition">The condition which says we have made it to where we want to go</param>
         /// <param name="forceOk">Will make sure this particular place is considered in all of our searches no matter what</param>
         /// <returns>A route</returns>
-        private static Route FindRouteTo(Uri u, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk = null, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        private static async Task<Route> FindRouteTo(Uri u, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk = null, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // First we need to find a source for this file.
-            var sources = _places.Value
-                .Where(p => p.HasFile(u, statusUpdate, failNow))
-                .TakeUntil(p => endCondition(p), 1)
-                .ToArray()
-                .Throw(places => places.Length == 0, places => new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'."));
+            // We have to be a little careful with processing - the HasFileAsync can be very expensive, so
+            // we do not want to call mroe than we need.
+            var goodPlaces = new List<IPlace>();
+            foreach (var p in _places.Value)
+            {
+                if (await p.HasFileAsync(u, statusUpdate, failNow))
+                {
+                    if (endCondition(p))
+                    {
+                        goodPlaces.Add(p);
+                        break;
+                    }
+                    goodPlaces.Add(p);
+                }
+            }
 
-            return FindRouteFromSources(sources, u, endCondition, forceOk);
+            if (goodPlaces.Count == 0)
+            {
+                throw new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'.");
+            }
+
+            return FindRouteFromSources(goodPlaces.ToArray(), u, endCondition, forceOk);
         }
 
         /// <summary>

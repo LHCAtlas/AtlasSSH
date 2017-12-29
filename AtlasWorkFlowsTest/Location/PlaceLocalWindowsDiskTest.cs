@@ -39,29 +39,29 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        public void ExistingFileInExistingDataset()
+        public async Task ExistingFileInExistingDataset()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
             var u = new Uri("gridds://ds1/f1.root");
-            Assert.IsTrue(place.HasFile(u));
+            Assert.IsTrue(await place.HasFileAsync(u));
         }
 
         [TestMethod]
-        public void NonExistingFileInExistingDataset()
+        public async Task NonExistingFileInExistingDataset()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             File.Delete($"{repro.FullName}\\ds1\\files\\f1.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
             var u = new Uri("gridds://ds1/f1.root");
-            Assert.IsFalse(place.HasFile(u));
+            Assert.IsFalse(await place.HasFileAsync(u));
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void BadFileInExistingDataset()
+        public async Task BadFileInExistingDataset()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
@@ -69,26 +69,26 @@ namespace AtlasWorkFlowsTest.Location
             var u = new Uri("gridds://ds1/f3.root");
 
             // This is undefined behavior - HasFile can only take URI's for files that exist in the dataset.
-            Assert.IsFalse(place.HasFile(u));
+            Assert.IsFalse(await place.HasFileAsync(u));
         }
 
         [TestMethod]
-        public void FileInNonExistingDataset()
+        public async Task FileInNonExistingDataset()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
             var u = new Uri("gridds://ds2/f3.root");
-            Assert.IsFalse(place.HasFile(u));
+            Assert.IsFalse(await place.HasFileAsync(u));
         }
 
         [TestMethod]
-        public void GetDSFileListForExistingDataset()
+        public async Task GetDSFileListForExistingDataset()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = place.GetListOfFilesForDataset("ds1");
+            var files = await place.GetListOfFilesForDatasetAsync("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual(2, files.Length);
             Assert.AreEqual("f1.root", files[0]);
@@ -97,13 +97,13 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void GetDSFileListForExistingDatasetButMissingOneFile()
+        public async Task GetDSFileListForExistingDatasetButMissingOneFile()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             File.Delete($"{repro.FullName}\\ds1\\files\\f1.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = place.GetListOfFilesForDataset("ds1");
+            var files = await place.GetListOfFilesForDatasetAsync("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual(2, files.Length);
             Assert.AreEqual("f1.root", files[0]);
@@ -111,23 +111,23 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        public void GetDSFileListForNonExistingDataset()
+        public async Task GetDSFileListForNonExistingDataset()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = place.GetListOfFilesForDataset("ds2");
+            var files = await place.GetListOfFilesForDatasetAsync("ds2");
             Assert.IsNull(files);
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void GetLocalPathsForDSFiles()
+        public async Task GetLocalPathsForDSFiles()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") });
+            var files = await place.GetLocalFileLocationsAsync(new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") });
             Assert.AreEqual(2, files.Count());
             foreach (var f in files)
             {
@@ -136,13 +136,13 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        public void GetLocalPathsForPartialDSFiles()
+        public async Task GetLocalPathsForPartialDSFiles()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
             File.Delete($"{repro.FullName}\\ds1\\files\\f2.root");
-            var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds1/f1.root") });
+            var files = await place.GetLocalFileLocationsAsync(new Uri[] { new Uri("gridds://ds1/f1.root") });
             Assert.AreEqual(1, files.Count());
             foreach (var f in files)
             {
@@ -152,24 +152,24 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [ExpectedException(typeof(DatasetFileNotLocalException))]
-        public void GetLocalPathsForMissingDSFiles()
+        public async Task GetLocalPathsForMissingDSFiles()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
             File.Delete($"{repro.FullName}\\ds1\\files\\f2.root");
-            var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds1/f2.root") }).ToArray();
+            var files = (await place.GetLocalFileLocationsAsync(new Uri[] { new Uri("gridds://ds1/f2.root") })).ToArray();
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
         [ExpectedException(typeof(DatasetDoesNotExistInThisReproException))]
-        public void GetLocalPathsForMissingDS()
+        public async Task GetLocalPathsForMissingDS()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = place.GetLocalFileLocations(new Uri[] { new Uri("gridds://ds3/f2.root") }).ToArray();
+            var files = (await place.GetLocalFileLocationsAsync(new Uri[] { new Uri("gridds://ds3/f2.root") })).ToArray();
         }
 
         [TestMethod]
@@ -189,7 +189,7 @@ namespace AtlasWorkFlowsTest.Location
         [TestMethod]
         [DeploymentItem("location_test_unc.txt")]
         [DeploymentItem("location_test_params.txt")]
-        public void TestUNCLocation()
+        public async Task TestUNCLocation()
         {
             // Create a UNC repro
             string uncRoot = File.ReadLines("location_test_unc.txt").First();
@@ -204,7 +204,7 @@ namespace AtlasWorkFlowsTest.Location
             // Now build a dataset there.
             BuildDatset(repro1, "ds1", "f1.root", "f2.root");
             var place1 = new PlaceLocalWindowsDisk("test1", repro1);
-            var files = place1.GetLocalFileLocations(new[] { new Uri("gridds://ds1/f1.root") }).ToArray();
+            var files = (await place1.GetLocalFileLocationsAsync(new[] { new Uri("gridds://ds1/f1.root") })).ToArray();
             Assert.AreEqual(1, files.Length);
             Assert.AreEqual($"{uncRoot}\\ds1\\files\\f1.root", files[0].LocalPath);
 
@@ -250,7 +250,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        public void CopyFrom()
+        public async Task CopyFrom()
         {
             var repro1 = BuildRepro("repro1");
             BuildDatset(repro1, "ds1", "f1.root", "f2.root");
@@ -260,14 +260,14 @@ namespace AtlasWorkFlowsTest.Location
             var place2 = new PlaceLocalWindowsDisk("test2", repro2);
             DatasetManager.ResetDSM(place1, place2);
 
-            Assert.IsNull(place2.GetListOfFilesForDataset("ds1"));
-            place2.CopyFrom(place1, place1.GetListOfFilesForDataset("ds1").Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
-            Assert.AreEqual(2, place2.GetListOfFilesForDataset("ds1").Length);
+            Assert.IsNull(await place2.GetListOfFilesForDatasetAsync("ds1"));
+            await place2.CopyFromAsync(place1, (await place1.GetListOfFilesForDatasetAsync("ds1")).Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
+            Assert.AreEqual(2, (await place2.GetListOfFilesForDatasetAsync("ds1")).Length);
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyFromSCPTarget()
+        public async Task CopyFromSCPTarget()
         {
             // Build remote dataset up on linux
             _ssh.CreateRepro();
@@ -279,16 +279,16 @@ namespace AtlasWorkFlowsTest.Location
             DatasetManager.ResetDSM(place1, place2);
 
             var uris = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            place2.CopyFrom(place1, uris);
-            var files = place2.GetListOfFilesForDataset("ds1");
+            await place2.CopyFromAsync(place1, uris);
+            var files = await place2.GetListOfFilesForDatasetAsync("ds1");
             Assert.AreEqual(2, files.Length);
-            Assert.IsTrue(place2.HasFile(uris[0]));
-            Assert.IsTrue(place2.HasFile(uris[1]));
+            Assert.IsTrue(await place2.HasFileAsync(uris[0]));
+            Assert.IsTrue(await place2.HasFileAsync(uris[1]));
         }
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public void CopyToSCPTarget()
+        public async Task CopyToSCPTarget()
         {
             // Build remote dataset up on linux
             _ssh.CreateRepro();
@@ -300,15 +300,15 @@ namespace AtlasWorkFlowsTest.Location
             DatasetManager.ResetDSM(place1, place2);
 
             var uris = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
-            place2.CopyTo(place1, uris);
-            var files = place1.GetListOfFilesForDataset("ds1");
+            await place2.CopyToAsync(place1, uris);
+            var files = await place1.GetListOfFilesForDatasetAsync("ds1");
             Assert.AreEqual(2, files.Length);
-            Assert.IsTrue(place1.HasFile(uris[0]));
-            Assert.IsTrue(place1.HasFile(uris[1]));
+            Assert.IsTrue(await place1.HasFileAsync(uris[0]));
+            Assert.IsTrue(await place1.HasFileAsync(uris[1]));
         }
 
         [TestMethod]
-        public void CopyTo()
+        public async Task CopyTo()
         {
             var repro1 = BuildRepro("repro1");
             BuildDatset(repro1, "ds1", "f1.root", "f2.root");
@@ -318,19 +318,19 @@ namespace AtlasWorkFlowsTest.Location
             var place2 = new PlaceLocalWindowsDisk("test2", repro2);
             DatasetManager.ResetDSM(place1, place2);
 
-            Assert.IsNull(place2.GetListOfFilesForDataset("ds1"));
-            place1.CopyTo(place2, place1.GetListOfFilesForDataset("ds1").Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
-            Assert.AreEqual(2, place2.GetListOfFilesForDataset("ds1").Length);
+            Assert.IsNull(await place2.GetListOfFilesForDatasetAsync("ds1"));
+            await place1.CopyToAsync(place2, (await place1.GetListOfFilesForDatasetAsync("ds1")).Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
+            Assert.AreEqual(2, (await place2.GetListOfFilesForDatasetAsync("ds1")).Length);
         }
 
         [TestMethod]
-        public void FileNameColonsAreIgnored()
+        public async Task FileNameColonsAreIgnored()
         {
             var repro = BuildRepro("repro");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             AddNamespaceToDatasetText(repro, "ds1", "user.gwatts");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = place.GetListOfFilesForDataset("ds1");
+            var files = await place.GetListOfFilesForDatasetAsync("ds1");
             Assert.AreEqual("f1.root", files[0]);
             Assert.AreEqual("f2.root", files[1]);
         }
@@ -424,118 +424,84 @@ namespace AtlasWorkFlowsTest.Location
                 ReturnSCPIsVisibleFrom = false;
             }
 
-            public int DataTier
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            public bool IsLocal
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            public string Name
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            public bool NeedsConfirmationCopy
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            public string SCPMachineName
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            public string SCPUser
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
             public bool ReturnForCanSourceCopy { get; set; }
             public bool CanSourceCopy(IPlace destination)
             {
                 return ReturnForCanSourceCopy;
             }
 
-            public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string GetPathToCopyFiles(string dsName)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string GetSCPFilePath(Uri f)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
-            {
-                throw new NotImplementedException();
-            }
-
             public bool ReturnSCPIsVisibleFrom { get; set; }
+
+            public string Name => throw new NotImplementedException();
+
+            public bool IsLocal => throw new NotImplementedException();
+
+            public int DataTier => throw new NotImplementedException();
+
+            public bool NeedsConfirmationCopy => throw new NotImplementedException();
+
+            public string SCPMachineName => throw new NotImplementedException();
+
+            public string SCPUser => throw new NotImplementedException();
+
             public bool SCPIsVisibleFrom(string internetLocation)
             {
                 return ReturnSCPIsVisibleFrom;
             }
 
-            public void CopyFromRemoteToLocal(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task ResetConnectionsAsync()
+            {
+                return Task.FromResult(true);
+            }
+
+            public Task<IEnumerable<Uri>> GetLocalFileLocationsAsync(IEnumerable<Uri> uris)
             {
                 throw new NotImplementedException();
             }
 
-            public void CopyFromLocalToRemote(string dsName, IEnumerable<FileInfo> files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }
 
-            public void ResetConnections()
+            public Task CopyDataSetInfoAsync(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
+                throw new NotImplementedException();
+            }
+
+            public Task<bool> HasFileAsync(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task CopyToAsync(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task CopyFromAsync(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<string> GetSCPFilePathAsync(Uri f)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<string> GetPathToCopyFilesAsync(string dsName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task CopyFromRemoteToLocalAsync(string dsName, string[] files, DirectoryInfo ourpath, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task CopyFromLocalToRemoteAsync(string dsName, IEnumerable<FileInfo> files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            {
+                throw new NotImplementedException();
             }
         }
         #endregion

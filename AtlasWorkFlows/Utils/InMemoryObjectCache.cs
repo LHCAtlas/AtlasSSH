@@ -39,5 +39,23 @@ namespace AtlasWorkFlows.Utils
             _keyStore[key] = r;
             return r;
         }
+
+        /// <summary>
+        /// Get or calc a cache line.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="calculate"></param>
+        /// <returns></returns>
+        public async Task<T> GetOrCalcAsync(string key, Func<Task<T>> calculate)
+        {
+            if (_keyStore.ContainsKey(key))
+            {
+                return _keyStore[key];
+            }
+
+            var r = await calculate();
+            _keyStore[key] = r;
+            return r;
+        }
     }
 }

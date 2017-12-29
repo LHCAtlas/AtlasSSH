@@ -2,11 +2,13 @@
 using AtlasWorkFlows.Jobs;
 using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Panda;
+using Nito.AsyncEx.Synchronous;
 using PSAtlasDatasetCommands.Utils;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Management.Automation;
+using System.Threading.Tasks;
 
 namespace PSAtlasDatasetCommands
 {
@@ -85,7 +87,8 @@ namespace PSAtlasDatasetCommands
                 }
 
                 // Find all the members of this dataset.
-                var allFilesToCopy = DatasetManager.ListOfFilesInDataset(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping);
+                var allFilesToCopy = DatasetManager.ListOfFilesInDatasetAsync(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping)
+                    .Result;
                 if (nFiles != 0)
                 {
                     allFilesToCopy = allFilesToCopy
@@ -103,8 +106,10 @@ namespace PSAtlasDatasetCommands
                 // Query the location to see if we have a decent copy there.
                 var loc = Location.AsIPlace();
 
-                var hasFiles = allFilesToCopy
-                    .All(f => loc.HasFile(f, m => DisplayStatus($"Checking Files {dataset}", m), failNow: () => Stopping));
+                var hasFiles = Task.WhenAll(allFilesToCopy
+                    .Select(f => loc.HasFileAsync(f, m => DisplayStatus($"Checking Files {dataset}", m), failNow: () => Stopping)))
+                    .Result
+                    .All(f => f);
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 using (var pl = listener.PauseListening())
@@ -144,7 +149,8 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void EndProcessing()
         {
-            DatasetManager.ResetConnections();
+            DatasetManager.ResetConnectionsAsync()
+                .WaitAndUnwrapException();
             base.EndProcessing();
         }
 
@@ -153,7 +159,8 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void BeginProcessing()
         {
-            DatasetManager.ResetConnections();
+            DatasetManager.ResetConnectionsAsync()
+                .WaitAndUnwrapException();
             base.BeginProcessing();
         }
     }

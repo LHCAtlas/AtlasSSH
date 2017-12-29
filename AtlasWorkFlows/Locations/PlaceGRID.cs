@@ -1,5 +1,6 @@
 ﻿using AtlasSSH;
 using AtlasWorkFlows.Utils;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,29 +31,30 @@ namespace AtlasWorkFlows.Locations
             Name = name;
             _linuxRemote = linuxRemote;
             _connection = null;
-            ResetConnections();
+            ResetConnectionsAsync()
+                .Wait();
         }
 
         /// <summary>
         /// The connection to our remote end-point
         /// </summary>
-        private Lazy<ISSHConnection> _connection;
+        private AsyncLazy<ISSHConnection> _connection;
 
         /// <summary>
         /// Close and reset the connection
         /// </summary>
-        public void ResetConnections(bool reAlloc)
+        public async Task ResetConnectionsAsync(bool reAlloc)
         {
-            if (_connection != null && _connection.IsValueCreated)
+            if (_connection != null && _connection.IsStarted)
             {
-                _connection.Value.Dispose();
+                (await _connection).Dispose();
             }
-            _connection = new Lazy<ISSHConnection>(() => InitConnection(null));
+            _connection = new AsyncLazy<ISSHConnection>(() => InitConnection(null));
         }
 
-        public void ResetConnections()
+        public async Task ResetConnectionsAsync()
         {
-            ResetConnections(true);
+            await ResetConnectionsAsync(true);
         }
 
         /// <summary>
@@ -60,21 +62,22 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         public void Dispose()
         {
-            ResetConnections(false);
+            ResetConnectionsAsync(false)
+                .Wait();
         }
 
         /// <summary>
         /// Track the other tunnel connections.
         /// </summary>
-        private ISSHConnection InitConnection(Action<string> statusUpdater, Func<bool> failNow = null)
+        private async Task<ISSHConnection> InitConnection(Action<string> statusUpdater, Func<bool> failNow = null)
         {
             if (statusUpdater != null)
                 statusUpdater("Setting up GRID Environment");
             var r = _linuxRemote.CloneConnection();
-            return r
-                .setupATLAS()
-                .setupRucio(r.Username)
-                .VomsProxyInit("atlas", failNow: failNow);
+            await r.setupATLASAsync();
+            await r.setupRucioAsync(r.Username);
+            await r.VomsProxyInitAsync("atlas", failNow: failNow);
+            return r;
         }
 
         /// <summary>
@@ -112,7 +115,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="dsName"></param>
         /// <param name="files"></param>
-        public void CopyDataSetInfo(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public Task CopyDataSetInfoAsync(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             throw new NotSupportedException($"GRID Place {Name} can't be copied to.");
         }
@@ -122,7 +125,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="origin"></param>
         /// <param name="uris"></param>
-        public void CopyFrom(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+        public Task CopyFromAsync(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
         {
             throw new NotSupportedException($"GRID Place {Name} can't be copied to.");
         }
@@ -132,7 +135,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="uris"></param>
-        public void CopyTo(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+        public async Task CopyToAsync(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
         {
             if (destination != _linuxRemote)
             {
@@ -143,9 +146,9 @@ namespace AtlasWorkFlows.Locations
             foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
             {
                 // First, move the catalog over
-                var catalog = DatasetManager.ListOfFilenamesInDataset(dsGroup.Key, statusUpdate, failNow, probabalLocation: this)
+                var catalog = (await DatasetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: this))
                     .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
-                _linuxRemote.CopyDataSetInfo(dsGroup.Key, catalog, statusUpdate);
+                await _linuxRemote.CopyDataSetInfoAsync(dsGroup.Key, catalog, statusUpdate);
                 if (failNow.PCall(false))
                 {
                     break;
@@ -155,7 +158,7 @@ namespace AtlasWorkFlows.Locations
                 // everything should happen.
                 var remoteLocation = _linuxRemote.GetLinuxDatasetDirectoryPath(dsGroup.Key);
                 var filesList = dsGroup.Select(u => u.DatasetFilename()).ToArray();
-                _connection.Value.DownloadFromGRID(dsGroup.Key, remoteLocation, 
+                await (await _connection).DownloadFromGRIDAsync(dsGroup.Key, remoteLocation, 
                     fileStatus: fname => statusUpdate($"Downloading {fname} from {Name}"),
                     failNow: failNow,
                     fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray(),
@@ -174,18 +177,18 @@ namespace AtlasWorkFlows.Locations
         /// Consider all datasets on the GRID frozen, so once they have been downloaded
         /// we cache them locally.
         /// </remarks>
-        public string[] GetListOfFilesForDataset(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public async Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             try
             {
-                return NonNullCacheInDisk("PlaceGRIDDSCatalog", dsname, () =>
+                return await NonNullCacheInDiskAsync("PlaceGRIDDSCatalog", dsname, async () =>
                 {
                     try
                     {
                         statusUpdate.PCall($"Listing files in dataset ({Name})");
                         try
                         {
-                            return _connection.Value.FilelistFromGRID(dsname, failNow: failNow)
+                            return (await (await _connection).FilelistFromGRIDAsync(dsname, failNow: failNow))
                                 .Select(f => f.Split(':').Last())
                                 .ToArray();
                         }
@@ -215,7 +218,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="uris"></param>
         /// <returns></returns>
-        public IEnumerable<Uri> GetLocalFileLocations(IEnumerable<Uri> uris)
+        public Task<IEnumerable<Uri>> GetLocalFileLocationsAsync(IEnumerable<Uri> uris)
         {
             throw new NotSupportedException($"GRID Place {Name} can't be directly accessed from Windows - so no local path names!");
         }
@@ -226,12 +229,12 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="u"></param>
         /// <returns></returns>
-        public bool HasFile(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public async Task<bool> HasFileAsync(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Get the list of files for the dataset and just look.
             // We use the GRID fetch explicitly here - so we can make sure that
             // we know if the files are there or are now gone from the GRID.
-            var files = GetListOfFilesForDataset(u.DatasetName(), statusUpdate, failNow);
+            var files = await GetListOfFilesForDatasetAsync(u.DatasetName(), statusUpdate, failNow);
             return files == null
                 ? false
                 : files.Contains(u.DatasetFilename());

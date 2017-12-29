@@ -6,6 +6,7 @@ using PSAtlasDatasetCommands.Utils;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Nito.AsyncEx.Synchronous;
 using System.Management.Automation;
 
 namespace PSAtlasDatasetCommands
@@ -110,7 +111,8 @@ namespace PSAtlasDatasetCommands
                 }
 
                 // Find all the members of this dataset.
-                var allFilesToCopy = DatasetManager.ListOfFilesInDataset(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping);
+                var allFilesToCopy = DatasetManager.ListOfFilesInDatasetAsync(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping)
+                    .Result;
                 if (nFiles != 0)
                 {
                     allFilesToCopy = allFilesToCopy
@@ -124,7 +126,9 @@ namespace PSAtlasDatasetCommands
                 var locDest = DestinationLocation.AsIPlace();
 
                 // Do the actual copy. This will fail if one of the files can't be found at the source.
-                var resultUris = DatasetManager.CopyFiles(locSource, locDest, allFilesToCopy, mbox => DisplayStatus($"Downloading {dataset}", mbox), failNow: () => Stopping, timeout: Timeout);
+                var resultUris = DatasetManager
+                    .CopyFilesAsync(locSource, locDest, allFilesToCopy, mbox => DisplayStatus($"Downloading {dataset}", mbox), failNow: () => Stopping, timeout: Timeout)
+                    .Result;
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 if (PassThru.IsPresent)
@@ -168,7 +172,8 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void BeginProcessing()
         {
-            DatasetManager.ResetConnections();
+            DatasetManager.ResetConnectionsAsync()
+                .WaitAndUnwrapException();
             base.BeginProcessing();
         }
         /// <summary>
@@ -176,7 +181,8 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void EndProcessing()
         {
-            DatasetManager.ResetConnections();
+            DatasetManager.ResetConnectionsAsync()
+                .WaitAndUnwrapException();
             base.EndProcessing();
         }
     }
