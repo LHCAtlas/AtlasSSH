@@ -425,12 +425,12 @@ namespace AtlasSSH
             // prompt won't be set yet.
             if (_prompt == null)
             {
-                var bogus = ExecuteCommand("pwd");
+                var bogus = await ExecuteCommandAsync("pwd");
             }
             var r = new SSHSubShellContext(_prompt, this);
 
             // Issue the ssh command... Since this isn't coming back, we have to do it a little differently.
-            ExecuteCommand($"ssh -oStrictHostKeyChecking=no -o TCPKeepAlive=yes -o ServerAliveInterval=15 {username}@{host}", WaitForCommandResult: false);
+            await ExecuteCommandAsync($"ssh -oStrictHostKeyChecking=no -o TCPKeepAlive=yes -o ServerAliveInterval=15 {username}@{host}", WaitForCommandResult: false);
             _prompt = null;
             var cmdResult = new StringBuilder();
             while (_prompt == null)
@@ -458,7 +458,7 @@ namespace AtlasSSH
             string shellStatus = "";
             try
             {
-                ExecuteCommand("echo $?", l => shellStatus = l, secondsTimeout: 30);
+                await ExecuteCommandAsync("echo $?", l => shellStatus = l, secondsTimeout: 30);
             }
             catch (Exception e)
             {
