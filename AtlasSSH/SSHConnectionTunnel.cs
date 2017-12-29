@@ -150,14 +150,22 @@ namespace AtlasSSH
                         _connectionStack = new List<IDisposable>();
                         var userMachineInfo = ExtractUserAndMachine(_machineConnectionStrings[0]);
                         _deepestConnection = new SSHConnection(userMachineInfo.machine, userMachineInfo.user);
-
-                        foreach (var cinfo in _machineConnectionStrings.Skip(1))
+                        try
                         {
-                            await MakeSSHTunnelConnection(cinfo);
-                        }
 
-                        // We don't need to track the connection strings any more.
-                        _machineConnectionStrings = null;
+                            foreach (var cinfo in _machineConnectionStrings.Skip(1))
+                            {
+                                await MakeSSHTunnelConnection(cinfo);
+                            }
+
+                            // We don't need to track the connection strings any more.
+                            _machineConnectionStrings = null;
+                        } catch
+                        {
+                            _deepestConnection.Dispose();
+                            _deepestConnection = null;
+                            throw;
+                        }
                     });
             } else if (_deepestConnection == null && _machineConnectionStrings.Count == 0)
             {

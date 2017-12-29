@@ -1,13 +1,11 @@
 ﻿using AtlasSSH;
 using AtlasWorkFlows;
 using AtlasWorkFlows.Locations;
-using AtlasWorkFlows.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using static AtlasWorkFlowsTest.DatasetManagerTest;
 
@@ -260,6 +258,7 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
+        [ExpectedException(typeof(MissingLinuxFileException))]
         public async Task CopyToWithMissingFile()
         {
             _ssh.CreateRepro();
@@ -270,6 +269,7 @@ namespace AtlasWorkFlowsTest.Location
             DatasetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            // This should fail because there is a missing file and we've explicitly requested both files to be copied.
             await p1.CopyToAsync(p2, fileList);
 
             Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
@@ -277,6 +277,7 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
+        [ExpectedException(typeof(MissingLinuxFileException))]
         public async Task CopyToWithFileAsPart()
         {
             _ssh.CreateRepro();
@@ -288,6 +289,7 @@ namespace AtlasWorkFlowsTest.Location
             DatasetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            // THis should fail because there is a missing file and we've requested all files to be copied.
             await p1.CopyToAsync(p2, fileList);
 
             Assert.IsTrue(await p2.HasFileAsync(fileList[0]));

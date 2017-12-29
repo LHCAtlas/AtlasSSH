@@ -51,7 +51,7 @@ namespace AtlasWorkFlows.Locations
                     (await c).Dispose();
                 }
                 return reAlloc
-                ? new AsyncLazy<ISSHConnection>(() => InitConnection(null))
+                ? new AsyncLazy<ISSHConnection>(() => InitConnection(null), AsyncLazyFlags.RetryOnFailure)
                 : null;
             });
         }

@@ -111,7 +111,7 @@ namespace AtlasSSH
                 var s = _client.Value.CreateShellStream("Commands", TerminalWidth, 200, 132, 80, 240 * 200);
                 _prompt = await ExtractPromptText(s, _client.Value);
                 return s;
-            });
+            }, AsyncLazyFlags.RetryOnFailure);
         }
 
         /// <summary>
