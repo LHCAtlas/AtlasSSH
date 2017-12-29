@@ -113,6 +113,7 @@
     <Compile Include="Utils\IPLocationTests.cs" />
     <Compile Include="Locations\ISCPTarget.cs" />
     <Compile Include="Utils\LINQUtils.cs" />
+    <Compile Include="Utils\AsyncLockedResourceHolder.cs" />
     <Compile Include="Utils\StringUtils.cs" />
   </ItemGroup>
   <ItemGroup>

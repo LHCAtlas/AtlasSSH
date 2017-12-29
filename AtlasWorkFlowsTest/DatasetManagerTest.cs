@@ -10,6 +10,7 @@ using System.Collections;
 using static AtlasWorkFlows.DatasetManager;
 using System.IO;
 using AtlasWorkFlows.Utils;
+using AtlasSSH;
 
 namespace AtlasWorkFlowsTest
 {
@@ -29,7 +30,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        [ExpectedException(typeof(DatasetManager.DatasetDoesNotExistException))]
+        [ExpectedException(typeof(DatasetDoesNotExistException))]
         public async Task NoPlaces()
         {
             var files = await DatasetManager.ListOfFilesInDatasetAsync("bogus");
@@ -184,6 +185,27 @@ namespace AtlasWorkFlowsTest
         public async Task FindLocalDatasetWithBadURIs()
         {
             var localFiles = await DatasetManager.MakeFilesLocalAsync(new Uri[] { new Uri("http://www.nytimes.com") });
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(DatasetDoesNotExistException))]
+        public async Task DSMgrGetListOfFilesFromBadDS()
+        {
+            var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };
+            var loc2 = new DummyPlace("bogusNonLocal") { IsLocal = false, DataTier = 10 };
+            loc2.Add("ds1", "f1", "f2");
+
+            DatasetManager.ResetDSM(loc1, loc2);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds2");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(DummyPlaceThatThrows.MyBogusDudeException))]
+        public async Task DSMgrEndpointThrowsWeirdException()
+        {
+            var loc1 = new DummyPlaceThatThrows("bogusLocal");
+            DatasetManager.ResetDSM(loc1);
+            var files = await DatasetManager.ListOfFilesInDatasetAsync("ds2");
         }
 
         [TestMethod]
@@ -581,6 +603,77 @@ namespace AtlasWorkFlowsTest
             public Task ResetConnectionsAsync()
             {
                 return Task.FromResult(true);
+            }
+        }
+
+        /// <summary>
+        /// Throw custom exception when we get a list of the files in here.
+        /// </summary>
+        internal class DummyPlaceThatThrows : IPlace
+        {
+            public DummyPlaceThatThrows(string name)
+            {
+                Name = name;
+            }
+
+            public string Name { get; private set; }
+
+            public bool IsLocal => throw new NotImplementedException();
+
+            public int DataTier => 1;
+
+            public bool NeedsConfirmationCopy => throw new NotImplementedException();
+
+            public bool CanSourceCopy(IPlace destination)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task CopyDataSetInfoAsync(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task CopyFromAsync(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task CopyToAsync(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeoutMinutes = 60)
+            {
+                throw new NotImplementedException();
+            }
+
+
+            [Serializable]
+            public class MyBogusDudeException : Exception
+            {
+                public MyBogusDudeException() { }
+                public MyBogusDudeException(string message) : base(message) { }
+                public MyBogusDudeException(string message, Exception inner) : base(message, inner) { }
+                protected MyBogusDudeException(
+                  System.Runtime.Serialization.SerializationInfo info,
+                  System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+            }
+
+            public Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            {
+                throw new MyBogusDudeException();
+            }
+
+            public Task<IEnumerable<Uri>> GetLocalFileLocationsAsync(IEnumerable<Uri> uris)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<bool> HasFileAsync(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task ResetConnectionsAsync()
+            {
+                throw new NotImplementedException();
             }
         }
 

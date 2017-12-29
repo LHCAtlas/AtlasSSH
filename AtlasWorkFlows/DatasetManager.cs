@@ -16,20 +16,6 @@ namespace AtlasWorkFlows
     /// </summary>
     public class DatasetManager
     {
-        /// <summary>
-        /// Thrown if a dataset does not exist out there.
-        /// </summary>
-        [Serializable]
-        public class DatasetDoesNotExistException : Exception
-        {
-            public DatasetDoesNotExistException() { }
-            public DatasetDoesNotExistException(string message) : base(message) { }
-            public DatasetDoesNotExistException(string message, Exception inner) : base(message, inner) { }
-            protected DatasetDoesNotExistException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
-
         [Serializable]
         public class NoLocalPlaceToCopyToException : Exception
         {
@@ -65,13 +51,19 @@ namespace AtlasWorkFlows
         {
             return await NonNullCacheInDiskAsync("AtlasWorkFlows-ListOfFilenamesInDataset", dsname, async () =>
             {
+                // This used to be a clean LINQ expression. However, we want to make sure to evaluate things one at a time
+                // and since the GetListOfFilesForDatasetAsync is expensive, we want to do it no more than is needed.
                 var r = new IPlace[] { probabalLocation }.Concat(_places.Value)
-                    .Where(p => p != null)
-                    .Select(async p => await p.GetListOfFilesForDatasetAsync(dsname.Dataset(), statusUpdate, failNow: failNow));
-                return (await Task.WhenAll(r))
-                    .Where(fs => fs != null)
-                    .FirstOrDefault()
-                    .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset {dsname} could not be found at any place."));
+                    .Where(p => p != null);
+                foreach (var p in r)
+                {
+                    var files = await p.GetListOfFilesForDatasetAsync(dsname.Dataset(), statusUpdate, failNow: failNow);
+                    if (files != null)
+                    {
+                        return files;
+                    }
+                }
+                throw new DatasetDoesNotExistException($"Dataset {dsname} could not be found at any place.");
             });
 
         }
@@ -79,8 +71,8 @@ namespace AtlasWorkFlows
         /// <summary>
         /// Given a dataset name, fine its list of files.
         /// </summary>
-        /// <param name="dsname"></param>
-        /// <returns>List of URI's of the files</returns>
+        /// <param name="dsname">Dataset name to return file list for. Throw if it can't be found.</param>
+        /// <returns>List of URI's of the files.</returns>
         /// <exception cref="DatasetDoesNotExistException">Throw if <paramref name="dsname"/> does not exist.</exception>
         /// <remarks>
         /// Look through the list of places in tier order (from closests to furthest) until we find a good dataset.

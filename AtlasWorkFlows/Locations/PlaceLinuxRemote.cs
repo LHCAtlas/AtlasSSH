@@ -1,16 +1,14 @@
 ﻿using AtlasSSH;
-using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
 using CredentialManagement;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Text;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using static AtlasSSH.DiskCacheTypedHelpers;
-using System.IO;
-using System.Net.Sockets;
-using System.Diagnostics;
 
 namespace AtlasWorkFlows.Locations
 {
@@ -47,6 +45,14 @@ namespace AtlasWorkFlows.Locations
         private string _connection_string;
 
         /// <summary>
+        /// Track the connection to the remote computer. Once opened we keep it open.
+        /// </summary>
+        /// <remarks>
+        /// Access is locked as there are times where multiple things are run (like many HasFileAsync's!).
+        /// </remarks>
+        private readonly AsyncLockedResourceHolder<Lazy<ISSHConnection>> _connection = new AsyncLockedResourceHolder<Lazy<ISSHConnection>>(null);
+
+        /// <summary>
         /// Create the connection based on 
         /// </summary>
         /// <param name="name"></param>
@@ -59,7 +65,6 @@ namespace AtlasWorkFlows.Locations
             DataTier = 50;
 
             _connection_string = connection_string;
-            _connection = null;
             ResetConnectionsAsync()
                 .Wait();
         }
@@ -77,21 +82,28 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// Close and reset the connection
         /// </summary>
-        public Task ResetConnectionsAsync(bool reAlloc)
+        public async Task ResetConnectionsAsync(bool reAlloc)
         {
-            if (_connection != null && _connection.IsValueCreated)
+            await _connection.ResetValueAsync(c =>
             {
-                _connection.Value.Dispose();
-                _connection = null;
-            }
-            if (reAlloc)
-            {
-                _connection = new Lazy<ISSHConnection>(() =>
+                if (c != null && c.IsValueCreated)
                 {
-                    return new SSHRecoveringConnection(() => new SSHConnectionTunnel(_connection_string));
-                });
-            }
-            return Task.FromResult(5);
+                    c.Value.Dispose();
+                }
+
+                if (reAlloc)
+                {
+                    return Task.FromResult(
+                        new Lazy<ISSHConnection>(() =>
+                            {
+                                return new SSHRecoveringConnection(() => new SSHConnectionTunnel(_connection_string));
+                            }));
+                }
+                else
+                {
+                    return Task.FromResult<Lazy<ISSHConnection>>(null);
+                }
+            });
         }
 
         public Task ResetConnectionsAsync()
@@ -131,12 +143,12 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// The machine name for accessing this SCP end point.
         /// </summary>
-        public string SCPMachineName { get { return _connection.Value.MachineName; } }
+        public string SCPMachineName { get { return _connection.ApplyAsync(c => c.Value.MachineName).Result; } }
 
         /// <summary>
         /// The username for accessing this machine via SCP
         /// </summary>
-        public string SCPUser { get { return _connection.Value.Username; } }
+        public string SCPUser { get { return _connection.ApplyAsync(c => c.Value.Username).Result; } }
 
         /// <summary>
         /// We can start a copy from here to other places that have a SSH destination available.
@@ -184,7 +196,7 @@ namespace AtlasWorkFlows.Locations
                 // The file path where we will store it all
                 var destLocation = await GetPathToCopyFilesAsync(fsGroup.Key);
 
-                // Next, queue up the copies, one at a time.
+                // Next, queue up and run the copies, one at a time. 
                 foreach (var f in fsGroup)
                 {
                     if (failNow.PCall(false))
@@ -195,11 +207,14 @@ namespace AtlasWorkFlows.Locations
                     var fname = f.DatasetFilename();
                     var pname = $"{fname}.part";
                     statusUpdate.PCall($"Copy file {fname}: {origin.Name} -> {Name}");
-                    await _connection.Value.ExecuteLinuxCommandAsync($"scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}/{pname}",
-                        seeAndRespond: new Dictionary<string, string>() { {"password:", passwd } },
-                        secondsTimeout: 5*60, refreshTimeout: true,
-                        failNow: failNow);
-                    await _connection.Value.ExecuteLinuxCommandAsync($"mv {destLocation}/{pname} {destLocation}/{fname}");
+                    await _connection.ApplyAsync(async c =>
+                    {
+                        await c.Value.ExecuteLinuxCommandAsync($"scp {remoteUser}@{remoteMachine}:{remoteLocation} {destLocation}/{pname}",
+                            seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
+                            secondsTimeout: 5 * 60, refreshTimeout: true,
+                            failNow: failNow);
+                        await c.Value.ExecuteLinuxCommandAsync($"mv {destLocation}/{pname} {destLocation}/{fname}");
+                    });
                 }
             }
         }
@@ -274,20 +289,18 @@ namespace AtlasWorkFlows.Locations
                     var fname = f.DatasetFilename();
                     var pname = $"{fname}.part";
                     statusUpdate.PCall($"Copying file {fname}: {Name} -> {destination.Name}");
-                    await _connection.Value.ExecuteLinuxCommandAsync($"scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}/{pname}",
-                        seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
-                        secondsTimeout: 5 * 60, refreshTimeout: true, failNow: failNow);
-                    await _connection.Value.ExecuteLinuxCommandAsync($"ssh {remoteUser}@{remoteMachine} mv {destLocation}/{pname} {destLocation}/{fname}",
-                        seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
-                        secondsTimeout: 5 * 60, refreshTimeout: true, failNow: failNow);
+                    await _connection.ApplyAsync(async c =>
+                    {
+                        await c.Value.ExecuteLinuxCommandAsync($"scp {localFilePath} {remoteUser}@{remoteMachine}:{destLocation}/{pname}",
+                            seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
+                            secondsTimeout: 5 * 60, refreshTimeout: true, failNow: failNow);
+                        await c.Value.ExecuteLinuxCommandAsync($"ssh {remoteUser}@{remoteMachine} mv {destLocation}/{pname} {destLocation}/{fname}",
+                            seeAndRespond: new Dictionary<string, string>() { { "password:", passwd } },
+                            secondsTimeout: 5 * 60, refreshTimeout: true, failNow: failNow);
+                    });
                 }
             }
         }
-
-        /// <summary>
-        /// Track the connection to the remote computer. Once opened we keep it open.
-        /// </summary>
-        private Lazy<ISSHConnection> _connection;
 
         /// <summary>
         /// The full list of all files that belong to a particular dataset. This is regardless
@@ -309,7 +322,7 @@ namespace AtlasWorkFlows.Locations
                     var files = new List<string>();
                     try
                     {
-                        await _connection.Value.ExecuteLinuxCommandAsync($"cat {_remote_path}/{cleanDSName}/aa_dataset_complete_file_list.txt", l => files.Add(l), failNow: failNow);
+                        await _connection.ApplyAsync(c => c.Value.ExecuteLinuxCommandAsync($"cat {_remote_path}/{cleanDSName}/aa_dataset_complete_file_list.txt", l => files.Add(l), failNow: failNow));
                     }
                     catch (LinuxCommandErrorException) when (files.Count > 0 && files[0].Contains("aa_dataset_complete_file_list.txt: No such file or directory"))
                     {
@@ -373,7 +386,7 @@ namespace AtlasWorkFlows.Locations
                     {
                         statusUpdate.PCall($"Getting available files ({Name})");
                         var files = new List<string>();
-                        await _connection.Value.ExecuteLinuxCommandAsync($"find {_remote_path}/{dsname} -print", l => files.Add(l), failNow: failNow);
+                        await _connection.ApplyAsync(c => c.Value.ExecuteLinuxCommandAsync($"find {_remote_path}/{dsname} -print", l => files.Add(l), failNow: failNow));
                         return files.ToArray();
                     }
                     catch (LinuxCommandErrorException e) when (e.Message.Contains("return status error"))
@@ -415,7 +428,7 @@ namespace AtlasWorkFlows.Locations
         public bool SCPIsVisibleFrom(string internetLocation)
         {
             // If we are globally visible. Currently we use a heuristic.
-            return _connection.Value.GloballyVisible; 
+            return _connection.ApplyAsync(c => c.Value.GloballyVisible).Result; 
         }
 
         /// <summary>
@@ -452,23 +465,27 @@ namespace AtlasWorkFlows.Locations
             var dsDir = $"{_remote_path}/{key}";
             var infoFile = $"{dsDir}/aa_dataset_complete_file_list.txt";
             var infoFilePart = $"{infoFile}.Part";
-            await _connection.Value.ExecuteLinuxCommandAsync($"mkdir -p {dsDir}");
-            await _connection.Value.ExecuteLinuxCommandAsync($"rm -rf {infoFilePart}");
 
-            // Just add every file in.
-            foreach (var f in filesInDataset)
+            await _connection.ApplyAsync(async c =>
             {
-                if (failNow.PCall(false))
+                await c.Value.ExecuteLinuxCommandAsync($"mkdir -p {dsDir}");
+                await c.Value.ExecuteLinuxCommandAsync($"rm -rf {infoFilePart}");
+
+                // Just add every file in.
+                foreach (var f in filesInDataset)
                 {
-                    return;
+                    if (failNow.PCall(false))
+                    {
+                        return;
+                    }
+
+                    await c.Value.ExecuteLinuxCommandAsync($"echo {f} >> {infoFilePart}");
                 }
 
-                await _connection.Value.ExecuteLinuxCommandAsync($"echo {f} >> {infoFilePart}");
-            }
-
-            // Done - rename it so it takes up the official name for later use.
-            await _connection.Value.ExecuteLinuxCommandAsync($"rm -rf {infoFile}");
-            await _connection.Value.ExecuteLinuxCommandAsync($"mv {infoFilePart} {infoFile}");
+                // Done - rename it so it takes up the official name for later use.
+                await c.Value.ExecuteLinuxCommandAsync($"rm -rf {infoFile}");
+                await c.Value.ExecuteLinuxCommandAsync($"mv {infoFilePart} {infoFile}");
+            });
         }
 
         /// <summary>
@@ -480,7 +497,7 @@ namespace AtlasWorkFlows.Locations
         {
             // Get the location, and make sure it exists.
             var copiedPath = $"{_remote_path}/{dsname}/copied";
-            await _connection.Value.ExecuteLinuxCommandAsync($"mkdir -p {copiedPath}");
+            await _connection.ApplyAsync(c => c.Value.ExecuteLinuxCommandAsync($"mkdir -p {copiedPath}"));
 
             // Assume we are going to update - so clear the internal cache.
             _filePaths.Remove(dsname);
@@ -506,18 +523,21 @@ namespace AtlasWorkFlows.Locations
 
             // Do the files one at a time, and download them to a temp location and then move them
             // to the proper location. Saftey if we get cut off mid-move.
-            foreach(var lx in linuxFiles)
+            await _connection.ApplyAsync(async c =>
             {
-                if (failNow.PCall(false))
+                foreach (var lx in linuxFiles)
                 {
-                    break;
+                    if (failNow.PCall(false))
+                    {
+                        break;
+                    }
+                    var fname = lx.Split('/').Last();
+                    var partName = $"{fname}.part";
+                    var partFileInfo = new FileInfo(Path.Combine(ourpath.FullName, partName));
+                    await c.Value.CopyRemoteFileLocallyAsync(lx, partFileInfo, statusUpdate, failNow);
+                    partFileInfo.MoveTo(Path.Combine(ourpath.FullName, fname));
                 }
-                var fname = lx.Split('/').Last();
-                var partName = $"{fname}.part";
-                var partFileInfo = new FileInfo(Path.Combine(ourpath.FullName, partName));
-                await _connection.Value.CopyRemoteFileLocallyAsync(lx, partFileInfo, statusUpdate, failNow);
-                partFileInfo.MoveTo(Path.Combine(ourpath.FullName, fname));
-            }
+            });
         }
 
         /// <summary>
@@ -530,15 +550,18 @@ namespace AtlasWorkFlows.Locations
             // The the dest direction setup
             var lxlocation = GetLinuxDatasetDirectoryPath(dsName);
             var copiedLocation = $"{lxlocation}/copied";
-            await _connection.Value.ExecuteLinuxCommandAsync($"mkdir -p {copiedLocation}");
-
-            // Now copy the files
-            foreach (var f in files)
+            await _connection.ApplyAsync(async c =>
             {
-                var partName = $"{f.Name}.part";
-                await _connection.Value.CopyLocalFileRemotelyAsync(f, $"{copiedLocation}/{partName}", statusUpdate, failNow);
-                await _connection.Value.ExecuteLinuxCommandAsync($"mv {copiedLocation}/{partName} {copiedLocation}/{f.Name}");
-            }
+                await c.Value.ExecuteLinuxCommandAsync($"mkdir -p {copiedLocation}");
+
+                // Now copy the files
+                foreach (var f in files)
+                {
+                    var partName = $"{f.Name}.part";
+                    await c.Value.CopyLocalFileRemotelyAsync(f, $"{copiedLocation}/{partName}", statusUpdate, failNow);
+                    await c.Value.ExecuteLinuxCommandAsync($"mv {copiedLocation}/{partName} {copiedLocation}/{f.Name}");
+                }
+            });
         }
 
     }

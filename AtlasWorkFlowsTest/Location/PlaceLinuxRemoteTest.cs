@@ -211,7 +211,7 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        public async Task CopyTo()
+        public async Task LinuxRemoteCopyTo()
         {
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
@@ -219,6 +219,23 @@ namespace AtlasWorkFlowsTest.Location
             var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
+            await p1.CopyToAsync(p2, fileList);
+
+            Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
+        }
+
+        [TestMethod]
+        [DeploymentItem("location_test_params.txt")]
+        [ExpectedException(typeof(DatasetDoesNotExistException))]
+        public async Task LinuxRemoteCopyToFromBadDS()
+        {
+            _ssh.CreateRepro();
+            _ssh.CreateDS("ds1", "f1.root", "f2.root");
+            var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
+            var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
+            DatasetManager.ResetDSM(p1, p2);
+
+            var fileList = new Uri[] { new Uri("gridds://ds2/f1.root"), new Uri("gridds://ds2/f2.root") };
             await p1.CopyToAsync(p2, fileList);
 
             Assert.IsTrue(await p2.HasFileAsync(fileList[0]));

@@ -58,11 +58,6 @@ namespace AtlasWorkFlows.Locations
         private DirectoryInfo _locationOfLocalRepro;
 
         /// <summary>
-        /// Location of this repo.
-        /// </summary>
-        //private WindowsGRIDDSRepro _rootLocation;
-
-        /// <summary>
         /// We can copy files from other locations.
         /// </summary>
         /// <param name="destination">The destination we need to copy from</param>
@@ -237,7 +232,7 @@ namespace AtlasWorkFlows.Locations
             var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetGlobalConstants.DatasetFileList));
             if (!f.Exists)
             {
-                return null;
+                return Task.FromResult<string[]>(null);
             }
 
             var files = new List<string>();

@@ -19,7 +19,7 @@ namespace AtlasWorkFlows.Locations
     /// </summary>
     class PlaceGRID : IPlace, IDisposable
     {
-        private PlaceLinuxRemote _linuxRemote;
+        private readonly AsyncLockedResourceHolder<PlaceLinuxRemote> _linuxRemote = new AsyncLockedResourceHolder<PlaceLinuxRemote>(null);
 
         /// <summary>
         /// Initialize the GRID location.
@@ -29,8 +29,7 @@ namespace AtlasWorkFlows.Locations
         public PlaceGRID(string name, PlaceLinuxRemote linuxRemote)
         {
             Name = name;
-            _linuxRemote = linuxRemote;
-            _connection = null;
+            _linuxRemote.ResetValueAsync(l => linuxRemote).Wait();
             ResetConnectionsAsync()
                 .Wait();
         }
@@ -38,20 +37,29 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// The connection to our remote end-point
         /// </summary>
-        private AsyncLazy<ISSHConnection> _connection;
+        private readonly AsyncLockedResourceHolder<AsyncLazy<ISSHConnection>> _connection = new AsyncLockedResourceHolder<AsyncLazy<ISSHConnection>>(null);
 
         /// <summary>
         /// Close and reset the connection
         /// </summary>
         public async Task ResetConnectionsAsync(bool reAlloc)
         {
-            if (_connection != null && _connection.IsStarted)
+            await _connection.ResetValueAsync(async c =>
             {
-                (await _connection).Dispose();
-            }
-            _connection = new AsyncLazy<ISSHConnection>(() => InitConnection(null));
+                if (c != null && c.IsStarted)
+                {
+                    (await c).Dispose();
+                }
+                return reAlloc
+                ? new AsyncLazy<ISSHConnection>(() => InitConnection(null))
+                : null;
+            });
         }
 
+        /// <summary>
+        /// Reset and reallocate the connection.
+        /// </summary>
+        /// <returns></returns>
         public async Task ResetConnectionsAsync()
         {
             await ResetConnectionsAsync(true);
@@ -73,7 +81,7 @@ namespace AtlasWorkFlows.Locations
         {
             if (statusUpdater != null)
                 statusUpdater("Setting up GRID Environment");
-            var r = _linuxRemote.CloneConnection();
+            var r = await _linuxRemote.ApplyAsync(l => l.CloneConnection());
             await r.setupATLASAsync();
             await r.setupRucioAsync(r.Username);
             await r.VomsProxyInitAsync("atlas", failNow: failNow);
@@ -139,7 +147,7 @@ namespace AtlasWorkFlows.Locations
         {
             if (destination != _linuxRemote)
             {
-                throw new ArgumentException($"Place {destination.Name} is not the correct partner for {Name}. Was expecting place {_linuxRemote.Name}.");
+                throw new ArgumentException($"Place {destination.Name} is not the correct partner for {Name}. Was expecting place {_linuxRemote.ApplyAsync(c => c.Name)}.");
             }
 
             // Look at all the files from each dataset.
@@ -148,7 +156,7 @@ namespace AtlasWorkFlows.Locations
                 // First, move the catalog over
                 var catalog = (await DatasetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: this))
                     .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
-                await _linuxRemote.CopyDataSetInfoAsync(dsGroup.Key, catalog, statusUpdate);
+                await _linuxRemote.ApplyAsync(l => l.CopyDataSetInfoAsync(dsGroup.Key, catalog, statusUpdate));
                 if (failNow.PCall(false))
                 {
                     break;
@@ -156,15 +164,18 @@ namespace AtlasWorkFlows.Locations
 
                 // Next, run the download into the directory in the linux area where
                 // everything should happen.
-                var remoteLocation = _linuxRemote.GetLinuxDatasetDirectoryPath(dsGroup.Key);
+                var remoteLocation = await _linuxRemote.ApplyAsync(l => l.GetLinuxDatasetDirectoryPath(dsGroup.Key));
                 var filesList = dsGroup.Select(u => u.DatasetFilename()).ToArray();
-                await (await _connection).DownloadFromGRIDAsync(dsGroup.Key, remoteLocation, 
-                    fileStatus: fname => statusUpdate($"Downloading {fname} from {Name}"),
-                    failNow: failNow,
-                    fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray(),
-                    timeout: timeoutMinutes * 60
-                    );
-                _linuxRemote.DatasetFilesChanged(dsGroup.Key);
+                await _connection.ApplyAsync(async c =>
+                {
+                    await (await c).DownloadFromGRIDAsync(dsGroup.Key, remoteLocation,
+                        fileStatus: fname => statusUpdate($"Downloading {fname} from {Name}"),
+                        failNow: failNow,
+                        fileNameFilter: fdslist => fdslist.Where(f => filesList.Where(mfs => f.Contains(mfs)).Any()).ToArray(),
+                        timeout: timeoutMinutes * 60
+                        );
+                    await _linuxRemote.ApplyAsync(l => l.DatasetFilesChanged(dsGroup.Key));
+                });
             }
         }
 
@@ -188,7 +199,8 @@ namespace AtlasWorkFlows.Locations
                         statusUpdate.PCall($"Listing files in dataset ({Name})");
                         try
                         {
-                            return (await (await _connection).FilelistFromGRIDAsync(dsname, failNow: failNow))
+                            var files = await _connection.ApplyAsync(async c => await (await c).FilelistFromGRIDAsync(dsname, failNow: failNow));
+                            return files
                                 .Select(f => f.Split(':').Last())
                                 .ToArray();
                         }
