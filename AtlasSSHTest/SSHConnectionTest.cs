@@ -156,7 +156,7 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
-        public void copyRemoteDirectoryLocal()
+        public void CopyRemoteDirectoryLocal()
         {
             var info = util.GetUsernameAndPassword();
             using (var s = new SSHConnection(info.Item1, info.Item2))
@@ -192,7 +192,7 @@ namespace AtlasSSHTest
 
         [TestMethod]
         [ExpectedException(typeof(ScpException))]
-        public void copyBadRemoteDirectoryLocal()
+        public void CopyBadRemoteDirectoryLocal()
         {
             try
             {

@@ -72,7 +72,7 @@ namespace AtlasWorkFlows.Utils
                     string rs = "";
                     try
                     {
-                        rs = _clientDNS.Value.Reverse(iptext).Result;
+                        rs = _clientDNS.Value.Reverse(iptext);
                         Trace.WriteLine($"Reverse lookup of ip address is {rs}.", "FindLocalIpName");
                         return rs;
                     }
