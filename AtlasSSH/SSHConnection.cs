@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AtlasSSH
@@ -74,21 +75,22 @@ namespace AtlasSSH
         public SSHConnection(string host, string username)
         {
             // Fetch the username and password.
-            var sclist = new CredentialSet(host);
-            var passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
+            Credential passwordInfo = FetchUserCredentials(host, username);
             if (passwordInfo == null)
             {
                 throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));
             }
 
             // Create the connection, but do it lazy so we don't do anything if we aren't used.
-            _client = new Lazy<SshClient>(() => {
+            _client = new Lazy<SshClient>(() =>
+            {
                 var c = new SshClient(host, username, passwordInfo.Password);
                 c.KeepAliveInterval = TimeSpan.FromSeconds(15);
                 try
                 {
                     c.Connect();
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     throw new SSHConnectFailureException($"Unable to make the connection to {host}.", e);
                 }
@@ -112,6 +114,30 @@ namespace AtlasSSH
                 _prompt = await ExtractPromptText(s, _client.Value);
                 return s;
             }, AsyncLazyFlags.RetryOnFailure);
+        }
+
+        /// <summary>
+        /// Look for user credentials in the generic windows credential store on this machine.
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        private static Credential FetchUserCredentials(string host, string username)
+        {
+            var sclist = new CredentialSet(host);
+            var passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
+            if (passwordInfo == null)
+            {
+                // See if this can be turned into a generic machine name
+                var m = Regex.Match(host, @"^(?<mroot>[^0-9\.]+)(?<mnumber>[0-9]+)(?<mfinal>\..+)$");
+                if (m.Success && !string.IsNullOrWhiteSpace(m.Groups["mnumber"].Value))
+                {
+                    var newMachineName = m.Groups["mroot"].Value + m.Groups["mfinal"].Value;
+                    sclist = new CredentialSet(newMachineName);
+                    passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
+                }
+            }
+            return passwordInfo;
         }
 
         /// <summary>

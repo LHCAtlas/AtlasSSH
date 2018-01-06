@@ -33,6 +33,15 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        public void KnownGenericNodeTest()
+        {
+            // Use a set of credentials that use something like "username" and "machine001.domain.edu" but have "machine.domain.edu" as the credential.
+            // This makes sure that the fallback password finder works properly.
+            var info = util.GetUsernameAndPassword(credentialKey: "AtlasSSHTestGenericMachine");
+            using (var s = new SSHConnection(info.Item1, info.Item2)) { }
+        }
+
+        [TestMethod]
         public void ListDirectory()
         {
             var info = util.GetUsernameAndPassword();
