@@ -93,7 +93,7 @@ namespace PSAtlasDatasetCommands
 
                 // If we have a location, we want to do a copy. If we don't have a location, then we just
                 // want to get the files somewhere local.
-                var loc = Location.AsIPlace();
+                var loc = Location.AsIPlace().Result;
                 //WriteError(new ErrorRecord(err, "NoSuchLocation", ErrorCategory.InvalidArgument, null));
 
                 var resultUris = loc == null

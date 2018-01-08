@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AtlasWorkFlows.Utils
@@ -17,6 +14,16 @@ namespace AtlasWorkFlows.Utils
             if (!_determined)
             {
                 _cache = calc();
+                _determined = true;
+            }
+            return _cache;
+        }
+
+        public async Task<T> GetAsync(Func<Task<T>> calc)
+        {
+            if (!_determined)
+            {
+                _cache = await calc();
                 _determined = true;
             }
             return _cache;

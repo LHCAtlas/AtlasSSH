@@ -104,7 +104,7 @@ namespace PSAtlasDatasetCommands
                 }
 
                 // Query the location to see if we have a decent copy there.
-                var loc = Location.AsIPlace();
+                var loc = Location.AsIPlace().Result;
 
                 var hasFiles = Task.WhenAll(allFilesToCopy
                     .Select(f => loc.HasFileAsync(f, m => DisplayStatus($"Checking Files {dataset}", m), failNow: () => Stopping)))

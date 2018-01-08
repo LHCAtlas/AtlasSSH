@@ -69,7 +69,7 @@ namespace AtlasWorkFlows.Locations
         {
             // As long as it is another active location
             return destination is PlaceLocalWindowsDisk
-                || ((destination is ISCPTarget) && ((ISCPTarget)destination).SCPIsVisibleFrom(IPLocationTests.FindLocalIpName()));
+                || ((destination is ISCPTarget) && ((ISCPTarget)destination).SCPIsVisibleFrom(IPLocationTests.FindLocalIpName().Result));
         }
 
         /// <summary>

@@ -16,11 +16,11 @@ namespace PSAtlasDatasetCommands.Utils
         /// </summary>
         /// <param name="placeName"></param>
         /// <returns></returns>
-        public static IPlace AsIPlace(this string placeName)
+        public static async Task<IPlace> AsIPlace(this string placeName)
         {
             var loc = string.IsNullOrWhiteSpace(placeName)
                 ? (IPlace)null
-                : DatasetManager.FindLocation(placeName);
+                : await DatasetManager.FindLocation(placeName);
 
             if (loc == null && !string.IsNullOrWhiteSpace(placeName))
             {

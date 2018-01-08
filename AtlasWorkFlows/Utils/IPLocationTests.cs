@@ -1,10 +1,7 @@
 ﻿using DNS.Client;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AtlasWorkFlows.Utils
@@ -44,12 +41,12 @@ namespace AtlasWorkFlows.Utils
         /// <summary>
         /// Fetch the host IP name
         /// </summary>
-        public static string FindLocalIpName()
+        public static async Task<string> FindLocalIpName()
         {
             if (_ipNameFound)
                 return _ipName;
 
-            return _ipDNSLookupCache.Get(() =>
+            return await _ipDNSLookupCache.GetAsync(async () =>
             {
                 // We have to get the IP address that the external world sees, rather than the one we see.
                 // This is to deal with internal DNS reverse lookup problems.
@@ -72,7 +69,7 @@ namespace AtlasWorkFlows.Utils
                     string rs = "";
                     try
                     {
-                        rs = _clientDNS.Value.Reverse(iptext);
+                        rs = await _clientDNS.Value.Reverse(iptext);
                         Trace.WriteLine($"Reverse lookup of ip address is {rs}.", "FindLocalIpName");
                         return rs;
                     }
@@ -84,7 +81,7 @@ namespace AtlasWorkFlows.Utils
                     // Can we get something out of windows for this now?\
                     try
                     {
-                        var address = Dns.GetHostEntry(iptext);
+                        var address = await Dns.GetHostEntryAsync(iptext);
                         if (address == null)
                         {
                             Trace.WriteLine("Unable to find any DNS name for this computer.", "FindLocalIpName");

@@ -122,8 +122,8 @@ namespace PSAtlasDatasetCommands
                 }
 
                 // Turn the source and destination locations into actual locations.
-                var locSource = SourceLocation.AsIPlace();
-                var locDest = DestinationLocation.AsIPlace();
+                var locSource = SourceLocation.AsIPlace().Result;
+                var locDest = DestinationLocation.AsIPlace().Result;
 
                 // Do the actual copy. This will fail if one of the files can't be found at the source.
                 var resultUris = DatasetManager

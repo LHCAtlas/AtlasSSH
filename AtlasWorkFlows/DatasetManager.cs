@@ -1,6 +1,7 @@
 ﻿using AtlasSSH;
 using AtlasWorkFlows.Locations;
 using AtlasWorkFlows.Utils;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -53,7 +54,7 @@ namespace AtlasWorkFlows
             {
                 // This used to be a clean LINQ expression. However, we want to make sure to evaluate things one at a time
                 // and since the GetListOfFilesForDatasetAsync is expensive, we want to do it no more than is needed.
-                var r = new IPlace[] { probabalLocation }.Concat(_places.Value)
+                var r = new IPlace[] { probabalLocation }.Concat(await _places)
                     .Where(p => p != null);
                 foreach (var p in r)
                 {
@@ -77,7 +78,7 @@ namespace AtlasWorkFlows
         /// <remarks>
         /// Look through the list of places in tier order (from closests to furthest) until we find a good dataset.
         /// </remarks>
-        public static async Task<Uri[]> ListOfFilesInDatasetAsync (string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public static async Task<Uri[]> ListOfFilesInDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             return (await ListOfFilenamesInDatasetAsync(dsname, statusUpdate, failNow))
                     .Select(fs => new Uri($"gridds://{dsname.Dataset()}/{fs}"))
@@ -90,11 +91,11 @@ namespace AtlasWorkFlows
         /// <param name="dsfiles"></param>
         /// <param name="maxDataTier">Don't look at any places with a data teir at or above this number</param>
         /// <returns></returns>
-        public static async Task<string[]> ListOfPlacesHoldingAllFilesAsync (IEnumerable<Uri> dsfiles, int maxDataTier = 1000)
+        public static async Task<string[]> ListOfPlacesHoldingAllFilesAsync(IEnumerable<Uri> dsfiles, int maxDataTier = 1000)
         {
             // Because of the async nature of HasFileAsync, we can't use a nice three line LINQ expression, unfortunately.
             List<IPlace> good_places = new List<IPlace>();
-            foreach (var p in _places.Value.Where(p => p.DataTier <= maxDataTier))
+            foreach (var p in (await _places).Where(p => p.DataTier <= maxDataTier))
             {
                 var r = await Task.WhenAll(dsfiles.Select(async f => await p.HasFileAsync(f)));
                 if (r.All(f => f))
@@ -102,7 +103,7 @@ namespace AtlasWorkFlows
                     good_places.Add(p);
                 }
             }
-            
+
             return good_places.OrderBy(p => p.DataTier)
                 .Select(p => p.Name)
                 .ToArray();
@@ -114,7 +115,7 @@ namespace AtlasWorkFlows
         /// <param name="place"></param>
         /// <param name="file"></param>
         /// <returns></returns>
-        public static async Task<Uri> LocalPathToFileAsync (string place, Uri file)
+        public static async Task<Uri> LocalPathToFileAsync(string place, Uri file)
         {
             return (await LocalPathToFilesAsync(place, new[] { file })).First();
         }
@@ -126,14 +127,14 @@ namespace AtlasWorkFlows
         /// <param name="place"></param>
         /// <param name="files"></param>
         /// <returns></returns>
-        public static Task<IEnumerable<Uri>> LocalPathToFilesAsync(string place, IEnumerable<Uri> files)
+        public static async Task<IEnumerable<Uri>> LocalPathToFilesAsync(string place, IEnumerable<Uri> files)
         {
-            var p = _places.Value
+            var p = (await _places)
                 .Where(pl => pl.Name == place)
                 .FirstOrDefault()
                 .ThrowIfNull(() => new ArgumentException($"I do not know about place {place}, so I can't find file {files.First().ToString()} on it!"));
 
-            return p.GetLocalFileLocationsAsync(files);
+            return await p.GetLocalFileLocationsAsync(files);
         }
 
         /// <summary>
@@ -213,7 +214,7 @@ namespace AtlasWorkFlows
             {
                 throw new ArgumentNullException("Can't have a null destination!");
             }
-            if (!_places.Value.Contains(destination))
+            if (!(await _places).Contains(destination))
             {
                 throw new ArgumentException($"Place {destination.Name} is not on our master list of places!");
             }
@@ -241,7 +242,7 @@ namespace AtlasWorkFlows
         /// <param name="failNow"></param>
         /// <param name="timeout">Minutes of no progress before canceling it</param>
         /// <returns></returns>
-        public static async Task<Uri[]> CopyFilesAsync (IPlace source, IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
+        public static async Task<Uri[]> CopyFilesAsync(IPlace source, IPlace destination, Uri[] files, Action<string> statusUpdate = null, Func<bool> failNow = null, int timeout = 60)
         {
             // Simple checks
             var goodFiles = files
@@ -252,7 +253,7 @@ namespace AtlasWorkFlows
             {
                 throw new ArgumentNullException("Can't have a null destination!");
             }
-            if (!_places.Value.Contains(destination))
+            if (!(await _places).Contains(destination))
             {
                 throw new ArgumentException($"Place {destination.Name} is not on our master list of places!");
             }
@@ -261,7 +262,7 @@ namespace AtlasWorkFlows
             {
                 throw new ArgumentNullException("Can't have a null source!");
             }
-            if (!_places.Value.Contains(source))
+            if (!(await _places).Contains(source))
             {
                 throw new ArgumentException($"Place {source.Name} is not on our master list of places!");
             }
@@ -276,7 +277,7 @@ namespace AtlasWorkFlows
             var routeSources = new IPlace[] { source };
             var routedFilesList = await Task.WhenAll(goodFiles
                 .Select(async u => new RoutedFileInfo {
-                    r = FindRouteFromSources((await destination.HasFileAsync(u, statusUpdate, failNow)) ? routeSources.Concat(new IPlace[] { destination }).ToArray() : routeSources, u, p => p == destination, p => p == destination),
+                    r = await FindRouteFromSources((await destination.HasFileAsync(u, statusUpdate, failNow)) ? routeSources.Concat(new IPlace[] { destination }).ToArray() : routeSources, u, p => p == destination, p => p == destination),
                     f = u
                 }));
             var routedFiles = routedFilesList
@@ -294,7 +295,7 @@ namespace AtlasWorkFlows
         /// </summary>
         public static async Task ResetConnectionsAsync()
         {
-            foreach (var p in _places.Value)
+            foreach (var p in await _places)
             {
                 await p.ResetConnectionsAsync();
             }
@@ -313,7 +314,7 @@ namespace AtlasWorkFlows
             // We have to be a little careful with processing - the HasFileAsync can be very expensive, so
             // we do not want to call mroe than we need.
             var goodPlaces = new List<IPlace>();
-            foreach (var p in _places.Value)
+            foreach (var p in await _places)
             {
                 if (await p.HasFileAsync(u, statusUpdate, failNow))
                 {
@@ -331,7 +332,7 @@ namespace AtlasWorkFlows
                 throw new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'.");
             }
 
-            return FindRouteFromSources(goodPlaces.ToArray(), u, endCondition, forceOk);
+            return await FindRouteFromSources(goodPlaces.ToArray(), u, endCondition, forceOk);
         }
 
         /// <summary>
@@ -342,12 +343,19 @@ namespace AtlasWorkFlows
         /// <param name="forceOk"></param>
         /// <param name="sources"></param>
         /// <returns></returns>
-        private static Route FindRouteFromSources(IPlace[] sources, Uri u, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk)
+        private static async Task<Route> FindRouteFromSources(IPlace[] sources, Uri u, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk)
         {
             // Now we have sources. We build a path for each, and select the path with the least number of steps.
-            return sources
-                .Select(s => new Route(s))
-                .SelectMany(r => FindStepsTo(r, endCondition, forceOk))
+            var results = new List<Route>();
+            foreach (var r in sources.Select(s => new Route(s)))
+            {
+                foreach (var step in await FindStepsTo(r, endCondition, forceOk))
+                {
+                    results.Add(step);
+                }
+            }
+
+            return results
                 .OrderBy(r => r.Length)
                 .FirstOrDefault()
                 .ThrowIfNull(() => new NoLocalPlaceToCopyToException($"Unable to find a way to copy {u} locally. Could be you have to explicitly copy it to your local cache."));
@@ -360,7 +368,7 @@ namespace AtlasWorkFlows
         /// <param name="endCondition"></param>
         /// <param name="forceOk">If true is returned, will make sure that these places aren't taken off the list for consideration</param>
         /// <returns></returns>
-        private static IEnumerable<Route> FindStepsTo(Route r, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk = null)
+        private static async Task<IEnumerable<Route>> FindStepsTo(Route r, Func<IPlace, bool> endCondition, Func<IPlace, bool> forceOk = null)
         {
             // If nothing extra is going on, then don't force anything.
             if (forceOk == null)
@@ -376,14 +384,14 @@ namespace AtlasWorkFlows
 
             // Go through all the places. Don't allow repeats, and make sure
             // nothing is included that needs explicit permission.
-            return _places.Value
+            return await (await _places)
                 .Where(p => !p.NeedsConfirmationCopy || forceOk(p))
                 .Where(p => !r.Contains(p))
                 .Where(p => r.LastPlace.CanSourceCopy(p) || p.CanSourceCopy(r.LastPlace))
                 .Select(p => new Route(r, p))
-                .SelectMany(nr => FindStepsTo(nr, endCondition, forceOk));
+                .SelectManyAsync(nr => FindStepsTo(nr, endCondition, forceOk));
         }
-        
+
         /// <summary>
         /// Reset the IPlace list. Used only for testing, dangerous otherwise!
         /// </summary>
@@ -392,10 +400,10 @@ namespace AtlasWorkFlows
         {
             if (places.Length == 0)
             {
-                _places = new Lazy<IPlace[]>(() => LoadPlaces());
+                _places = new AsyncLazy<IPlace[]>(() => LoadPlaces());
             } else
             {
-                _places = new Lazy<IPlace[]>(() => places.OrderBy(p => p.DataTier).ToArray());
+                _places = new AsyncLazy<IPlace[]>(() => Task.FromResult(places.OrderBy(p => p.DataTier).ToArray()));
             }
             DiskCache.RemoveCache("AtlasWorkFlows-ListOfFilenamesInDataset");
         }
@@ -405,9 +413,9 @@ namespace AtlasWorkFlows
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static IPlace FindLocation(string name)
+        public static async Task<IPlace> FindLocation(string name)
         {
-            return _places.Value
+            return (await _places)
                 .Where(p => p.Name == name)
                 .FirstOrDefault();
         }
@@ -417,7 +425,7 @@ namespace AtlasWorkFlows
         /// </summary>
         public static string[] ValidLocations
         {
-            get { return _places.Value.Select(p => p.Name).ToArray(); }
+            get { return _places.Task.Result.Select(p => p.Name).ToArray(); }
         }
 
         /// <summary>
@@ -425,17 +433,25 @@ namespace AtlasWorkFlows
         /// decent heavy-duty parsing of text files.
         /// </summary>
         /// <remarks>This list is sorted in Tier order all the time, starting from the lowest to the highest.</remarks>
-        private static Lazy<IPlace[]> _places = new Lazy<IPlace[]>(() => LoadPlaces());
+        private static AsyncLazy<IPlace[]> _places = new AsyncLazy<IPlace[]>(() => LoadPlaces());
 
         /// <summary>
         /// Load places from the default text config file
         /// </summary>
         /// <returns></returns>
-        private static IPlace[] LoadPlaces()
+        private static async Task<IPlace[]> LoadPlaces()
         {
             var config = Config.GetLocationConfigs();
-            return config.Keys
-                .SelectMany(placeName => ParseSingleConfig(config[placeName]))
+            var places = new List<IPlace>();
+            foreach (var plst in config.Keys.Select(placeName => ParseSingleConfig(config[placeName])))
+            {
+                foreach (var p in (await plst))
+                {
+                    places.Add(p);
+                }
+            }
+
+            return places
                 .Where(p => p != null)
                 .OrderBy(p => p.DataTier)
                 .ToArray();
@@ -446,50 +462,52 @@ namespace AtlasWorkFlows
         /// </summary>
         /// <param name="info"></param>
         /// <returns></returns>
-        private static IEnumerable<IPlace> ParseSingleConfig(Dictionary<string, string> info)
+        private static async Task<IEnumerable<IPlace>> ParseSingleConfig(Dictionary<string, string> info)
         {
             // Check to see if there are any restrictions on using these guys
             bool isGoodConfig = true;
             if (info.ContainsKey("UseOnlyWhenDNSEndStringIs"))
             {
                 // We will use this iff the DNS string ends with the argument.
-                isGoodConfig = info["UseOnlyWhenDNSEndStringIs"].Split(',').Select(s => IPLocationTests.FindLocalIpName().EndsWith(s.Trim())).Any(t => t);
+                isGoodConfig = (await CheckDNS(info["UseOnlyWhenDNSEndStringIs"])).Any(t => t);
             }
             if (info.ContainsKey("UseWhenDNSEndStringIsnt"))
             {
                 // We will use this config only if the IP address doesn't end in one of the given ones here.
                 if (isGoodConfig)
                 {
-                    isGoodConfig = info["UseWhenDNSEndStringIsnt"].Split(',').Select(s => IPLocationTests.FindLocalIpName().EndsWith(s.Trim())).All(t => !t);
+                    isGoodConfig = (await CheckDNS(info["UseWhenDNSEndStringIsnt"])).All(t => !t);
                 }
             }
 
+            var result = new List<IPlace>();
             if (isGoodConfig)
             {
                 // Now, create the end points as needed.
                 var type = info["LocationType"];
                 if (type == "LocalWindowsFilesystem")
                 {
-                    yield return CreateWindowsFilesystemPlace(info);
+                    result.Add(CreateWindowsFilesystemPlace(info));
                 }
                 else if (type == "LinuxWithLocalAndGRID")
                 {
                     // First, do the linux remote
                     var name = info["Name"];
                     var p_linux = CreateLinuxFilesystemPlace($"{name}-linux", info);
-                    yield return p_linux;
+                    result.Add(p_linux);
                     // Next, the grid
                     var p_grid = new PlaceGRID($"{name}-GRID", p_linux);
-                    yield return p_grid;
+                    result.Add(p_grid);
                     // Next, the local if that is "ok" to create.
                     var localVisible = info.ContainsKey("WindowsAccessibleDNSEndString")
-                        ? info["WindowsAccessibleDNSEndString"].Split(',').Select(s => IPLocationTests.FindLocalIpName().EndsWith(s.Trim())).Any(t => t)
+                        ? (await CheckDNS(info["WindowsAccessibleDNSEndString"])).Any(t => t)
                         : true;
                     if (localVisible)
                     {
                         Trace.WriteLine($"Linux-GRID-Local {name} is locally visible.", "ParseSingleConfig");
                         // Create the local disk - but this is a big server, so a copy confirmation isn't needed
-                        yield return CreateWindowsFilesystemPlace(info, needsCopyConfirmation: false);
+                        var ip = CreateWindowsFilesystemPlace(info, needsCopyConfirmation: false);
+                        result.Add(ip);
                     }
                 }
                 else
@@ -497,6 +515,23 @@ namespace AtlasWorkFlows
                     throw new UnknownLocationTypeException($"Location type {type} is not known as read from the configuration file.");
                 }
             }
+            return result;
+        }
+
+        /// <summary>
+        /// See if a particular thign is in the DNS list.
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        private static async Task<IEnumerable<bool>> CheckDNS(string dnsList)
+        {
+            var result = new List<bool>();
+            foreach (var dns in dnsList.Split(','))
+            {
+                bool endswith = (await IPLocationTests.FindLocalIpName()).EndsWith(dns.Trim());
+                result.Add(endswith);
+            }
+            return result;
         }
 
         /// <summary>
@@ -534,6 +569,22 @@ namespace AtlasWorkFlows
             }
 
             return new PlaceLocalWindowsDisk(info["Name"], goodPath, needsConfirmationOfCopy: needsCopyConfirmation);
+        }
+    }
+
+    static class LINQUtils
+    {
+        public static async Task<IEnumerable<TResult>> SelectManyAsync<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, Task<IEnumerable<TResult>>> selector)
+        {
+            var results = new List<TResult>();
+            foreach (var s in source)
+            {
+                foreach (var r in await selector(s))
+                {
+                    results.Add(r);
+                }
+            }
+            return results;
         }
     }
 }
