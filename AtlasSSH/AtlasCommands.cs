@@ -122,7 +122,7 @@ namespace AtlasSSH
 
             if (badCommand)
             {
-                throw new LinuxConfigException("Unable to setupATLAS - command is not known!");
+                throw new LinuxConfigException($"Unable to setupATLAS - command is not known! ({connection.MachineName})");
             }
 
             return r;
@@ -157,7 +157,7 @@ namespace AtlasSSH
 
             if (hashCount != 0 && !dumpOnly)
             {
-                throw new LinuxConfigException("Unable to setup Rucio... did you forget to setup ATLAS first?");
+                throw new LinuxConfigException("Unable to setup Rucio... did you forget to setup ATLAS first?  ({connection.MachineName})");
             }
             return connection;
         }
@@ -217,7 +217,7 @@ namespace AtlasSSH
             if (goodProxy == false && !dumpOnly)
             {
                 var error = new StringBuilder();
-                error.AppendLine("Failed to get the proxy: ");
+                error.AppendLine($"Failed to get the proxy ({connection.MachineName}): ");
                 foreach (var l in whatHappened)
                 {
                     error.AppendLine(string.Format("  -> {0}", l));
@@ -305,7 +305,7 @@ namespace AtlasSSH
 
             // We good on creating the directory?
             await connection.ExecuteLinuxCommandAsync(string.Format("mkdir -p {0}", localDirectory),
-                l => { throw new ArgumentException("Error trying to create directory {0} for dataset on remote machine.", localDirectory); },
+                l => { throw new ArgumentException($"Error trying to create directory {0} for dataset on remote machine ({connection.MachineName}).", localDirectory); },
                 secondsTimeout: 20);
 
             // If we have no files to download, then we are totally done!
@@ -366,11 +366,11 @@ namespace AtlasSSH
                 // Special case - there was a clock skew error.
                 if (foundClockSkewMessage)
                 {
-                    throw new ClockSkewException($"Failed to download {filesThatFailedToDownload} files due to clock skew. Please double check!");
+                    throw new ClockSkewException($"Failed to download {filesThatFailedToDownload} files due to clock skew. Please double check ({connection.MachineName})!");
                 }
 
                 // Something else - will likely require a human to get involved.
-                throw new FileFailedToDownloadException($"Failed to download all the files from the GRID - {filesThatFailedToDownload} files failed to download!");
+                throw new FileFailedToDownloadException($"Failed to download all the files from the GRID - {filesThatFailedToDownload} files failed to download ({connection.MachineName})!");
             }
         }
 
@@ -504,7 +504,7 @@ namespace AtlasSSH
 
             if (bad & !dumpOnly)
             {
-                throw new DatasetDoesNotExistException(string.Format("Dataset '{0}' does not exist - can't get its list of files.", datasetName));
+                throw new DatasetDoesNotExistException($"Dataset '{datasetName}' does not exist - can't get its list of files ({connection.MachineName}).");
             }
 
             _GRIDFileInfoCache.Value[datasetName] = fileNameList.ToArray();
@@ -586,9 +586,9 @@ namespace AtlasSSH
                 dirAlreadyExists = dirAlreadyExists ? true : l.Contains("File exists");
             }, dumpOnly: dumpOnly);
             if (dirAlreadyExists)
-                throw new LinuxMissingConfigurationException(string.Format("Release directory '{0}' already exists - we need a fresh start", linuxLocation));
+                throw new LinuxMissingConfigurationException($"Release directory '{linuxLocation}' already exists - we need a fresh start ({connection.MachineName})");
             if (!dirCreated)
-                throw new LinuxMissingConfigurationException(string.Format("Unable to create release directory '{0}'.", linuxLocation));
+                throw new LinuxMissingConfigurationException(string.Format($"Unable to create release directory '{linuxLocation}' ({connection.MachineName})."));
 
             // Next, put our selves there
             await connection.ExecuteLinuxCommandAsync(string.Format("cd {0}", linuxLocation), dumpOnly: dumpOnly);
@@ -597,7 +597,7 @@ namespace AtlasSSH
             bool found = false;
             await connection.ExecuteLinuxCommandAsync(string.Format("rcSetup {0}", releaseName), l => found = found ? true : l.Contains("Found ASG release with"), dumpOnly: dumpOnly);
             if (!found && !dumpOnly)
-                throw new LinuxMissingConfigurationException(string.Format("Unable to find release '{0}'", releaseName));
+                throw new LinuxMissingConfigurationException($"Unable to find release '{releaseName}' ({connection.MachineName})");
 
             // Return the connection to make it a functional interface.
             return connection;
@@ -632,11 +632,11 @@ namespace AtlasSSH
             var errorStrings = allStrings.Where(l => l.StartsWith("kinit:")).ToArray();
             if (errorStrings.Length > 0)
             {
-                throw new LinuxCommandErrorException(string.Format("Failed to execute kinit command: {0}", errorStrings[0]));
+                throw new LinuxCommandErrorException($"Failed to execute kinit command: {errorStrings[0]} ({connection.MachineName})");
             }
             if (!allStrings.Where(l => l.StartsWith("Password for")).Any() && !dumpOnly)
             {
-                throw new LinuxCommandErrorException(string.Format("Failed to execute kinit command: {0}", allStrings[0]));
+                throw new LinuxCommandErrorException($"Failed to execute kinit command: {allStrings[0]} ({connection.MachineName})");
             }
             return connection;
         }
@@ -721,7 +721,7 @@ namespace AtlasSSH
             await connection.ExecuteLinuxCommandAsync($"cd {pkgName}; git checkout {scRevision}; cd ..", processLine: l => error = l.Contains("error") ? l : error);
             if (error.Length > 0)
             {
-                throw new LinuxCommandErrorException($"Unable to check out package {scPackagePath} with SHA {scRevision}: {error}");
+                throw new LinuxCommandErrorException($"Unable to check out package {scPackagePath} with SHA {scRevision} ({connection.MachineName}): {error}");
             }
 
             return connection;
@@ -793,7 +793,7 @@ namespace AtlasSSH
             await connection.ExecuteLinuxCommandAsync(string.Format("rc checkout_pkg {0}", fullPackagePath), l => sawRevisionMessage = sawRevisionMessage ? true : l.Contains("Checked out revision"), secondsTimeout: 120, failNow: failNow, dumpOnly: dumpOnly);
             if (!sawRevisionMessage && !dumpOnly)
             {
-                throw new LinuxCommandErrorException(string.Format("Unable to check out svn package {0}.", scPackagePath));
+                throw new LinuxCommandErrorException($"Unable to check out svn package {scPackagePath} ({connection.MachineName}).");
             }
 
             // If this was checked out to trunk, then we need to fix it up.
@@ -805,7 +805,7 @@ namespace AtlasSSH
                 await connection.ExecuteLinuxCommandAsync(string.Format("mv {0} {1}", checkoutName, packageName), l => lineSeen = true, dumpOnly: dumpOnly);
                 if (lineSeen && !dumpOnly)
                 {
-                    throw new LinuxCommandErrorException("Unable to rename the downloaded trunk directory for package '" + scPackagePath + "'.");
+                    throw new LinuxCommandErrorException($"Unable to rename the downloaded trunk directory for package '{scPackagePath}' ({connection.MachineName}).");
                 }
             }
 
@@ -874,12 +874,12 @@ namespace AtlasSSH
                 await connection.ExecuteCommandAsync("echo $?", l => rtnValue = l, dumpOnly: dumpOnly);
             } catch (TimeoutException te)
             {
-                throw new TimeoutException($"{te.Message} - While executing command {command}.", te);
+                throw new TimeoutException($"{te.Message} - While executing command {command} on {connection.MachineName}.", te);
             }
 
             if (rtnValue != "0" && !dumpOnly)
             {
-                throw new LinuxCommandErrorException(string.Format("The remote command '{0}' return status error code '{1}'", command, rtnValue));
+                throw new LinuxCommandErrorException($"The remote command '{command}' return status error code '{rtnValue}' on {connection.MachineName}");
             }
             return connection;
         }

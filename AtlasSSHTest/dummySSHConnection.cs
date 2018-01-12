@@ -52,7 +52,7 @@ namespace AtlasSSHTest
 
         public string Username => throw new NotImplementedException();
 
-        public string MachineName => throw new NotImplementedException();
+        public string MachineName => "bogus";
 
         public bool GloballyVisible => throw new NotImplementedException();
 

@@ -129,7 +129,7 @@ namespace AtlasSSH
             var prompt = await s.ReadRemainingText(1000);
             if (prompt == null || prompt.Length == 0)
             {
-                throw new LinuxCommandErrorException("Did not find the shell prompt! I will not be able to properly interact with this shell!");
+                throw new LinuxCommandErrorException($"Did not find the shell prompt! I will not be able to properly interact with this shell! ({c.ConnectionInfo.Host})");
             }
             Trace.WriteLine("Initialization: prompt=" + prompt, "SSHConnection");
             return prompt;
