@@ -96,6 +96,7 @@
   <ItemGroup>
     <Compile Include="AtlasCommands.cs" />
     <Compile Include="CircularStringBuffer.cs" />
+    <Compile Include="CredentialUtils.cs" />
     <Compile Include="DiskCache.cs" />
     <Compile Include="DataSetUtils.cs" />
     <Compile Include="DiskCacheTyped.cs" />

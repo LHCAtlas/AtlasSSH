@@ -1,6 +1,5 @@
 ﻿using AtlasSSH;
 using AtlasWorkFlows.Utils;
-using CredentialManagement;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using static AtlasSSH.CredentialUtils;
 using static AtlasSSH.DiskCacheTypedHelpers;
 
 namespace AtlasWorkFlows.Locations
@@ -237,8 +237,7 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         private string GetPasswordForHost(string host, string username)
         {
-            var sclist = new CredentialSet(host);
-            var passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
+            var passwordInfo = FetchUserCredentials(host, username);
             if (passwordInfo == null)
             {
                 throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));

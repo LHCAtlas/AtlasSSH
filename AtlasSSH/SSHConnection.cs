@@ -7,8 +7,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static AtlasSSH.CredentialUtils;
 
 namespace AtlasSSH
 {
@@ -114,30 +114,6 @@ namespace AtlasSSH
                 _prompt = await ExtractPromptText(s, _client.Value);
                 return s;
             }, AsyncLazyFlags.RetryOnFailure);
-        }
-
-        /// <summary>
-        /// Look for user credentials in the generic windows credential store on this machine.
-        /// </summary>
-        /// <param name="host"></param>
-        /// <param name="username"></param>
-        /// <returns></returns>
-        private static Credential FetchUserCredentials(string host, string username)
-        {
-            var sclist = new CredentialSet(host);
-            var passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
-            if (passwordInfo == null)
-            {
-                // See if this can be turned into a generic machine name
-                var m = Regex.Match(host, @"^(?<mroot>[^0-9\.]+)(?<mnumber>[0-9]+)(?<mfinal>\..+)$");
-                if (m.Success && !string.IsNullOrWhiteSpace(m.Groups["mnumber"].Value))
-                {
-                    var newMachineName = m.Groups["mroot"].Value + m.Groups["mfinal"].Value;
-                    sclist = new CredentialSet(newMachineName);
-                    passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
-                }
-            }
-            return passwordInfo;
         }
 
         /// <summary>
@@ -464,8 +440,7 @@ namespace AtlasSSH
                 cmdResult.Append(text);
                 if (text.StartsWith("Password"))
                 {
-                    var sclist = new CredentialSet(host);
-                    var passwordInfo = sclist.Load().Where(c => c.Username == username).FirstOrDefault();
+                    var passwordInfo = FetchUserCredentials(host, username);
                     if (passwordInfo == null)
                     {
                         throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));
