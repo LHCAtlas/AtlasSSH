@@ -276,7 +276,6 @@ namespace AtlasWorkFlowsTest.Jobs
             using (var writer = f.CreateText())
             {
                 writer.WriteLine("job(DiVert,22) { job release(Base,1234) package(DiVertAnalysis,1234) submit(ls) }");
-                writer.Close();
             }
 
             f.Refresh();

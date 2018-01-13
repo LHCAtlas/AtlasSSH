@@ -17,7 +17,7 @@ namespace PSAtlasDatasetCommands
     /// return a reference to that previously run job as well.
     /// </summary>
     [Cmdlet(VerbsLifecycle.Invoke, "GRIDJob")]
-    public class InvokeGRIDJob : PSCmdlet
+    public sealed class InvokeGRIDJob : PSCmdlet, IDisposable
     {
         /// <summary>
         /// Get/Set the name of the dataset we are being asked to fetch.
@@ -209,6 +209,17 @@ namespace PSAtlasDatasetCommands
         {
             var pr = new ProgressRecord(1, $"Submitting {JobName} v{JobVersion} ({DatasetName})", message);
             WriteProgress(pr);
+        }
+
+        /// <summary>
+        /// Clean up as we are getting cleaned up.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_connection != null)
+            {
+                _connection.Dispose();
+            }
         }
     }
 }

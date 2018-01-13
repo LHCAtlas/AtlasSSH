@@ -3,8 +3,6 @@ using Renci.SshNet.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using static AtlasSSH.SSHConnection;
 
@@ -13,7 +11,7 @@ namespace AtlasSSH
     /// <summary>
     /// A connection that can recover from being broken.
     /// </summary>
-    public class SSHRecoveringConnection : ISSHConnection
+    public sealed class SSHRecoveringConnection : ISSHConnection
     {
         /// <summary>
         /// The function that will return a connection anytime we need one.

@@ -25,7 +25,7 @@ namespace AtlasSSH
     /// 
     /// Each connection tunnel isn't a seeprate connection, so it doesn't make sense to iterate through them.
     /// </summary>
-    public class SSHConnectionTunnel : ISSHConnection
+    public sealed class SSHConnectionTunnel : ISSHConnection
     {
         /// <summary>
         /// Return the last connection in our list.
@@ -96,9 +96,9 @@ namespace AtlasSSH
         /// <param name="c"></param>
         private async Task AddSingleConnection(string c)
         {
-            var userMachineInfo = ExtractUserAndMachine(c);
-            MachineName = userMachineInfo.machine;
-            Username = userMachineInfo.user;
+            var (user, machine) = ExtractUserAndMachine(c);
+            MachineName = machine;
+            Username = user;
             if (_deepestConnection == null)
             {
                 _machineConnectionStrings.Add(c);
@@ -148,8 +148,8 @@ namespace AtlasSSH
                     .ExecuteAsync(async () =>
                     {
                         _connectionStack = new List<IDisposable>();
-                        var userMachineInfo = ExtractUserAndMachine(_machineConnectionStrings[0]);
-                        _deepestConnection = new SSHConnection(userMachineInfo.machine, userMachineInfo.user);
+                        var (user, machine) = ExtractUserAndMachine(_machineConnectionStrings[0]);
+                        _deepestConnection = new SSHConnection(machine, user);
                         try
                         {
 
@@ -179,8 +179,8 @@ namespace AtlasSSH
         /// <param name="cinfo"></param>
         private async Task MakeSSHTunnelConnection(string cinfo)
         {
-            var cUserMachine = ExtractUserAndMachine(cinfo);
-            _connectionStack.Add(await _deepestConnection.SSHToAsync(cUserMachine.machine, cUserMachine.user));
+            var (user, machine) = ExtractUserAndMachine(cinfo);
+            _connectionStack.Add(await _deepestConnection.SSHToAsync(machine, user));
         }
 
         /// <summary>

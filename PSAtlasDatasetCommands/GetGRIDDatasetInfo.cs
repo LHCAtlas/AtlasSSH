@@ -17,7 +17,7 @@ namespace PSAtlasDatasetCommands
     /// Return info about a GRID dataset. We query rucio to get the info
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GRIDDatasetInfo")]
-    public class GetGRIDDatasetInfo : PSCmdlet
+    public sealed class GetGRIDDatasetInfo : PSCmdlet, IDisposable
     {
         /// <summary>
         /// Get/Set the name of the dataset we are being asked to fetch.
@@ -82,8 +82,7 @@ namespace PSAtlasDatasetCommands
         protected override void ProcessRecord()
         {
             var trimmedDSName = DatasetName.Trim();
-            var cHit = _resultsCache.Value[trimmedDSName] as PSGRIDDatasetInfo;
-            if (cHit != null)
+            if (_resultsCache.Value[trimmedDSName] is PSGRIDDatasetInfo cHit)
             {
                 WriteObject(cHit);
             }
@@ -146,5 +145,15 @@ namespace PSAtlasDatasetCommands
             WriteProgress(pr);
         }
 
+        /// <summary>
+        /// Clean up as we are on our way out
+        /// </summary>
+        public void Dispose()
+        {
+            if (_connection != null)
+            {
+                _connection.Dispose();
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ namespace AtlasSSHTest
     /// <summary>
     /// Dummy class for testing
     /// </summary>
-    public class dummySSHConnection : ISSHConnection
+    public sealed class DummySSHConnection : ISSHConnection
     {
         private Dictionary<string, string> _responses = null;
 
@@ -33,7 +33,7 @@ namespace AtlasSSHTest
         /// If we see a given command we should return with a response.
         /// </summary>
         /// <param name="commandAndResponse"></param>
-        public dummySSHConnection(Dictionary<string, string> commandAndResponse)
+        public DummySSHConnection(Dictionary<string, string> commandAndResponse)
         {
             _responses = commandAndResponse;
         }
@@ -50,11 +50,11 @@ namespace AtlasSSHTest
         /// </summary>
         private Queue<CommandChangeInfo> _changeQueue = new Queue<CommandChangeInfo>();
 
-        public string Username => throw new NotImplementedException();
+        public string Username => "bogusUsernamne";
 
-        public string MachineName => "bogus";
+        public string MachineName => "bogusMachine";
 
-        public bool GloballyVisible => throw new NotImplementedException();
+        public bool GloballyVisible => false;
 
         /// <summary>
         /// After we see a command, then do the replace. We will allow the given command to "execute" first.
@@ -64,7 +64,7 @@ namespace AtlasSSHTest
         /// <param name="command"></param>
         /// <param name="commandResponse"></param>
         /// <returns></returns>
-        public dummySSHConnection AddQueuedChange(string afterSeeCommand, string command, string commandResponse)
+        public DummySSHConnection AddQueuedChange(string afterSeeCommand, string command, string commandResponse)
         {
             _changeQueue.Enqueue(new CommandChangeInfo() { _afterCommand = afterSeeCommand, _command = command, _response = commandResponse });
             return this;
@@ -79,8 +79,7 @@ namespace AtlasSSHTest
         /// <returns></returns>
         public ISSHConnection ExecuteCommand(string command, Action<string> output = null, int secondsTimeout = 60*60, bool refreshTiming = false, Func<bool> failNow = null, bool dumpOnly = false, Dictionary<string, string> seeAndRespond = null, bool WaitForCommandResponse = false)
         {
-            string result;
-            if (!_responses.TryGetValue(command, out result))
+            if (!_responses.TryGetValue(command, out string result))
             {
                 Console.WriteLine("Error: asked for a command '{0}' and had no response!", command);
                 throw new UnknownTestCommandException("Command " + command + " not known - can't response");
@@ -89,9 +88,7 @@ namespace AtlasSSHTest
             {
                 string line;
                 while ((line = lstream.ReadLine()) != null) {
-                    if (output != null) {
-                        output(line);
-                    }
+                    output?.Invoke(line);
                 }
             }
 

@@ -22,7 +22,7 @@ namespace AtlasSSHTest
         [TestMethod]       
         public void setupATLAS()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>().AddsetupATLASResponses());
+            var s = new DummySSHConnection(new Dictionary<string, string>().AddsetupATLASResponses());
             s.setupATLAS();
         }
 
@@ -30,7 +30,7 @@ namespace AtlasSSHTest
         public void setupATLASNosetupATLASThere()
         {
             var setupATLASBad = @"-bash: setupATLAS: command not found";
-            var s = new dummySSHConnection(new Dictionary<string, string>() {
+            var s = new DummySSHConnection(new Dictionary<string, string>() {
             { "setupATLAS", setupATLASBad }}.AddGoodLinuxCommand()
             );
             util.CatchException(() => s.setupATLAS(), typeof(LinuxConfigException), "Unable to setupATLAS - command is not known!");
@@ -40,7 +40,7 @@ namespace AtlasSSHTest
         public void setupRucioWithoutATLASSetup()
         {
             // Fails when we don't get right setup
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupRucioResponses("bogus")
                 .AddEntry("lsetup rucio", "-bash: lsetup rucio: command not found")
                 .AddEntry("hash rucio", "-bash: hash: rucio: not found")
@@ -53,7 +53,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void setupRucio()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 );
@@ -144,7 +144,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void getDSFileList()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("user.gwatts:user.gwatts.301295.EVNT.1")
@@ -165,7 +165,7 @@ namespace AtlasSSHTest
         public void getDSFileListdata15()
         {
             // Seen in the wild.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("data15_13TeV:data15_13TeV.00266904.physics_Main.merge.DAOD_EXOT15.r7600_p2521_p2950")
@@ -185,7 +185,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void getDSFileListInfoNoEventsBytes()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("user.gwatts:user.gwatts.301295.EVNT.1")
@@ -207,7 +207,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void getDSFileListInfoNoEventsGBytes()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
@@ -229,7 +229,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void getZeroDSFileList()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("user.gwatts.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.DAOD_EXOT15.r6765_r6282_p2452.DiVertAnalysis_v4_539A3CCD_hist")
@@ -249,7 +249,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void getDSFileListT()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
@@ -285,7 +285,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void DownloadDS()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
@@ -303,7 +303,7 @@ namespace AtlasSSHTest
         public void DownloadDSBadFileDownload()
         {
             // A file fails to download correctly.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
@@ -325,7 +325,7 @@ namespace AtlasSSHTest
         public void DownloadDSClockSkewFileDownload()
         {
             // A file fails to download correctly due to clock skew... But we don't catch up in the timeout times.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
@@ -346,7 +346,7 @@ namespace AtlasSSHTest
         public void DownloadDSClockSkewThatGetsBetterFileDownload()
         {
             // A file fails to download correctly due to clock skew... but a little while later it is ok.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRucioListFiles("mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282")
@@ -451,7 +451,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void setupGoodRcRelease()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRcSetup("/tmp/gwattsbogusrel", "Base,2.3.30")
@@ -465,7 +465,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void setupRcInNullDirectory()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRcSetup("", "Base,2.3.30")
@@ -477,7 +477,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void setupRcInRelativeDirectory()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRcSetup("", "Base,2.3.30")
@@ -489,7 +489,7 @@ namespace AtlasSSHTest
         [TestMethod]
         public void setupBadRcRelease()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRcSetup("/tmp/gwattsbogusrel", "Base,2.3.31")
@@ -521,7 +521,7 @@ Or run 'rcSetup -r' for a full available release
         [TestMethod]
         public void setupBadDirRcRelease()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRcSetup("/tmp/gwattsbogusrel", "Base,2.3.30")
@@ -534,7 +534,7 @@ Or run 'rcSetup -r' for a full available release
         [TestMethod]
         public void setupAlreadyCreatedDirRcRelease()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupATLASResponses()
                 .AddsetupRucioResponses("bogus")
                 .AddRcSetup("/tmp/gwattsbogusrel", "Base,2.3.30")
@@ -547,7 +547,7 @@ Or run 'rcSetup -r' for a full available release
         [TestMethod]
         public void kinitGood()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupKinit("bogus@CERN.CH", "mypassword")
                 );
 
@@ -561,7 +561,7 @@ Or run 'rcSetup -r' for a full available release
             //-bash-4.1$ kinit gwatts@CERN.BOGUS
             //kinit: Cannot resolve servers for KDC in realm "CERN.BOGUS" while getting initial credentials
 
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupKinit("bogus@CERN.CH", "mypassword")
                 .AddEntry("echo mypassword | kinit bogus@CERN.CH", @"kinit: Cannot resolve servers for KDC in realm ""CERN.BOGUS"" while getting initial credentials")
                 );
@@ -572,7 +572,7 @@ Or run 'rcSetup -r' for a full available release
         [TestMethod]
         public void KinitBadPassword()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupKinit("bogus@CERN.CH", "mypassword")
                 .AddEntry("echo mypassword | kinit bogus@CERN.CH", @"Password for gwatts@CERN.CH:
 kinit: Preauthentication failed while getting initial credentials")
@@ -584,7 +584,7 @@ kinit: Preauthentication failed while getting initial credentials")
         [TestMethod]
         public void KinitCommandNotKnown()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddsetupKinit("bogus@CERN.CH", "mypassword")
                 .AddEntry("echo mypassword | kinit bogus@CERN.CH", @"-bash: kinit: command not found")
                 );
@@ -596,7 +596,7 @@ kinit: Preauthentication failed while getting initial credentials")
         public void CheckoutNoTagsDirectoryAllowed()
         {
             // Just checkout a package as it is listed in the release.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 );
 
             util.CatchException(() => s.CheckoutPackage("atlasoff/Event/xAOD/xAODTrigger/tags", ""), typeof(ArgumentException), "tags");
@@ -606,7 +606,7 @@ kinit: Preauthentication failed while getting initial credentials")
         public void CheckoutNoTrunkAllowed()
         {
             // Just checkout a package as it is listed in the release.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 );
 
             util.CatchException(() => s.CheckoutPackage("atlasoff/Event/xAOD/xAODTrigger/trunk", ""), typeof(ArgumentException), "trunk");
@@ -616,7 +616,7 @@ kinit: Preauthentication failed while getting initial credentials")
         public void CheckoutByRevision()
         {
             // Just checkout a package as it is listed in the release.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddCheckoutFromRevision("atlasoff/Event/xAOD/xAODTrigger", "704382")
                 );
 
@@ -627,7 +627,7 @@ kinit: Preauthentication failed while getting initial credentials")
         public void CheckoutNoTrailingSlash()
         {
             // Just checkout a package as it is listed in the release.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddCheckoutFromRevision("atlasoff/Event/xAOD/xAODTrigger", "704382")
                 );
 
@@ -638,7 +638,7 @@ kinit: Preauthentication failed while getting initial credentials")
         public void CheckoutSubDirOfTrunk()
         {
             // Check out a package that is in a sub-dir of trunk.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddCheckoutFromRevisionTrunk("atlasoff/Event/xAOD/xAODTrigger/trunk/subpkg", "704382")
                 .AddGoodLinuxCommand()
                 );
@@ -651,7 +651,7 @@ kinit: Preauthentication failed while getting initial credentials")
         public void CheckoutByRevisionWithReleasePackage()
         {
             // Just checkout a package as it is listed in the release.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 );
 
             util.CatchException(() => s.CheckoutPackage("xAODTrigger", "704382"), typeof(ArgumentException), "revision is specified then the package path must be fully specified");
@@ -661,7 +661,7 @@ kinit: Preauthentication failed while getting initial credentials")
         public void CheckoutByReleasePackage()
         {
             // Just checkout a package as it is listed in the release.
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddCheckoutFromRelease("xAODTrigger")
                 );
 
@@ -671,7 +671,7 @@ kinit: Preauthentication failed while getting initial credentials")
         [TestMethod]
         public void CheckoutNonexistantPackage()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("rc checkout_pkg xAODForward", @"RootCore: Error unknown package xAODForward")
                 .AddGoodLinuxCommand()
                 );
@@ -682,7 +682,7 @@ kinit: Preauthentication failed while getting initial credentials")
         [TestMethod]
         public void CheckoutGitGoodShorthand()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("git clone --recursive https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", @"RootCore: Error unknown package xAODForward")
                 .AddEntry("cd DiVertAnalysisCode; git checkout 77658117c62ac99610068228668563d29baa3912; cd ..", "Now using dude")
                 .AddGoodLinuxCommand()
@@ -694,7 +694,7 @@ kinit: Preauthentication failed while getting initial credentials")
         [TestMethod]
         public void CheckoutGitGoodShorthandBadSHA()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("git clone --recursive https://:@gitlab.cern.ch:8443/atlas-phys-exotics-llp-mscrid/DiVertAnalysisCode.git", @"RootCore: Error unknown package xAODForward")
                 .AddEntry("cd DiVertAnalysisCode; git checkout 77658117c62ac99610068228668563d29baa3912; cd ..", "error: pathspec '77658117c62ac99610068228668563d29baa39122' did not match any file(s) known to git.")
                 .AddGoodLinuxCommand()
@@ -707,7 +707,7 @@ kinit: Preauthentication failed while getting initial credentials")
         [TestMethod]
         public void ExecuteBadLinuxCommand()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("ls bogusduduefreak", @"ls: cannot access bogusduduefreak: No such file or directory")
                 .AddGoodLinuxCommand("1")
                 );
@@ -733,7 +733,7 @@ kinit: Preauthentication failed while getting initial credentials")
         [TestMethod]
         public void ExecuteGoodLinuxCommand()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddGoodLinuxCommand()
                 .AddEntry("ls", @"1                        cmt                        rachel
 105279.root              cmthome                    runBuildTest.sh
@@ -769,7 +769,7 @@ build_nv_ntuple.txt      python                     xAOForward.tar.gz")
         [TestMethod]
         public void CompileWithNoErrors()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddBuildCommandResponses()
             );
 
@@ -779,7 +779,7 @@ build_nv_ntuple.txt      python                     xAOForward.tar.gz")
         [TestMethod]
         public void CompileBadFindPackages()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddEntry("rc find_packages", @"bash-4.1$ rc find_packages                                                                                                      
 using release set with set_release                                                                                              
 looking for packages in /phys/users/gwatts/bogus                                                                                
@@ -923,7 +923,7 @@ RootCore: Error package boguspkg not known, required by DiVertAnalysis")
         [TestMethod]
         public void CompileSourceCodeError()
         {
-            var s = new dummySSHConnection(new Dictionary<string, string>()
+            var s = new DummySSHConnection(new Dictionary<string, string>()
                 .AddBuildCommandResponses()
                 .AddEntry("rc compile", @"compiling RootCore  
 finished compiling RootCore

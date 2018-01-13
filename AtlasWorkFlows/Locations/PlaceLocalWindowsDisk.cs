@@ -284,7 +284,6 @@ namespace AtlasWorkFlows.Locations
                 {
                     write.WriteLine(dsFile);
                 }
-                write.Close();
             }
 
             return Task.FromResult(true);

@@ -375,7 +375,6 @@ namespace AtlasWorkFlowsTest.Location
                     using (var wr = finfo.CreateText())
                     {
                         wr.WriteLine("hi");
-                        wr.Close();
                         listingFileWr.WriteLine(f);
                     }
                 }

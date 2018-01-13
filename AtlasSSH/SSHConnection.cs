@@ -23,7 +23,7 @@ namespace AtlasSSH
     /// 
     /// If anything is done to change the command prompt, this class will fail to work properly.
     /// </remarks>
-    public class SSHConnection : IDisposable, ISSHConnection
+    public sealed class SSHConnection : IDisposable, ISSHConnection
     {
         const int TerminalWidth = 240;
 
@@ -74,6 +74,9 @@ namespace AtlasSSH
         /// <param name="username"></param>
         public SSHConnection(string host, string username)
         {
+            Username = username;
+            MachineName = host;
+
             // Fetch the username and password.
             Credential passwordInfo = FetchUserCredentials(host, username);
             if (passwordInfo == null)
@@ -84,8 +87,10 @@ namespace AtlasSSH
             // Create the connection, but do it lazy so we don't do anything if we aren't used.
             _client = new Lazy<SshClient>(() =>
             {
-                var c = new SshClient(host, username, passwordInfo.Password);
-                c.KeepAliveInterval = TimeSpan.FromSeconds(15);
+                var c = new SshClient(host, username, passwordInfo.Password)
+                {
+                    KeepAliveInterval = TimeSpan.FromSeconds(15)
+                };
                 try
                 {
                     c.Connect();
@@ -158,9 +163,9 @@ namespace AtlasSSH
         /// </summary>
         private string _prompt;
 
-        public string Username => throw new NotImplementedException();
+        public string Username { get; private set; }
 
-        public string MachineName => throw new NotImplementedException();
+        public string MachineName { get; private set; }
 
         /// <summary>
         /// Since we are connected, we assume we are always there.
@@ -361,11 +366,8 @@ namespace AtlasSSH
                     {
                         await DumpTillFind((await _shell), _client.Value, _prompt, s => {
                             buf.Add(s);
-                            if (output != null)
-                            {
-                                output(s);
-                            }
-                            },
+                            output?.Invoke(s);
+                        },
                             secondsTimeout: secondsTimeout, refreshTimeout: refreshTimeout, failNow: failNow, seeAndRespond: seeAndRespond);
                     }
                 } catch (TimeoutException e)
@@ -494,8 +496,11 @@ namespace AtlasSSH
         /// <returns></returns>
         public async Task<ISSHConnection> CopyRemoteDirectoryLocallyAsync(string remotedir, DirectoryInfo localDir, Action<string> statusUpdate = null)
         {
+            // Status update function
+            void updateStatus(object o, Renci.SshNet.Common.ScpDownloadEventArgs args) => statusUpdate(args.Filename);
+
+            // Now run everything.
             _scpError = null;
-            EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) => statusUpdate(args.Filename);
             if (statusUpdate != null)
             {
                 _scp.Value.Downloading += updateStatus;
@@ -556,14 +561,14 @@ namespace AtlasSSH
 
             // Update, but only when something interesting changes.
             string oldMessage = "";
-            EventHandler<Renci.SshNet.Common.ScpDownloadEventArgs> updateStatus = (o, args) =>
+            void updateStatus(object o, Renci.SshNet.Common.ScpDownloadEventArgs args)
             {
                 if (args.Filename != oldMessage)
                 {
                     statusUpdate($"Copying {args.Filename} via SCP");
                     oldMessage = args.Filename;
                 }
-            };
+            }
 
             if (statusUpdate != null)
             {
@@ -616,14 +621,15 @@ namespace AtlasSSH
 
             // Send a message only when the message changes.
             string oldMessage = "";
-            EventHandler<Renci.SshNet.Common.ScpUploadEventArgs> updateStatus = (o, args) =>
+            void updateStatus(object o, Renci.SshNet.Common.ScpUploadEventArgs args)
             {
                 if (args.Filename != oldMessage)
                 {
                     statusUpdate(args.Filename);
                     oldMessage = args.Filename;
                 }
-            };
+            }
+
             if (statusUpdate != null)
             {
                 _scp.Value.Uploading += updateStatus;

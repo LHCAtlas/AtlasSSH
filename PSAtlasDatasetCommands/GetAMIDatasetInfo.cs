@@ -2,23 +2,20 @@
 using AtlasWorkFlows.Jobs;
 using PSAtlasDatasetCommands.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PSAtlasDatasetCommands
 {
     [Cmdlet(VerbsCommon.Get, "AMIDatasetInfo")]
-    public class GetAMIDatasetInfo : PSCmdlet
+    public sealed class GetAMIDatasetInfo : PSCmdlet, IDisposable
     {
         /// <summary>
         /// Track the listener for verbose messages
         /// </summary>
-        private PSListener _listener;
+        private PSListener _listener = null;
 
         /// <summary>
         /// Get/Set the name of the dataset we are being asked to fetch.
@@ -135,5 +132,15 @@ namespace PSAtlasDatasetCommands
             WriteProgress(pr);
         }
 
+        /// <summary>
+        /// Dispose everything.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_listener != null)
+            {
+                _listener.Close();
+            }
+        }
     }
 }

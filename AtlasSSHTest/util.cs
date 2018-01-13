@@ -1432,7 +1432,7 @@ Details: Could not open source: globus_ftp_client: the server responded with an 
         /// <param name="s"></param>
         /// <param name="dsname"></param>
         /// <returns></returns>
-        public static dummySSHConnection AddClockSkewDownloadOKResponses(this dummySSHConnection s, string dsname)
+        public static DummySSHConnection AddClockSkewDownloadOKResponses(this DummySSHConnection s, string dsname)
         {
             s.AddQueuedChange("rucio download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",
                 "rucio download --dir /tmp/gwattsdownload/now `cat /tmp/mc15_13TeV.304805.MadGraphPythia8EvtGen_A14NNPDF23LO_HSS_LLP_mH200_mS25_lt5m.merge.AOD.e4754_s2698_r7146_r6282.filelist`",

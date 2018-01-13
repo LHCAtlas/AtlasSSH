@@ -153,7 +153,6 @@ namespace AtlasSSH
             {
                 var bn = new BinaryFormatter();
                 bn.Serialize(wr, item.Value);
-                wr.Close();
             }
         }
 

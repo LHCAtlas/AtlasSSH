@@ -93,7 +93,7 @@ namespace AtlasWorkFlowsTest.Jobs
         public async Task SubmitCommandWithGlobal()
         {
             AtlasJob j = MakeSimpleJob();
-            var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j));
+            var s = new DummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j));
             await s.SubmitJobAsync(j, "ds1", "ds1-out", credSet: "bogus");
         }
 
@@ -101,7 +101,7 @@ namespace AtlasWorkFlowsTest.Jobs
         public async Task SubmitCommandWithGlobalPattern()
         {
             AtlasJob j = MakePatternJob();
-            var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
+            var s = new DummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
             await s.SubmitJobAsync(j, "ds1", "ds1-out", credSet: "bogus");
         }
 
@@ -110,7 +110,7 @@ namespace AtlasWorkFlowsTest.Jobs
         public async Task SubmitCommandWithAmbiguousPattern()
         {
             AtlasJob j = MakePatternJob();
-            var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
+            var s = new DummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
             await s.SubmitJobAsync(j, "ds1ds2", "ds1-out", credSet: "bogus");
         }
 
@@ -119,7 +119,7 @@ namespace AtlasWorkFlowsTest.Jobs
         public async Task SubmitCommandWithMissingPattern()
         {
             AtlasJob j = MakePatternJob();
-            var s = new dummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
+            var s = new DummySSHConnection(new Dictionary<string, string>().AddSubmitInfo(j, "ds1_submit"));
             await s.SubmitJobAsync(j, "ds3", "ds1-out", credSet: "bogus");
         }
     }

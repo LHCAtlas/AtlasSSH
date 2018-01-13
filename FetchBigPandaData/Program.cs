@@ -38,12 +38,18 @@ namespace FetchBigPandaData
 
             using (var data = wr.GetResponse())
             {
-                using (var rdr = data.GetResponseStream())
+                var rdr = data.GetResponseStream();
+                try
                 {
                     using (var r = new StreamReader(rdr))
                     {
+                        rdr = null;
                         Console.WriteLine(r.ReadToEnd());
                     }
+                } finally
+                {
+                    if (rdr != null)
+                        rdr.Dispose();
                 }
             }
             

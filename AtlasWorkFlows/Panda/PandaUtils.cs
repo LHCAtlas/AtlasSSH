@@ -79,10 +79,14 @@ namespace AtlasWorkFlows.Panda
                 {
                     using (var data = wr.GetResponse())
                     {
-                        using (var rdr = data.GetResponseStream())
+                        var rdr = data.GetResponseStream();
+                        try
                         {
                             using (var r = new StreamReader(rdr))
                             {
+                                // Trick to avoid double-dispose.
+                                rdr = null;
+
                                 var text = r.ReadToEnd();
                                 try
                                 {
@@ -99,6 +103,12 @@ namespace AtlasWorkFlows.Panda
                                     throw;
                                 }
                             }
+                        } finally
+                        {
+                            if (rdr != null)
+                            {
+                                rdr.Dispose();
+                            }
                         }
                     }
                 });
@@ -114,7 +124,7 @@ namespace AtlasWorkFlows.Panda
         /// </summary>
         public static void ResetCache(string cacheDirName = null)
         {
-            _cacheDirectoryName = cacheDirName == null ? "PandaCache" : cacheDirName;
+            _cacheDirectoryName = cacheDirName ?? "PandaCache";
             if (_cacheLocation.IsValueCreated)
             {
                 _cacheLocation = new Lazy<DirectoryInfo>(() => {
@@ -156,7 +166,6 @@ namespace AtlasWorkFlows.Panda
             using (var wrt = cFile.CreateText())
             {
                 wrt.Write(JsonConvert.SerializeObject(result));
-                wrt.Close();
             }
         }
 
