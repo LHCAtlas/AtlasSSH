@@ -20,7 +20,7 @@ namespace PSAtlasDatasetCommands.Utils
         {
             var loc = string.IsNullOrWhiteSpace(placeName)
                 ? (IPlace)null
-                : await DatasetManager.FindLocation(placeName);
+                : await DataSetManager.FindLocation(placeName);
 
             if (loc == null && !string.IsNullOrWhiteSpace(placeName))
             {

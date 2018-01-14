@@ -102,7 +102,7 @@ namespace AtlasWorkFlows.Locations
                 {
                     if (pairing.Item1.CanSourceCopy(pairing.Item2))
                     {
-                        foreach (var fileSet in uris.GroupBy(u => u.DatasetName()))
+                        foreach (var fileSet in uris.GroupBy(u => u.DataSetName()))
                         {
                             await pairing.Item1.CopyToAsync(pairing.Item2, fileSet.ToArray(), statusUpdate, failNow, timeout);
                         }
@@ -110,7 +110,7 @@ namespace AtlasWorkFlows.Locations
                     else
                     {
                         // Copying must be done by a single dataset at a time.
-                        foreach (var fileSet in uris.GroupBy(u => u.DatasetName()))
+                        foreach (var fileSet in uris.GroupBy(u => u.DataSetName()))
                         {
                             await pairing.Item2.CopyFromAsync(pairing.Item1, fileSet.ToArray(), statusUpdate, failNow, timeout);
                         }

@@ -70,7 +70,7 @@ namespace AtlasWorkFlows.Locations
         /// one "true" set of files in a dataset. If there is a difference, it is a bug, and
         /// results are not longer going to be... sensible!
         /// </remarks>
-        Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null);
+        Task<string[]> GetListOfFilesForDataSetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null);
 
         /// <summary>
         /// Copy the full info for this dataset into the repro

@@ -40,7 +40,7 @@ namespace AtlasWorkFlows.Jobs
         public Command SubmitCommand { get; set; }
         internal Submit Clone()
         {
-            throw new NotImplementedException();
+            return new Submit() { SubmitCommand = this.SubmitCommand.Clone() };
         }
     }
 
@@ -49,13 +49,13 @@ namespace AtlasWorkFlows.Jobs
     /// </summary>
     public class SubmitPattern
     {
-        public string RegEx { get; set; }
+        public string Regex { get; set; }
 
         public Submit SubmitCommand { get; set; }
 
         internal SubmitPattern Clone()
         {
-            throw new NotImplementedException();
+            return new SubmitPattern() { Regex = this.Regex, SubmitCommand = this.SubmitCommand.Clone() };
         }
     }
 
@@ -111,7 +111,7 @@ namespace AtlasWorkFlows.Jobs
     public class SubmissionMachine
     {
         public string MachineName { get; set; }
-        public string Username { get; set; }
+        public string UserName { get; set; }
     }
 
     /// <summary>
@@ -181,6 +181,21 @@ namespace AtlasWorkFlows.Jobs
         {
             job = job == null ? new AtlasJob() : job;
             job.SubmitCommand = new Submit() { SubmitCommand = new Jobs.Command() { CommandLine = commandLine } };
+            return job;
+        }
+
+        /// <summary>
+        /// Add a new submit command pattern to the job.
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="commandLine"></param>
+        /// <param name="pattern"></param>
+        /// <returns></returns>
+        public static AtlasJob SubmitCommandPattern (this AtlasJob job, string commandLine, string pattern)
+        {
+            job = job ?? new AtlasJob();
+            job.SubmitPatternCommands = job.SubmitPatternCommands
+                .Append(new SubmitPattern() { Regex = pattern, SubmitCommand = new Submit() { SubmitCommand = new Jobs.Command() { CommandLine = commandLine } } });
             return job;
         }
     }

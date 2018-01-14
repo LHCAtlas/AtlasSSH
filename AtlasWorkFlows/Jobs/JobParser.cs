@@ -118,7 +118,7 @@ namespace AtlasWorkFlows.Jobs
 
             return new SubmitPattern()
             {
-                RegEx = r[0],
+                Regex = r[0],
                 SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = r[1] } }
             };
         }
@@ -275,7 +275,7 @@ namespace AtlasWorkFlows.Jobs
             {
                 throw new JobParseException("submission_machine requires two ");
             }
-            return new SubmissionMachine() { MachineName = a[0], Username = a[1] };
+            return new SubmissionMachine() { MachineName = a[0], UserName = a[1] };
         }
 
         /// <summary>

@@ -25,7 +25,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestSetup()
         {
             _ssh = new UtilsForBuildingLinuxDatasets();
-            DatasetManager.ResetDSM();
+            DataSetManager.ResetDSM();
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestCleanup()
         {
             _ssh.TestCleanup();
-            DatasetManager.ResetDSM();
+            DataSetManager.ResetDSM();
         }
 
         [TestMethod]
@@ -44,8 +44,8 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p);
-            var files = await p.GetListOfFilesForDatasetAsync("ds2");
+            DataSetManager.ResetDSM(p);
+            var files = await p.GetListOfFilesForDataSetAsync("ds2");
             Assert.IsNull(files);
         }
 
@@ -55,7 +55,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p);
+            DataSetManager.ResetDSM(p);
 
             var files = await p.GetLocalFileLocationsAsync(new [] { new Uri("gridds://ds1/f1.root")});
             Assert.IsNotNull(files);
@@ -76,9 +76,9 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p);
+            DataSetManager.ResetDSM(p);
 
-            var files = await p.GetListOfFilesForDatasetAsync("ds1");
+            var files = await p.GetListOfFilesForDataSetAsync("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual("f1.root", files[0]);
             Assert.AreEqual("f2.root", files[1]);
@@ -97,7 +97,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p);
+            DataSetManager.ResetDSM(p);
 
             Assert.IsTrue(await p.HasFileAsync(new Uri("gridds://ds1/f1.root")));
         }
@@ -116,7 +116,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             _ssh.RemoveFileInDS("ds1", "f1.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p);
+            DataSetManager.ResetDSM(p);
 
             Assert.IsFalse(await p.HasFileAsync(new Uri("gridds://ds1/f1.root")));
         }
@@ -129,7 +129,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.RemoveFileInDS("ds1", "f1.root");
             _ssh.AddFileToDS("ds1", "f1.root.part");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p);
+            DataSetManager.ResetDSM(p);
 
             Assert.IsFalse(await p.HasFileAsync(new Uri("gridds://ds1/f1.root")));
         }
@@ -148,7 +148,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             _ssh.RemoveFileInDS("ds1", "f1.root");
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p);
+            DataSetManager.ResetDSM(p);
 
             Assert.IsFalse(await p.HasFileAsync(new Uri("gridds://ds2/f1.root")));
         }
@@ -165,7 +165,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var other = new ScpTargetDummy() { DoVisibility = true };
-            DatasetManager.ResetDSM(p, other);
+            DataSetManager.ResetDSM(p, other);
 
             Assert.IsTrue(p.CanSourceCopy(other));
         }
@@ -175,7 +175,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var other = new ScpTargetDummy() { DoVisibility = false };
-            DatasetManager.ResetDSM(p, other);
+            DataSetManager.ResetDSM(p, other);
 
             Assert.IsFalse(p.CanSourceCopy(other));
         }
@@ -185,7 +185,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var other = new DummyPlace("testmeout");
-            DatasetManager.ResetDSM(p, other);
+            DataSetManager.ResetDSM(p, other);
 
             Assert.IsFalse(p.CanSourceCopy(other));
         }
@@ -208,7 +208,7 @@ namespace AtlasWorkFlowsTest.Location
             var p1 = new PlaceLinuxRemote("test1", _ssh1.RemotePath, _ssh1.RemoteHostInfo);
             var _ssh2 = new UtilsForBuildingLinuxDatasets();
             var p2 = new PlaceLinuxRemote("test1", _ssh2.RemotePath, _ssh2.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             Assert.IsTrue(p1.CanSourceCopy(p2));
         }
@@ -220,7 +220,7 @@ namespace AtlasWorkFlowsTest.Location
             var p1 = new PlaceLinuxRemote("test1", _ssh1.RemotePath, _ssh1.RemoteHostInfo);
             var _ssh2 = new UtilsForBuildingLinuxDatasets();
             var p2 = new PlaceLinuxRemote("test1", _ssh2.RemotePath, _ssh2.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             Assert.IsFalse(p2.CanSourceCopy(p1));
         }
@@ -232,7 +232,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p1.CopyToAsync(p2, fileList);
@@ -248,7 +248,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds2/f1.root"), new Uri("gridds://ds2/f2.root") };
             await p1.CopyToAsync(p2, fileList);
@@ -266,7 +266,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.RemoveFileInDS("ds1", "f1.root");
             var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             // This should fail because there is a missing file and we've explicitly requested both files to be copied.
@@ -286,7 +286,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.AddFileToDS("ds1", "f1.root.part");
             var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var p2 = new PlaceLinuxRemote("test", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             // THis should fail because there is a missing file and we've requested all files to be copied.
@@ -343,7 +343,7 @@ namespace AtlasWorkFlowsTest.Location
 
             var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p1.CopyToAsync(p2, fileList);
@@ -368,7 +368,7 @@ namespace AtlasWorkFlowsTest.Location
 
             var p1 = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var p2 = new PlaceLinuxRemote("test", ssh2.RemotePath, _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p1.CopyToAsync(p2, fileList);
@@ -388,7 +388,7 @@ namespace AtlasWorkFlowsTest.Location
             var sshRemote = new UtilsForBuildingLinuxDatasets();
             sshRemote.CreateRepro();
             var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p1.CopyToAsync(p2, fileList);
@@ -406,7 +406,7 @@ namespace AtlasWorkFlowsTest.Location
             var sshRemote = new UtilsForBuildingLinuxDatasets();
             sshRemote.CreateRepro();
             var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p1.CopyToAsync(p2, fileList);
@@ -421,7 +421,7 @@ namespace AtlasWorkFlowsTest.Location
             var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
             _ssh.CreateRepro(_ssh.RemotePath + "2");
             var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p1.CopyToAsync(p2, fileList.Take(1).ToArray());
@@ -439,25 +439,25 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p2.CopyFromAsync(p1, fileList);
 
             Assert.IsTrue(await p2.HasFileAsync(fileList[0]));
-            Assert.AreEqual(2, (await p2.GetListOfFilesForDatasetAsync("ds1")).Length);
+            Assert.AreEqual(2, (await p2.GetListOfFilesForDataSetAsync("ds1")).Length);
         }
 
         [TestMethod]
         public async Task CopyFromTwoStep()
         {
-            DatasetManager.ResetDSM();
+            DataSetManager.ResetDSM();
             _ssh.CreateRepro();
             _ssh.CreateDS("ds1", "f1.root", "f2.root");
             var p1 = new PlaceLinuxRemote("test1", _ssh.RemotePath, _ssh.RemoteHostInfo);
             _ssh.CreateRepro(_ssh.RemotePath + "2");
             var p2 = new PlaceLinuxRemote("test2", _ssh.RemotePath + "2", _ssh.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p2.CopyFromAsync(p1, fileList.Take(1).ToArray());
@@ -479,7 +479,7 @@ namespace AtlasWorkFlowsTest.Location
             sshRemote.CreateRepro();
             sshRemote.CreateDS("ds1", "f1.root", "f2.root");
             var p2 = new PlaceLinuxRemote("test", sshRemote.RemotePath, sshRemote.RemoteHostInfo);
-            DatasetManager.ResetDSM(p1, p2);
+            DataSetManager.ResetDSM(p1, p2);
 
             var fileList = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await p1.CopyFromAsync(p2, fileList);
@@ -540,7 +540,7 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
 
-            public Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task<string[]> GetListOfFilesForDataSetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }

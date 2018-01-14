@@ -13,11 +13,11 @@ namespace AtlasSSH
         /// <param name="host"></param>
         /// <param name="userName"></param>
         /// <returns></returns>
-        public static Credential FetchUserCredentials(string host, string userName)
+        public static string FetchUserCredentials(string host, string userName)
         {
             using (var sclist = new CredentialSet(host))
             {
-                var passwordInfo = sclist.Load().Where(c => c.Username == userName).FirstOrDefault();
+                var passwordInfo = sclist.Load().Where(c => c.Username == userName).FirstOrDefault()?.Password;
                 if (passwordInfo == null)
                 {
                     // See if this can be turned into a generic machine name
@@ -27,7 +27,7 @@ namespace AtlasSSH
                         var newMachineName = m.Groups["mroot"].Value + m.Groups["mfinal"].Value;
                         using (var sclistNew = new CredentialSet(newMachineName))
                         {
-                            passwordInfo = sclist.Load().Where(c => c.Username == userName).FirstOrDefault();
+                            passwordInfo = sclistNew.Load().Where(c => c.Username == userName).FirstOrDefault()?.Password;
                         }
                     }
                 }

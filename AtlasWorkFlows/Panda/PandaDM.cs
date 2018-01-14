@@ -11,7 +11,7 @@ namespace AtlasWorkFlows.Panda
     /// </summary>
 
     // Actual datasets
-    public class Dataset
+    public class DataSet
     {
         public string containername { get; set; }
         public string datasetname { get; set; }
@@ -64,6 +64,7 @@ namespace AtlasWorkFlows.Panda
     public class PandaTask
     {
         public string termcondition { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "username")]
         public string username { get; set; }
         public string statechangetime { get; set; }
         public string ticketid { get; set; }
@@ -108,7 +109,9 @@ namespace AtlasWorkFlows.Panda
         public string endtime { get; set; }
         public string iointensityunit { get; set; }
         public int walltime { get; set; }
-        public List<Dataset> datasets { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1002:DoNotExposeGenericLists")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "datasets")]
+        public List<DataSet> datasets { get; set; }
         public int jeditaskid { get; set; }
         public string outdiskunit { get; set; }
         public int outdiskcount { get; set; }

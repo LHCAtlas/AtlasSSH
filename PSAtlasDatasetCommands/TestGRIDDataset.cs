@@ -70,7 +70,7 @@ namespace PSAtlasDatasetCommands
                     }
 
                     // Get the resulting job name for this guy.
-                    var pandaJobName = job.ResultingDatasetName(JobSourceDatasetName) + "/";
+                    var pandaJobName = job.ResultingDataSetName(JobSourceDatasetName) + "/";
 
                     // Now, to get the output dataset, we need to fetch the job.
                     var pandaTask = pandaJobName.FindPandaJobWithTaskName(true);
@@ -78,7 +78,7 @@ namespace PSAtlasDatasetCommands
                     {
                         throw new ArgumentException($"No panda task found with name '{pandaJobName}' for job '{JobName}' v{JobVersion}.");
                     }
-                    var containers = pandaTask.DatasetNamesOUT();
+                    var containers = pandaTask.DataSetNamesOUT();
                     if (containers.Length > 1)
                     {
                         throw new ArgumentException($"There are more than one output container for the panda task {pandaTask.jeditaskid} - can't decide. Need code upgrade!! Thanks for the fish!");
@@ -87,7 +87,7 @@ namespace PSAtlasDatasetCommands
                 }
 
                 // Find all the members of this dataset.
-                var allFilesToCopy = DatasetManager.ListOfFilesInDatasetAsync(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping)
+                var allFilesToCopy = DataSetManager.ListOfFilesInDataSetAsync(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping)
                     .Result;
                 if (nFiles != 0)
                 {
@@ -149,7 +149,7 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void EndProcessing()
         {
-            DatasetManager.ResetConnectionsAsync()
+            DataSetManager.ResetConnectionsAsync()
                 .WaitAndUnwrapException();
             base.EndProcessing();
         }
@@ -159,7 +159,7 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void BeginProcessing()
         {
-            DatasetManager.ResetConnectionsAsync()
+            DataSetManager.ResetConnectionsAsync()
                 .WaitAndUnwrapException();
             base.BeginProcessing();
         }

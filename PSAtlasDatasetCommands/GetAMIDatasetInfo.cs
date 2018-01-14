@@ -52,7 +52,7 @@ namespace PSAtlasDatasetCommands
 
             // Establish the connection
             var sm = JobParser.GetSubmissionMachine();
-            var connection = new SSHConnection(sm.MachineName, sm.Username);
+            var connection = new SSHConnection(sm.MachineName, sm.UserName);
 
             // Setup for using ami.
             connection.Apply(() => DisplayStatus("Setting up ATLAS"))

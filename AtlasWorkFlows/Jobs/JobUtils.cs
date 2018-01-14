@@ -8,23 +8,22 @@ using System.Threading.Tasks;
 
 namespace AtlasWorkFlows.Jobs
 {
+    [Serializable]
+    public class GRIDSubmitException : Exception
+    {
+        public GRIDSubmitException() { }
+        public GRIDSubmitException(string message) : base(message) { }
+        public GRIDSubmitException(string message, Exception inner) : base(message, inner) { }
+        protected GRIDSubmitException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     /// <summary>
     /// Some utility routines to help with working with jobs
     /// </summary>
     public static class JobUtils
     {
-
-        [Serializable]
-        public class GRIDSubmitException : Exception
-        {
-            public GRIDSubmitException() { }
-            public GRIDSubmitException(string message) : base(message) { }
-            public GRIDSubmitException(string message, Exception inner) : base(message, inner) { }
-            protected GRIDSubmitException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
-
         /// <summary>
         /// Append an item to the array. Not efficeint, but...
         /// </summary>
@@ -63,7 +62,7 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="datasetToStartWith"></param>
         /// <param name="credSet">Set of credentials to load. Default to CERN</param>
         /// <returns></returns>
-        public static async Task<ISSHConnection> SubmitJobAsync(this ISSHConnection connection, AtlasJob job, string inputDataset, string resultingDataset, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false, string credSet = "CERN", bool dumpOnly = false)
+        public static async Task<ISSHConnection> SubmitJobAsync(this ISSHConnection connection, AtlasJob job, string inputDataSet, string resultingDataSet, Action<string> statusUpdate = null, Func<bool> failNow = null, bool sameJobAsLastTime = false, string credSet = "CERN", bool dumpOnly = false)
         {
             // Get the status update protected.
             Action<string> update = statusUpdate != null ? 
@@ -72,7 +71,7 @@ namespace AtlasWorkFlows.Jobs
 
             // Figure out the proper submit command.
             string submitCmd = (job.SubmitPatternCommands.Length > 0
-                ? MatchSubmitPattern(job.SubmitPatternCommands, inputDataset)
+                ? MatchSubmitPattern(job.SubmitPatternCommands, inputDataSet)
                 : job.SubmitCommand.SubmitCommand.CommandLine)
                 .Replace("*INPUTDS*", "{0}")
                 .Replace("*OUTPUTDS*", "{1}");
@@ -85,7 +84,7 @@ namespace AtlasWorkFlows.Jobs
             // If this is the first time through with a single job, then setup a directory we can use.
             if (!sameJobAsLastTime)
             {
-                var linuxLocation = string.Format("/tmp/{0}", resultingDataset);
+                var linuxLocation = string.Format("/tmp/{0}", resultingDataSet);
                 await connection.Apply(() => update("Removing old build directory"))
                         .ExecuteLinuxCommandAsync("rm -rf " + linuxLocation, dumpOnly: dumpOnly);
 
@@ -107,8 +106,8 @@ namespace AtlasWorkFlows.Jobs
 
             // We should now be in the directory where everything is - so submit!
             return await connection
-                .Apply(() => update($"Running submit command ({inputDataset})"))
-                .ExecuteLinuxCommandAsync(string.Format(submitCmd, inputDataset, resultingDataset), failNow: failNow, dumpOnly: dumpOnly);
+                .Apply(() => update($"Running submit command ({inputDataSet})"))
+                .ExecuteLinuxCommandAsync(string.Format(submitCmd, inputDataSet, resultingDataSet), failNow: failNow, dumpOnly: dumpOnly);
         }
 
         /// <summary>
@@ -120,7 +119,7 @@ namespace AtlasWorkFlows.Jobs
         private static string MatchSubmitPattern(SubmitPattern[] submitPatternCommands, string inputDataset)
         {
             var matched = from sc in submitPatternCommands
-                          let reg = Regex.Match(inputDataset, sc.RegEx)
+                          let reg = Regex.Match(inputDataset, sc.Regex)
                           where reg.Success
                           select sc;
             var all = matched.ToArray();

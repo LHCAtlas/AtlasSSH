@@ -13,8 +13,13 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="uri"></param>
         /// <returns></returns>
-        public static string DatasetName(this Uri uri)
+        public static string DataSetName(this Uri uri)
         {
+            if (uri == null)
+            {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
             if (uri.Scheme != "gridds")
             {
                 throw new UnknownUriSchemeException($"Expected a gridds Uri, but got a {uri.Scheme} one instead.");
@@ -32,8 +37,13 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="uri"></param>
         /// <returns></returns>
-        public static string DatasetFilename(this Uri uri)
+        public static string DataSetFileName(this Uri uri)
         {
+            if (uri == null)
+            {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
             if (uri.Scheme != "gridds")
             {
                 throw new UnknownUriSchemeException($"Expected a gridds Uri, but got a {uri.Scheme} one instead.");

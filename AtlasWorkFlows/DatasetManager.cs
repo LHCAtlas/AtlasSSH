@@ -12,34 +12,34 @@ using static AtlasSSH.DiskCacheTypedHelpers;
 
 namespace AtlasWorkFlows
 {
+    [Serializable]
+    public class NoLocalPlaceToCopyToException : Exception
+    {
+        public NoLocalPlaceToCopyToException() { }
+        public NoLocalPlaceToCopyToException(string message) : base(message) { }
+        public NoLocalPlaceToCopyToException(string message, Exception inner) : base(message, inner) { }
+        protected NoLocalPlaceToCopyToException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+
+    [Serializable]
+    public class UnknownLocationTypeException : Exception
+    {
+        public UnknownLocationTypeException() { }
+        public UnknownLocationTypeException(string message) : base(message) { }
+        public UnknownLocationTypeException(string message, Exception inner) : base(message, inner) { }
+        protected UnknownLocationTypeException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     /// <summary>
     /// A singleton that is the master dataset manager
     /// </summary>
-    public class DatasetManager
+    public class DataSetManager
     {
-        [Serializable]
-        public class NoLocalPlaceToCopyToException : Exception
-        {
-            public NoLocalPlaceToCopyToException() { }
-            public NoLocalPlaceToCopyToException(string message) : base(message) { }
-            public NoLocalPlaceToCopyToException(string message, Exception inner) : base(message, inner) { }
-            protected NoLocalPlaceToCopyToException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
-
-
-        [Serializable]
-        public class UnknownLocationTypeException : Exception
-        {
-            public UnknownLocationTypeException() { }
-            public UnknownLocationTypeException(string message) : base(message) { }
-            public UnknownLocationTypeException(string message, Exception inner) : base(message, inner) { }
-            protected UnknownLocationTypeException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
-
         /// <summary>
         /// Return a list of files in a dataset. For high-speed access we cache everything.
         /// </summary>
@@ -58,7 +58,7 @@ namespace AtlasWorkFlows
                     .Where(p => p != null);
                 foreach (var p in r)
                 {
-                    var files = await p.GetListOfFilesForDatasetAsync(dsname.Dataset(), statusUpdate, failNow: failNow);
+                    var files = await p.GetListOfFilesForDataSetAsync(dsname.Dataset(), statusUpdate, failNow: failNow);
                     if (files != null)
                     {
                         return files;
@@ -78,7 +78,7 @@ namespace AtlasWorkFlows
         /// <remarks>
         /// Look through the list of places in tier order (from closests to furthest) until we find a good dataset.
         /// </remarks>
-        public static async Task<Uri[]> ListOfFilesInDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public static async Task<Uri[]> ListOfFilesInDataSetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             return (await ListOfFilenamesInDatasetAsync(dsname, statusUpdate, failNow))
                     .Select(fs => new Uri($"gridds://{dsname.Dataset()}/{fs}"))
@@ -398,6 +398,11 @@ namespace AtlasWorkFlows
         /// <param name="places">List of places that we should use. If empty, then the default list will be used.</param>
         public static void ResetDSM(params IPlace[] places)
         {
+            if (places == null)
+            {
+                throw new ArgumentNullException(nameof(places));
+            }
+
             if (places.Length == 0)
             {
                 _places = new AsyncLazy<IPlace[]>(() => LoadPlaces());

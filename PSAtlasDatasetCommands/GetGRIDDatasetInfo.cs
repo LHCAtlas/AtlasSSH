@@ -99,7 +99,7 @@ namespace PSAtlasDatasetCommands
                     // Get the remove environment configured if it needs to be
                     if (_connection == null)
                     {
-                        _connection = new SSHConnection(sm.MachineName, sm.Username);
+                        _connection = new SSHConnection(sm.MachineName, sm.UserName);
                         _connection
                             .Apply(() => DisplayStatus("Setting up ATLAS"))
                             .setupATLAS()

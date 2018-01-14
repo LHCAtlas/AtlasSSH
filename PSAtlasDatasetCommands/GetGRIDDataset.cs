@@ -82,7 +82,7 @@ namespace PSAtlasDatasetCommands
                     : DatasetName.Trim();
 
                 // Find all the members of this dataset.
-                var allFilesToCopy = DatasetManager.ListOfFilesInDatasetAsync(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping).Result;
+                var allFilesToCopy = DataSetManager.ListOfFilesInDataSetAsync(dataset, m => DisplayStatus($"Listing Files in {dataset}", m), failNow: () => Stopping).Result;
                 if (nFiles != 0)
                 {
                     allFilesToCopy = allFilesToCopy
@@ -97,8 +97,8 @@ namespace PSAtlasDatasetCommands
                 //WriteError(new ErrorRecord(err, "NoSuchLocation", ErrorCategory.InvalidArgument, null));
 
                 var resultUris = loc == null
-                    ? DatasetManager.MakeFilesLocalAsync(allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping, timeout: Timeout).Result
-                    : DatasetManager.CopyFilesToAsync(loc, allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping, timeout: Timeout).Result;
+                    ? DataSetManager.MakeFilesLocalAsync(allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping, timeout: Timeout).Result
+                    : DataSetManager.CopyFilesToAsync(loc, allFilesToCopy, m => DisplayStatus($"Downloading {dataset}", m), failNow: () => Stopping, timeout: Timeout).Result;
 
                 // Dump all the returned files out to whatever is next in the pipeline.
                 if (PassThru.IsPresent)
@@ -130,7 +130,7 @@ namespace PSAtlasDatasetCommands
             }
 
             // Get the resulting job name for this guy.
-            var pandaJobName = job.ResultingDatasetName(JobSourceDatasetName, JobIteration) + "/";
+            var pandaJobName = job.ResultingDataSetName(JobSourceDatasetName, JobIteration) + "/";
 
             // Now, to get the output dataset, we need to fetch the job.
             var pandaTask = pandaJobName.FindPandaJobWithTaskName(true);
@@ -142,7 +142,7 @@ namespace PSAtlasDatasetCommands
             {
                 throw new ArgumentException($"Panda task {pandaTask.jeditaskid} has status {pandaTask.status} - which is not done or finished ({pandaJobName}).");
             }
-            var containers = pandaTask.DatasetNamesOUT();
+            var containers = pandaTask.DataSetNamesOUT();
             if (containers.Length > 1)
             {
                 throw new ArgumentException($"There are more than one output container for the panda task {pandaTask.jeditaskid} - can't decide. Need code upgrade!! Thanks for the fish!");
@@ -193,7 +193,7 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void BeginProcessing()
         {
-            DatasetManager.ResetConnectionsAsync()
+            DataSetManager.ResetConnectionsAsync()
                 .WaitAndUnwrapException();
             base.BeginProcessing();
         }
@@ -203,7 +203,7 @@ namespace PSAtlasDatasetCommands
         /// </summary>
         protected override void EndProcessing()
         {
-            DatasetManager.ResetConnectionsAsync()
+            DataSetManager.ResetConnectionsAsync()
                 .WaitAndUnwrapException();
             base.EndProcessing();
         }

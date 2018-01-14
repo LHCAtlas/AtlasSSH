@@ -151,10 +151,10 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Look at all the files from each dataset.
-            foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
+            foreach (var dsGroup in uris.GroupBy(u => u.DataSetName()))
             {
                 // First, move the catalog over
-                var catalog = (await DatasetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: this))
+                var catalog = (await DataSetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: this))
                     .ThrowIfNull(() => new DataSetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
                 await _linuxRemote.ApplyAsync(l => l.CopyDataSetInfoAsync(dsGroup.Key, catalog, statusUpdate));
                 if (failNow.PCall(false))
@@ -165,7 +165,7 @@ namespace AtlasWorkFlows.Locations
                 // Next, run the download into the directory in the linux area where
                 // everything should happen.
                 var remoteLocation = await _linuxRemote.ApplyAsync(l => l.GetLinuxDatasetDirectoryPath(dsGroup.Key));
-                var filesList = dsGroup.Select(u => u.DatasetFilename()).ToArray();
+                var filesList = dsGroup.Select(u => u.DataSetFileName()).ToArray();
                 await _connection.ApplyAsync(async c =>
                 {
                     await (await c).DownloadFromGRIDAsync(dsGroup.Key, remoteLocation,
@@ -188,7 +188,7 @@ namespace AtlasWorkFlows.Locations
         /// Consider all datasets on the GRID frozen, so once they have been downloaded
         /// we cache them locally.
         /// </remarks>
-        public async Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public async Task<string[]> GetListOfFilesForDataSetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             try
             {
@@ -246,10 +246,10 @@ namespace AtlasWorkFlows.Locations
             // Get the list of files for the dataset and just look.
             // We use the GRID fetch explicitly here - so we can make sure that
             // we know if the files are there or are now gone from the GRID.
-            var files = await GetListOfFilesForDatasetAsync(u.DatasetName(), statusUpdate, failNow);
+            var files = await GetListOfFilesForDataSetAsync(u.DataSetName(), statusUpdate, failNow);
             return files == null
                 ? false
-                : files.Contains(u.DatasetFilename());
+                : files.Contains(u.DataSetFileName());
         }
     }
 }

@@ -214,19 +214,24 @@ namespace AtlasWorkFlows.Panda
         /// <param name="task"></param>
         /// <param name="streamname"></param>
         /// <returns></returns>
-        public static string[] DatasetNames(this PandaTask task, string streamname)
+        public static string[] DataSetNames(this PandaTask task, string streamname)
         {
+            if (task == null)
+            {
+                throw new ArgumentNullException(nameof(task));
+            }
+
             return task.datasets.Where(ds => ds.streamname == streamname).GroupBy(ds => ds.containername).Select(k => k.Key).ToArray();
         }
 
-        public static string[] DatasetNamesIN(this PandaTask task)
+        public static string[] DataSetNamesIN(this PandaTask task)
         {
-            return task.DatasetNames("IN");
+            return task.DataSetNames("IN");
         }
 
-        public static string[] DatasetNamesOUT(this PandaTask task)
+        public static string[] DataSetNamesOUT(this PandaTask task)
         {
-            return task.DatasetNames("OUTPUT0");
+            return task.DataSetNames("OUTPUT0");
         }
     }
 }

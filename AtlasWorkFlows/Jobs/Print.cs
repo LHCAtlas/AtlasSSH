@@ -56,7 +56,7 @@ namespace AtlasWorkFlows.Jobs
         {
             if (prettyPrint)
                 bld.Append("  ");
-            bld.Append($"submit_pattern({p.RegEx}, {p.SubmitCommand.SubmitCommand})");
+            bld.Append($"submit_pattern({p.Regex}, {p.SubmitCommand.SubmitCommand})");
             if (prettyPrint)
                 bld.AppendLine();
             return bld;
@@ -101,7 +101,7 @@ namespace AtlasWorkFlows.Jobs
             }
             if (r.SubmitPatternCommands != null && r.SubmitPatternCommands.Length > 0)
             {
-                foreach (var sc in r.SubmitPatternCommands.OrderBy(p => $"{p.RegEx}-{p.SubmitCommand.SubmitCommand}"))
+                foreach (var sc in r.SubmitPatternCommands.OrderBy(p => $"{p.Regex}-{p.SubmitCommand.SubmitCommand}"))
                 {
                     sc.Print(bld, prettyPrint: prettyPrint);
                 }

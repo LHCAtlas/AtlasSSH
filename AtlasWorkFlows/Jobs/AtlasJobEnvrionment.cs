@@ -44,22 +44,52 @@ namespace AtlasWorkFlows.Jobs
         #region AtlasJob Manipulation
         public static AtlasJobEnvrionment NameVersionRelease(this AtlasJobEnvrionment e, string name, int version, string release)
         {
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
             return e.Clone(r => r.Job = r.Job.NameVersionRelease(name,version,release));
         }
 
         public static AtlasJobEnvrionment Package(this AtlasJobEnvrionment e, string packageName, string SCTag = "")
         {
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
             return e.Clone(r => r.Job = r.Job.Package(packageName, SCTag));
         }
 
         public static AtlasJobEnvrionment Command(this AtlasJobEnvrionment e, string commandLine)
         {
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
             return e.Clone(r => r.Job = r.Job.Command(commandLine));
         }
 
         public static AtlasJobEnvrionment SubmitCommand(this AtlasJobEnvrionment e, string commandLine)
         {
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
             return e.Clone(r => r.Job = r.Job.SubmitCommand(commandLine));
+        }
+
+        public static AtlasJobEnvrionment SubmitPatternCommand (this AtlasJobEnvrionment e, string commandLine, string pattern)
+        {
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
+            return e.Clone(r => r.Job = r.Job.SubmitCommandPattern(commandLine, pattern));
         }
         #endregion
 

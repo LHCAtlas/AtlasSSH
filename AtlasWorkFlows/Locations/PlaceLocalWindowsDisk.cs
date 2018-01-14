@@ -101,10 +101,10 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         private async Task CopyFromSCPTargetAsync(IPlace origin, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
+            foreach (var dsGroup in uris.GroupBy(u => u.DataSetName()))
             {
                 // Move the catalog over.
-                var files = await DatasetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: origin);
+                var files = await DataSetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: origin);
                 await CopyDataSetInfoAsync(dsGroup.Key, files, statusUpdate, failNow);
 
                 // Now, do the files via SCP.
@@ -113,7 +113,7 @@ namespace AtlasWorkFlows.Locations
                 {
                     ourpath.Create();
                 }
-                await (origin as ISCPTarget).CopyFromRemoteToLocalAsync(dsGroup.Key, uris.Select(u => u.DatasetFilename()).ToArray(), ourpath, statusUpdate, failNow);
+                await (origin as ISCPTarget).CopyFromRemoteToLocalAsync(dsGroup.Key, uris.Select(u => u.DataSetFileName()).ToArray(), ourpath, statusUpdate, failNow);
             }
         }
 
@@ -125,12 +125,12 @@ namespace AtlasWorkFlows.Locations
         private async Task CopyFromLocalDiskAsync(Uri[] uris, PlaceLocalWindowsDisk source, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             // Do the copy by dataset, which is our primary way of storing things here.
-            var groupedByDS = uris.GroupBy(u => u.DatasetName());
+            var groupedByDS = uris.GroupBy(u => u.DataSetName());
             foreach (var dsFileListing in groupedByDS)
             {
                 // Copy over the dataset info
                 await CopyDataSetInfoAsync(dsFileListing.Key,
-                    await DatasetManager.ListOfFilenamesInDatasetAsync(dsFileListing.Key, statusUpdate, failNow, probabalLocation: this),
+                    await DataSetManager.ListOfFilenamesInDatasetAsync(dsFileListing.Key, statusUpdate, failNow, probabalLocation: this),
                     statusUpdate, failNow);
 
                 // For each file we don't have, do the copy. Checking for existance shouldn't
@@ -144,7 +144,7 @@ namespace AtlasWorkFlows.Locations
                     }
                     if (!(await HasFileAsync(f, statusUpdate, failNow)))
                     {
-                        var destPath = new FileInfo(Path.Combine(BuildDSRootDirectory(f.DatasetName()).FullName, "copied", f.DatasetFilename()));
+                        var destPath = new FileInfo(Path.Combine(BuildDSRootDirectory(f.DataSetName()).FullName, "copied", f.DataSetFileName()));
                         if (!destPath.Directory.Exists)
                         {
                             destPath.Directory.Create();
@@ -209,10 +209,10 @@ namespace AtlasWorkFlows.Locations
         /// <param name="uris"></param>
         private async Task CopyToSCPTargetAsync(IPlace destination, Uri[] uris, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
-            foreach (var dsGroup in uris.GroupBy(u => u.DatasetName()))
+            foreach (var dsGroup in uris.GroupBy(u => u.DataSetName()))
             {
                 // Move the catalog over.
-                var files = await DatasetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: this);
+                var files = await DataSetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: this);
                 await destination.CopyDataSetInfoAsync(dsGroup.Key, files);
 
                 // Now, do the files via SCP.
@@ -227,7 +227,7 @@ namespace AtlasWorkFlows.Locations
         /// <param name="dsname">Name of datest</param>
         /// <param name="statusUpdate">Update messages for long operations - but ignored here because we only open a file.</param>
         /// <returns>List of files, null if the dataset is not known.</returns>
-        public Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public Task<string[]> GetListOfFilesForDataSetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsname).FullName, DatasetGlobalConstants.DatasetFileList));
             if (!f.Exists)
@@ -271,6 +271,11 @@ namespace AtlasWorkFlows.Locations
         /// <param name="files"></param>
         public Task CopyDataSetInfoAsync(string dsName, string[] files, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
+            if (files == null)
+            {
+                throw new ArgumentNullException(nameof(files));
+            }
+
             var f = new FileInfo(Path.Combine(BuildDSRootDirectory(dsName).FullName, DatasetGlobalConstants.DatasetFileList));
             if (!f.Directory.Exists)
             {
@@ -319,10 +324,10 @@ namespace AtlasWorkFlows.Locations
         {
             // Do it by dataset.
             var dsGroups = (from u in uris
-                            let ds = u.DatasetName()
-                            let fname = u.DatasetFilename()
+                            let ds = u.DataSetName()
+                            let fname = u.DataSetFileName()
                             group new { FileName = fname } by ds)
-                           .Throw(g => !HasDS(g.Key), g => new DatasetDoesNotExistInThisReproException($"Dataset '{g.Key}' does not exists in repro {Name}"));
+                           .Throw(g => !HasDS(g.Key), g => new DataSetDoesNotExistInThisReproException($"Dataset '{g.Key}' does not exists in repro {Name}"));
 
             var fileUris = from dsFiles in dsGroups
                            let flist = FindAllFilesOnDisk(dsFiles.Key)
@@ -330,7 +335,7 @@ namespace AtlasWorkFlows.Locations
                            select new { matchedUri = flist.Where(fu => fu.Segments.Last() == u.FileName).FirstOrDefault(), OrigUri = u };
 
             return Task.FromResult(fileUris
-                .Throw(o => o.matchedUri == null, o => new DatasetFileNotLocalException($"File {o.OrigUri} does not exist locally!"))
+                .Throw(o => o.matchedUri == null, o => new DataSetFileNotLocalException($"File {o.OrigUri} does not exist locally!"))
                 .Select(o => o.matchedUri));
         }
 
@@ -355,13 +360,17 @@ namespace AtlasWorkFlows.Locations
         /// <returns>true if the file exists on the local disk. False otherwise</returns>
         public Task<bool> HasFileAsync(Uri u, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
+            if (u == null)
+            {
+                throw new ArgumentNullException(nameof(u));
+            }
             // Simple checks.
             if (u.Scheme != "gridds")
             {
                 throw new UnknownUriSchemeException($"Uri {u} does not have a gridds:// scheme!");
             }
 
-            var ds = u.DatasetName();
+            var ds = u.DataSetName();
             if (!HasDS(ds))
             {
                 return Task.FromResult(false);
@@ -369,7 +378,7 @@ namespace AtlasWorkFlows.Locations
 
             // See if any of the files on disk match the file we need to look at.
             var allLocalFiles = FindAllFilesOnDisk(ds, statusUpdate, failNow);
-            return Task.FromResult(allLocalFiles.Select(lf => lf.Segments.Last() == u.DatasetFilename()).Any(t => t));
+            return Task.FromResult(allLocalFiles.Select(lf => lf.Segments.Last() == u.DataSetFileName()).Any(t => t));
         }
     }
 }

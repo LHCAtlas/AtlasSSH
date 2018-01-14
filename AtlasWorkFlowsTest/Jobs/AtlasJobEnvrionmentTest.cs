@@ -63,7 +63,31 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.AreEqual(1, eBase.Job.Packages.Length);
             Assert.AreEqual(2, e1.Job.Packages.Length);
         }
+
+        [TestMethod]
+        public void CheckCloneWithSubmit()
+        {
+            var e = CleanAtlasJobEnvrionment
+                .NameVersionRelease("DiVertAnalysis", 3, "2.3.32")
+                .Package("JetSelectorTools")
+                .Package("atlasphys-exo/Physics/Exotic/UEH/DisplacedJets/Run2/AnalysisCode/trunk/DiVertAnalysis", "248132")
+                .SubmitCommand("DiVertAnalysisRunner -EventLoopDriver GRID *INPUTDS* -ELGRIDOutputSampleName *OUTPUTDS* -WaitTillDone FALSE -isLLPMC true")
+                .Command("grep -v \"emf < 0.05\" JetSelectorTools/Root/JetCleaningTool.cxx > JetSelectorTools/Root/JetCleaningTool-New.cxx")
+                .Command("mv JetSelectorTools/Root/JetCleaningTool-New.cxx JetSelectorTools/Root/JetCleaningTool.cxx");
+        }
+
+        [TestMethod]
+        public void CheckCloneWithSubmitPattern()
+        {
+            var e = CleanAtlasJobEnvrionment
+                .NameVersionRelease("DiVertAnalysis", 3, "2.3.32")
+                .Package("JetSelectorTools")
+                .Package("atlasphys-exo/Physics/Exotic/UEH/DisplacedJets/Run2/AnalysisCode/trunk/DiVertAnalysis", "248132")
+                .SubmitPatternCommand("DiVertAnalysisRunner -EventLoopDriver GRID *INPUTDS* -ELGRIDOutputSampleName *OUTPUTDS* -WaitTillDone FALSE -isLLPMC true", "pattern")
+                .Command("grep -v \"emf < 0.05\" JetSelectorTools/Root/JetCleaningTool.cxx > JetSelectorTools/Root/JetCleaningTool-New.cxx")
+                .Command("mv JetSelectorTools/Root/JetCleaningTool-New.cxx JetSelectorTools/Root/JetCleaningTool.cxx");
+        }
     }
 
-    
+
 }

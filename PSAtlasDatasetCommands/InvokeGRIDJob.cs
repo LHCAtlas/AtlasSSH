@@ -113,7 +113,7 @@ namespace PSAtlasDatasetCommands
                 // Get the expected resulting dataset name. Since this will be a personal
                 // dataset, we need to get the GRID info.
                 var originalDatasetName = DatasetName.Trim();
-                string resultDatasetName = job.ResultingDatasetName(originalDatasetName, _gridCredentials, JobIteration);
+                string resultDatasetName = job.ResultingDataSetName(originalDatasetName, _gridCredentials, JobIteration);
 
                 // See if there is already a job defined that will produce this
                 var pandaJob = (resultDatasetName + "/").FindPandaJobWithTaskName(useCacheIfPossible: !DoNotUsePandaTaskCache.IsPresent);
@@ -128,7 +128,7 @@ namespace PSAtlasDatasetCommands
                     if (_connection == null)
                     {
                         firstJob = true;
-                        _connection = new SSHConnection(sm.MachineName, sm.Username);
+                        _connection = new SSHConnection(sm.MachineName, sm.UserName);
                         _connection
                             .Apply(() => DisplayStatus("Setting up ATLAS"))
                             .setupATLAS(dumpOnly: WhatIf.IsPresent)

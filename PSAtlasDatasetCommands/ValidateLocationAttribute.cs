@@ -52,6 +52,6 @@ namespace PSAtlasDatasetCommands
         /// Note: If the computer changes location after this has been initialized, it won't
         ///       get updated!
         /// </remarks>
-        private Lazy<string[]> _validLocations = new Lazy<string[]>(() => DatasetManager.ValidLocations);
+        private Lazy<string[]> _validLocations = new Lazy<string[]>(() => DataSetManager.ValidLocations);
     }
 }

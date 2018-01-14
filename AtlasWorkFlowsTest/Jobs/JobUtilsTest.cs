@@ -48,7 +48,7 @@ namespace AtlasWorkFlowsTest.Jobs
         {
             var j = MakePatternJob();
             var h1 = j.Hash();
-            j.SubmitPatternCommands[0].RegEx = "anotheronebitesthedust";
+            j.SubmitPatternCommands[0].Regex = "anotheronebitesthedust";
             var h2 = j.Hash();
             Assert.AreNotEqual(h1, h2);
         }
@@ -83,8 +83,8 @@ namespace AtlasWorkFlowsTest.Jobs
             j.SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "neveruseorerror" } };
 
             j.SubmitPatternCommands = new SubmitPattern[2];
-            j.SubmitPatternCommands[0] = new SubmitPattern() { RegEx = "ds1", SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "ds1_submit" } } };
-            j.SubmitPatternCommands[1] = new SubmitPattern() { RegEx = "ds2", SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "ds2_submit" } } };
+            j.SubmitPatternCommands[0] = new SubmitPattern() { Regex = "ds1", SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "ds1_submit" } } };
+            j.SubmitPatternCommands[1] = new SubmitPattern() { Regex = "ds2", SubmitCommand = new Submit() { SubmitCommand = new Command() { CommandLine = "ds2_submit" } } };
 
             return j;
         }

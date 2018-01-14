@@ -26,7 +26,7 @@ namespace PSAtlasDatasetCommands
             Trace.Listeners.Add(listener);
             try
             {
-                var list = DatasetManager.ValidLocations;
+                var list = DataSetManager.ValidLocations;
                 foreach (var l in list)
                 {
                     using (var pl = listener.PauseListening())

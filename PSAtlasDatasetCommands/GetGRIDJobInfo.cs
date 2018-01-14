@@ -80,7 +80,7 @@ namespace PSAtlasDatasetCommands
                 {
                     // Get the job and resulting dataset name.
                     var job = JobParser.FindJob(JobName, JobVersion);
-                    var ds = job.ResultingDatasetName(DatasetName.Trim(), JobIteration);
+                    var ds = job.ResultingDataSetName(DatasetName.Trim(), JobIteration);
 
                     // Now, look up the job itself.
                     t = (ds + "/").FindPandaJobWithTaskName();
@@ -99,11 +99,11 @@ namespace PSAtlasDatasetCommands
                 }
                 if (InputContainerNames.IsPresent)
                 {
-                    WriteObject(t.DatasetNamesIN());
+                    WriteObject(t.DataSetNamesIN());
                 }
                 if (OutputContainerNames.IsPresent)
                 {
-                    WriteObject(t.DatasetNamesOUT());
+                    WriteObject(t.DataSetNamesOUT());
                 }
             } finally
             {

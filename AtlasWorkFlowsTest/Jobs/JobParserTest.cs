@@ -66,7 +66,7 @@ namespace AtlasWorkFlowsTest.Jobs
         {
             var s = "submit_pattern(xAOD, ls dummymyfood)";
             var c = JobParser.ParseSubmitPattern.Parse(s);
-            Assert.AreEqual("xAOD", c.RegEx);
+            Assert.AreEqual("xAOD", c.Regex);
             Assert.AreEqual("ls dummymyfood", c.SubmitCommand.SubmitCommand.CommandLine);
         }
 
@@ -75,7 +75,7 @@ namespace AtlasWorkFlowsTest.Jobs
         {
             var s = "submit_pattern(xAOD, \"ls dummymyfood\")";
             var c = JobParser.ParseSubmitPattern.Parse(s);
-            Assert.AreEqual("xAOD", c.RegEx);
+            Assert.AreEqual("xAOD", c.Regex);
             Assert.AreEqual("ls dummymyfood", c.SubmitCommand.SubmitCommand.CommandLine);
         }
 
@@ -121,7 +121,7 @@ namespace AtlasWorkFlowsTest.Jobs
             var s = "submission_machine(tev01.phys.washington.edu, gwatts)";
             var c = JobParser.ParseSubmissionMachine.Parse(s);
             Assert.AreEqual("tev01.phys.washington.edu", c.MachineName);
-            Assert.AreEqual("gwatts", c.Username);
+            Assert.AreEqual("gwatts", c.UserName);
         }
 
         [TestMethod]
@@ -196,7 +196,7 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.IsNotNull(j.SubmitPatternCommands);
             Assert.AreEqual(1, j.SubmitPatternCommands.Length);
             Assert.AreEqual("ls", j.SubmitPatternCommands[0].SubmitCommand.SubmitCommand.CommandLine);
-            Assert.AreEqual("joke", j.SubmitPatternCommands[0].RegEx);
+            Assert.AreEqual("joke", j.SubmitPatternCommands[0].Regex);
         }
 
         [TestMethod]
@@ -217,9 +217,9 @@ namespace AtlasWorkFlowsTest.Jobs
             Assert.IsNotNull(j.SubmitPatternCommands);
             Assert.AreEqual(2, j.SubmitPatternCommands.Length);
             Assert.AreEqual("ls", j.SubmitPatternCommands[0].SubmitCommand.SubmitCommand.CommandLine);
-            Assert.AreEqual("joke", j.SubmitPatternCommands[0].RegEx);
+            Assert.AreEqual("joke", j.SubmitPatternCommands[0].Regex);
             Assert.AreEqual("dude", j.SubmitPatternCommands[1].SubmitCommand.SubmitCommand.CommandLine);
-            Assert.AreEqual("myfoot", j.SubmitPatternCommands[1].RegEx);
+            Assert.AreEqual("myfoot", j.SubmitPatternCommands[1].Regex);
         }
 
         [TestMethod]

@@ -176,7 +176,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Do things a single dataset at a time.
-            foreach (var fsGroup in uris.GroupBy(u => u.DatasetName()))
+            foreach (var fsGroup in uris.GroupBy(u => u.DataSetName()))
             {
                 if (failNow.PCall(false))
                 {
@@ -190,7 +190,7 @@ namespace AtlasWorkFlows.Locations
 
                 // Get the catalog over
                 await CopyDataSetInfoAsync(fsGroup.Key,
-                    await DatasetManager.ListOfFilenamesInDatasetAsync(fsGroup.Key, statusUpdate, failNow, probabalLocation: origin),
+                    await DataSetManager.ListOfFilenamesInDatasetAsync(fsGroup.Key, statusUpdate, failNow, probabalLocation: origin),
                     statusUpdate, failNow);
 
                 // The file path where we will store it all
@@ -204,7 +204,7 @@ namespace AtlasWorkFlows.Locations
                         break;
                     }
                     var remoteLocation = await scpTarget.GetSCPFilePathAsync(f);
-                    var fname = f.DatasetFilename();
+                    var fname = f.DataSetFileName();
                     var pname = $"{fname}.part";
                     statusUpdate.PCall($"Copy file {fname}: {origin.Name} -> {Name}");
                     await _connection.ApplyAsync(async c =>
@@ -235,15 +235,15 @@ namespace AtlasWorkFlows.Locations
         /// <param name="host"></param>
         /// <param name="username"></param>
         /// <returns></returns>
-        private string GetPasswordForHost(string host, string username)
+        private static string GetPasswordForHost(string host, string username)
         {
-            var passwordInfo = FetchUserCredentials(host, username);
-            if (passwordInfo == null)
+            var password = FetchUserCredentials(host, username);
+            if (password == null)
             {
                 throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));
             }
 
-            return passwordInfo.Password;
+            return password;
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace AtlasWorkFlows.Locations
             }
 
             // Do things one dataset at a time.
-            foreach (var fsGroup in uris.GroupBy(u => u.DatasetName()))
+            foreach (var fsGroup in uris.GroupBy(u => u.DataSetName()))
             {
                 // Get the remote user, path, and password.
                 var remoteUser = scpTarget.SCPUser;
@@ -270,7 +270,7 @@ namespace AtlasWorkFlows.Locations
 
                 // Get the catalog over
                 await destination.CopyDataSetInfoAsync(fsGroup.Key,
-                    await DatasetManager.ListOfFilenamesInDatasetAsync(fsGroup.Key, statusUpdate, failNow, probabalLocation: this),
+                    await DataSetManager.ListOfFilenamesInDatasetAsync(fsGroup.Key, statusUpdate, failNow, probabalLocation: this),
                     statusUpdate, failNow);
 
                 // The file path where we will store it all
@@ -285,7 +285,7 @@ namespace AtlasWorkFlows.Locations
                     }
 
                     var localFilePath = await GetSCPFilePathAsync(f);
-                    var fname = f.DatasetFilename();
+                    var fname = f.DataSetFileName();
                     var pname = $"{fname}.part";
                     statusUpdate.PCall($"Copying file {fname}: {Name} -> {destination.Name}");
                     await _connection.ApplyAsync(async c =>
@@ -307,7 +307,7 @@ namespace AtlasWorkFlows.Locations
         /// </summary>
         /// <param name="cleanDSname">Name of the dataset we are looking at</param>
         /// <returns>List of the files in the dataset, or null if the dataset is not known in this repro</returns>
-        public async Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+        public async Task<string[]> GetListOfFilesForDataSetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
             var cleanDSName = dsname.Replace("/", "");
 
@@ -347,8 +347,8 @@ namespace AtlasWorkFlows.Locations
         public async Task<IEnumerable<Uri>> GetLocalFileLocationsAsync(IEnumerable<Uri> uris)
         {
             var r = uris
-                .Select(async u => (await GetAbsoluteLinuxFilePathsAsync(u.DatasetName()))
-                            .Where(uf => uf.Split('/').Last() == u.DatasetFilename())
+                .Select(async u => (await GetAbsoluteLinuxFilePathsAsync(u.DataSetName()))
+                            .Where(uf => uf.Split('/').Last() == u.DataSetFileName())
                             .FirstOrDefault()
                             .ThrowIfNull(() => new ArgumentException("Unable to find one of the files at this location!")))
                 .Select(async p => new Uri($"file://{Name}{await p}"));
@@ -413,9 +413,9 @@ namespace AtlasWorkFlows.Locations
                 throw new UnknownUriSchemeException($"The uri '{u.OriginalString}' is not a gridds:// uri - can't map it to a file!");
             }
 
-            return (await GetAbsoluteLinuxFilePathsAsync(u.DatasetName(), statusUpdate, failNow))
+            return (await GetAbsoluteLinuxFilePathsAsync(u.DataSetName(), statusUpdate, failNow))
                 .Select(f => f.Split('/').Last())
-                .Where(f => f == u.DatasetFilename())
+                .Where(f => f == u.DataSetFileName())
                 .Any();
         }
 
@@ -437,8 +437,8 @@ namespace AtlasWorkFlows.Locations
         /// <returns></returns>
         public async Task<string> GetSCPFilePathAsync(Uri f)
         {
-            var file = (await GetAbsoluteLinuxFilePathsAsync(f.DatasetName()))
-                .Where(rf => rf.EndsWith("/" + f.DatasetFilename()))
+            var file = (await GetAbsoluteLinuxFilePathsAsync(f.DataSetName()))
+                .Where(rf => rf.EndsWith("/" + f.DataSetFileName()))
                 .FirstOrDefault();
             if (file == null)
             {
@@ -518,7 +518,7 @@ namespace AtlasWorkFlows.Locations
             var linuxLocations = await GetAbsoluteLinuxFilePathsAsync(dsName, statusUpdate, failNow);
             var linuxFiles = files
                 .Select(f => linuxLocations.Where(lx => lx.EndsWith("/" + f)).FirstOrDefault())
-                .Throw<string>(s => s == null, s => new DatasetFileNotLocalException($"File '{s}' is not in place {Name}, so we can't copy it locally!"));
+                .Throw<string>(s => s == null, s => new DataSetFileNotLocalException($"File '{s}' is not in place {Name}, so we can't copy it locally!"));
 
             // Do the files one at a time, and download them to a temp location and then move them
             // to the proper location. Saftey if we get cut off mid-move.

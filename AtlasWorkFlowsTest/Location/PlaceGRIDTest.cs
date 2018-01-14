@@ -32,7 +32,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestSetup()
         {
             _ssh = new UtilsForBuildingLinuxDatasets();
-            DatasetManager.ResetDSM();
+            DataSetManager.ResetDSM();
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestCleanup()
         {
             _ssh.TestCleanup();
-            DatasetManager.ResetDSM();
+            DataSetManager.ResetDSM();
         }
 
         [TestMethod]
@@ -50,9 +50,9 @@ namespace AtlasWorkFlowsTest.Location
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p);
+            DataSetManager.ResetDSM(local_p, grid_p);
 
-            var files = await grid_p.GetListOfFilesForDatasetAsync(_good_dsname);
+            var files = await grid_p.GetListOfFilesForDataSetAsync(_good_dsname);
             Assert.AreEqual(197, files.Length);
             // This might not be safe b.c. file order might not be idempotent, but try this for now.
             Assert.AreEqual(_good_dsfile_1, files[0]);
@@ -71,9 +71,9 @@ namespace AtlasWorkFlowsTest.Location
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p);
+            DataSetManager.ResetDSM(local_p, grid_p);
 
-            var files = await grid_p.GetListOfFilesForDatasetAsync("mc15_13TeV.361032.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ12W.merge.DAOD_EXOT15.bogus");
+            var files = await grid_p.GetListOfFilesForDataSetAsync("mc15_13TeV.361032.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ12W.merge.DAOD_EXOT15.bogus");
             Assert.IsNull(files);
         }
 
@@ -82,7 +82,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p);
+            DataSetManager.ResetDSM(local_p, grid_p);
 
             Assert.IsTrue(await grid_p.HasFileAsync(new Uri($"gridds://{_good_dsname}/{_good_dsfile_1}")));
         }
@@ -92,7 +92,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p);
+            DataSetManager.ResetDSM(local_p, grid_p);
 
             Assert.IsFalse(await grid_p.HasFileAsync(new Uri($"gridds://{_good_dsname}/myfile.root")));
         }
@@ -101,7 +101,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p);
+            DataSetManager.ResetDSM(local_p, grid_p);
 
             Assert.IsFalse(await grid_p.HasFileAsync(new Uri($"gridds://{_good_dsname}_bogus/{_good_dsfile_1}")));
         }
@@ -112,7 +112,7 @@ namespace AtlasWorkFlowsTest.Location
         {
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p);
+            DataSetManager.ResetDSM(local_p, grid_p);
 
             Assert.IsTrue(grid_p.CanSourceCopy(local_p));
         }
@@ -132,7 +132,7 @@ namespace AtlasWorkFlowsTest.Location
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var local_p_other = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p, local_p_other);
+            DataSetManager.ResetDSM(local_p, grid_p, local_p_other);
 
             Assert.IsFalse(grid_p.CanSourceCopy(local_p_other));
         }
@@ -148,7 +148,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateRepro();
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p);
+            DataSetManager.ResetDSM(local_p, grid_p);
 
             var uris = new Uri[]
             {
@@ -158,7 +158,7 @@ namespace AtlasWorkFlowsTest.Location
 
             await grid_p.CopyToAsync(local_p, uris);
 
-            var files = await local_p.GetListOfFilesForDatasetAsync(_good_dsname);
+            var files = await local_p.GetListOfFilesForDataSetAsync(_good_dsname);
             Assert.AreEqual(197, files.Length);
             Assert.IsTrue(await local_p.HasFileAsync(uris[0]));
             Assert.IsTrue(await local_p.HasFileAsync(uris[1]));
@@ -177,7 +177,7 @@ namespace AtlasWorkFlowsTest.Location
             _ssh.CreateRepro();
             var local_p = new PlaceLinuxRemote("test", _ssh.RemotePath, _ssh.RemoteHostInfo);
             var grid_p = new PlaceGRID("test-GRID", local_p);
-            DatasetManager.ResetDSM(local_p, grid_p);
+            DataSetManager.ResetDSM(local_p, grid_p);
 
             var uris = new Uri[]
             {
@@ -186,7 +186,7 @@ namespace AtlasWorkFlowsTest.Location
 
             await grid_p.CopyToAsync(local_p, uris);
 
-            var files = await local_p.GetListOfFilesForDatasetAsync(_good_dsname);
+            var files = await local_p.GetListOfFilesForDataSetAsync(_good_dsname);
             Assert.AreEqual(197, files.Length);
             Assert.IsTrue(await local_p.HasFileAsync(uris[0]));
         }

@@ -25,7 +25,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestSetup()
         {
             _ssh = new UtilsForBuildingLinuxDatasets();
-            DatasetManager.ResetDSM();
+            DataSetManager.ResetDSM();
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace AtlasWorkFlowsTest.Location
         public void TestCleanup()
         {
             _ssh.TestCleanup();
-            DatasetManager.ResetDSM();
+            DataSetManager.ResetDSM();
         }
 
         [TestMethod]
@@ -88,7 +88,7 @@ namespace AtlasWorkFlowsTest.Location
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = await place.GetListOfFilesForDatasetAsync("ds1");
+            var files = await place.GetListOfFilesForDataSetAsync("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual(2, files.Length);
             Assert.AreEqual("f1.root", files[0]);
@@ -103,7 +103,7 @@ namespace AtlasWorkFlowsTest.Location
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             File.Delete($"{repro.FullName}\\ds1\\files\\f1.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = await place.GetListOfFilesForDatasetAsync("ds1");
+            var files = await place.GetListOfFilesForDataSetAsync("ds1");
             Assert.IsNotNull(files);
             Assert.AreEqual(2, files.Length);
             Assert.AreEqual("f1.root", files[0]);
@@ -116,7 +116,7 @@ namespace AtlasWorkFlowsTest.Location
             var repro = BuildRepro("ExistingFileInExistingDataset");
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = await place.GetListOfFilesForDatasetAsync("ds2");
+            var files = await place.GetListOfFilesForDataSetAsync("ds2");
             Assert.IsNull(files);
         }
 
@@ -151,7 +151,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        [ExpectedException(typeof(DatasetFileNotLocalException))]
+        [ExpectedException(typeof(DataSetFileNotLocalException))]
         public async Task GetLocalPathsForMissingDSFiles()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
@@ -163,7 +163,7 @@ namespace AtlasWorkFlowsTest.Location
 
         [TestMethod]
         [DeploymentItem("location_test_params.txt")]
-        [ExpectedException(typeof(DatasetDoesNotExistInThisReproException))]
+        [ExpectedException(typeof(DataSetDoesNotExistInThisReproException))]
         public async Task GetLocalPathsForMissingDS()
         {
             var repro = BuildRepro("ExistingFileInExistingDataset");
@@ -258,11 +258,11 @@ namespace AtlasWorkFlowsTest.Location
 
             var place1 = new PlaceLocalWindowsDisk("test1", repro1);
             var place2 = new PlaceLocalWindowsDisk("test2", repro2);
-            DatasetManager.ResetDSM(place1, place2);
+            DataSetManager.ResetDSM(place1, place2);
 
-            Assert.IsNull(await place2.GetListOfFilesForDatasetAsync("ds1"));
-            await place2.CopyFromAsync(place1, (await place1.GetListOfFilesForDatasetAsync("ds1")).Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
-            Assert.AreEqual(2, (await place2.GetListOfFilesForDatasetAsync("ds1")).Length);
+            Assert.IsNull(await place2.GetListOfFilesForDataSetAsync("ds1"));
+            await place2.CopyFromAsync(place1, (await place1.GetListOfFilesForDataSetAsync("ds1")).Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
+            Assert.AreEqual(2, (await place2.GetListOfFilesForDataSetAsync("ds1")).Length);
         }
 
         [TestMethod]
@@ -276,11 +276,11 @@ namespace AtlasWorkFlowsTest.Location
 
             var repro1 = BuildRepro("repro2");
             var place2 = new PlaceLocalWindowsDisk("test1", repro1);
-            DatasetManager.ResetDSM(place1, place2);
+            DataSetManager.ResetDSM(place1, place2);
 
             var uris = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await place2.CopyFromAsync(place1, uris);
-            var files = await place2.GetListOfFilesForDatasetAsync("ds1");
+            var files = await place2.GetListOfFilesForDataSetAsync("ds1");
             Assert.AreEqual(2, files.Length);
             Assert.IsTrue(await place2.HasFileAsync(uris[0]));
             Assert.IsTrue(await place2.HasFileAsync(uris[1]));
@@ -297,11 +297,11 @@ namespace AtlasWorkFlowsTest.Location
             var repro1 = BuildRepro("repro2");
             BuildDatset(repro1, "ds1", "f1.root", "f2.root");
             var place2 = new PlaceLocalWindowsDisk("test1", repro1);
-            DatasetManager.ResetDSM(place1, place2);
+            DataSetManager.ResetDSM(place1, place2);
 
             var uris = new Uri[] { new Uri("gridds://ds1/f1.root"), new Uri("gridds://ds1/f2.root") };
             await place2.CopyToAsync(place1, uris);
-            var files = await place1.GetListOfFilesForDatasetAsync("ds1");
+            var files = await place1.GetListOfFilesForDataSetAsync("ds1");
             Assert.AreEqual(2, files.Length);
             Assert.IsTrue(await place1.HasFileAsync(uris[0]));
             Assert.IsTrue(await place1.HasFileAsync(uris[1]));
@@ -316,11 +316,11 @@ namespace AtlasWorkFlowsTest.Location
 
             var place1 = new PlaceLocalWindowsDisk("test1", repro1);
             var place2 = new PlaceLocalWindowsDisk("test2", repro2);
-            DatasetManager.ResetDSM(place1, place2);
+            DataSetManager.ResetDSM(place1, place2);
 
-            Assert.IsNull(await place2.GetListOfFilesForDatasetAsync("ds1"));
-            await place1.CopyToAsync(place2, (await place1.GetListOfFilesForDatasetAsync("ds1")).Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
-            Assert.AreEqual(2, (await place2.GetListOfFilesForDatasetAsync("ds1")).Length);
+            Assert.IsNull(await place2.GetListOfFilesForDataSetAsync("ds1"));
+            await place1.CopyToAsync(place2, (await place1.GetListOfFilesForDataSetAsync("ds1")).Select(f => new Uri($"gridds://ds1/{f}")).ToArray());
+            Assert.AreEqual(2, (await place2.GetListOfFilesForDataSetAsync("ds1")).Length);
         }
 
         [TestMethod]
@@ -330,7 +330,7 @@ namespace AtlasWorkFlowsTest.Location
             BuildDatset(repro, "ds1", "f1.root", "f2.root");
             AddNamespaceToDatasetText(repro, "ds1", "user.gwatts");
             var place = new PlaceLocalWindowsDisk("test", repro);
-            var files = await place.GetListOfFilesForDatasetAsync("ds1");
+            var files = await place.GetListOfFilesForDataSetAsync("ds1");
             Assert.AreEqual("f1.root", files[0]);
             Assert.AreEqual("f2.root", files[1]);
         }
@@ -458,7 +458,7 @@ namespace AtlasWorkFlowsTest.Location
                 throw new NotImplementedException();
             }
 
-            public Task<string[]> GetListOfFilesForDatasetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
+            public Task<string[]> GetListOfFilesForDataSetAsync(string dsname, Action<string> statusUpdate = null, Func<bool> failNow = null)
             {
                 throw new NotImplementedException();
             }

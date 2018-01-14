@@ -93,8 +93,8 @@ namespace AtlasSSH
             MachineName = host;
 
             // Fetch the username and password.
-            Credential passwordInfo = FetchUserCredentials(host, userName);
-            if (passwordInfo == null)
+            string password = FetchUserCredentials(host, userName);
+            if (password == null)
             {
                 throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, userName));
             }
@@ -102,7 +102,7 @@ namespace AtlasSSH
             // Create the connection, but do it lazy so we don't do anything if we aren't used.
             _client = new Lazy<SshClient>(() =>
             {
-                var c = new SshClient(host, userName, passwordInfo.Password);
+                var c = new SshClient(host, userName, password);
                 try
                 {
                     c.KeepAliveInterval = TimeSpan.FromSeconds(15);
@@ -119,7 +119,7 @@ namespace AtlasSSH
             // Create the scp client for copying things
             _scp = new Lazy<ScpClient>(() =>
             {
-                var c = new ScpClient(host, userName, passwordInfo.Password);
+                var c = new ScpClient(host, userName, password);
                 try
                 {
                     c.Connect();
@@ -448,12 +448,12 @@ namespace AtlasSSH
                 cmdResult.Append(text);
                 if (text.StartsWith("Password"))
                 {
-                    var passwordInfo = FetchUserCredentials(host, userName);
-                    if (passwordInfo == null)
+                    var password = FetchUserCredentials(host, userName);
+                    if (password == null)
                     {
                         throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, userName));
                     }
-                    (await _shell).WriteLine(passwordInfo.Password);
+                    (await _shell).WriteLine(password);
                 } else if (!string.IsNullOrWhiteSpace(text))
                 {
                     _prompt = text;

@@ -16,6 +16,11 @@ namespace AtlasWorkFlows.Utils
         /// <returns></returns>
         public static string[] ReadToEnd (this FileInfo file)
         {
+            if (file == null)
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
             using (var rdr = file.OpenText())
             {
                 var lines = new List<string>();

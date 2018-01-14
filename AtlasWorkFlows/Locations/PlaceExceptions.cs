@@ -22,24 +22,24 @@ namespace AtlasWorkFlows.Locations
 
 
     [Serializable]
-    public class DatasetDoesNotExistInThisReproException : Exception
+    public class DataSetDoesNotExistInThisReproException : Exception
     {
-        public DatasetDoesNotExistInThisReproException() { }
-        public DatasetDoesNotExistInThisReproException(string message) : base(message) { }
-        public DatasetDoesNotExistInThisReproException(string message, Exception inner) : base(message, inner) { }
-        protected DatasetDoesNotExistInThisReproException(
+        public DataSetDoesNotExistInThisReproException() { }
+        public DataSetDoesNotExistInThisReproException(string message) : base(message) { }
+        public DataSetDoesNotExistInThisReproException(string message, Exception inner) : base(message, inner) { }
+        protected DataSetDoesNotExistInThisReproException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
 
     [Serializable]
-    public class DatasetFileNotLocalException : Exception
+    public class DataSetFileNotLocalException : Exception
     {
-        public DatasetFileNotLocalException() { }
-        public DatasetFileNotLocalException(string message) : base(message) { }
-        public DatasetFileNotLocalException(string message, Exception inner) : base(message, inner) { }
-        protected DatasetFileNotLocalException(
+        public DataSetFileNotLocalException() { }
+        public DataSetFileNotLocalException(string message) : base(message) { }
+        public DataSetFileNotLocalException(string message, Exception inner) : base(message, inner) { }
+        protected DataSetFileNotLocalException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }

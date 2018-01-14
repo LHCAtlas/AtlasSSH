@@ -13,7 +13,7 @@ namespace AtlasWorkFlows.Jobs
     /// <summary>
     /// Deal with dataset functions
     /// </summary>
-    public static class Datasets
+    public static class DataSets
     {
         /// <summary>
         /// Returns a dataset name that this job should produce given the original dataset name.
@@ -26,8 +26,13 @@ namespace AtlasWorkFlows.Jobs
         /// Truncate the ds name if it gets too long (rucio has some limits)
         /// Make sure that the uniqueness of the lost dataset name is not lost.
         /// </returns>
-        public static string ResultingDatasetName (this AtlasJob job, string originalDSName, string scopeDSName, int jobIteration = 0)
+        public static string ResultingDataSetName (this AtlasJob job, string originalDSName, string scopeDSName, int jobIteration = 0)
         {
+            if (job == null)
+            {
+                throw new ArgumentNullException(nameof(job));
+            }
+
             // Remove the scope if it is there.
             var sanitizedDSName = originalDSName.RemoveBefore(":");
 
@@ -98,10 +103,15 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="origDSName"></param>
         /// <param name="gridCredentials"></param>
         /// <returns></returns>
-        public static string ResultingDatasetName(this AtlasJob job, string origDSName, Credential gridCredentials, int jobIteration = 0)
+        public static string ResultingDataSetName(this AtlasJob job, string origDSName, Credential gridCredentials, int jobIteration = 0)
         {
+            if (gridCredentials == null)
+            {
+                throw new ArgumentNullException(nameof(gridCredentials));
+            }
+
             var scope = string.Format("user.{0}", gridCredentials.Username);
-            return job.ResultingDatasetName(origDSName, scope, jobIteration);
+            return job.ResultingDataSetName(origDSName, scope, jobIteration);
         }
 
         /// <summary>
@@ -110,14 +120,17 @@ namespace AtlasWorkFlows.Jobs
         /// <param name="job"></param>
         /// <param name="origDSName"></param>
         /// <returns></returns>
-        public static string ResultingDatasetName(this AtlasJob job, string origDSName, int jobIteration = 0)
+        public static string ResultingDataSetName(this AtlasJob job, string origDSName, int jobIteration = 0)
         {
-            var gridCredentials = new CredentialSet("GRID").Load().FirstOrDefault();
-            if (gridCredentials == null)
+            using (var credList = new CredentialSet("GRID"))
             {
-                throw new ArgumentException("Please create a generic windows credential with the target 'GRID' with the user name as the rucio grid user name and the password to be used with voms proxy init");
+                var gridCredentials = credList.Load().FirstOrDefault();
+                if (gridCredentials == null)
+                {
+                    throw new ArgumentException("Please create a generic windows credential with the target 'GRID' with the user name as the rucio grid user name and the password to be used with voms proxy init");
+                }
+                return job.ResultingDataSetName(origDSName, gridCredentials, jobIteration);
             }
-            return job.ResultingDatasetName(origDSName, gridCredentials, jobIteration);
         }
 
         /// <summary>
@@ -228,18 +241,6 @@ namespace AtlasWorkFlows.Jobs
             return parts
                 .Take(parts.Count - 1)
                 .ToList();
-        }
-
-        /// <summary>
-        /// Make sure the number is postive.
-        /// </summary>
-        /// <param name="num"></param>
-        /// <returns></returns>
-        private static int AsPositiveNumber(this int num)
-        {
-            if (num < 0)
-                return -num;
-            return num;
         }
     }
 }

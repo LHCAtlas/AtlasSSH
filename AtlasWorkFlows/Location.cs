@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace AtlasWorkFlows
         /// <remarks>
         /// Location is independent of dataset name.
         /// </remarks>
-        public List<Func<bool>> LocationTests { get; private set; }
+        public Collection<Func<bool>> LocationTests { get; private set; }
 
         public bool LocationIsGood()
         {
@@ -60,7 +61,7 @@ namespace AtlasWorkFlows
         /// </summary>
         public Location()
         {
-            LocationTests = new List<Func<bool>>();
+            LocationTests = new Collection<Func<bool>>();
         }
     }
 }

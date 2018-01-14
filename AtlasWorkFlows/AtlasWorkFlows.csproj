@@ -24,6 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\AllProjectAnalysisRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -106,6 +107,7 @@
   <ItemGroup>
     <Compile Include="DatasetManager.cs" />
     <Compile Include="DSInfo.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Jobs\AtlasJobEnvrionment.cs" />
     <Compile Include="Jobs\Datasets.cs" />
     <Compile Include="Jobs\JobDataStructures.cs" />
