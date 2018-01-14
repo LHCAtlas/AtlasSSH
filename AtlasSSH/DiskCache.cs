@@ -88,6 +88,11 @@ namespace AtlasSSH
         /// <returns></returns>
         public override CacheItem AddOrGetExisting(CacheItem value, CacheItemPolicy policy)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value", "Must be a non-null cache item");
+            }
+
             var old = Get(value.Key, value.RegionName);
 
             Set(value, policy);
@@ -144,6 +149,10 @@ namespace AtlasSSH
         /// <param name="policy"></param>
         public override void Set(CacheItem item, CacheItemPolicy policy)
         {
+            if (item == null)
+            {
+                throw new ArgumentNullException("item");
+            }
             var f = GetCacheFileName(item.Key);
             if (!f.Directory.Exists)
             {

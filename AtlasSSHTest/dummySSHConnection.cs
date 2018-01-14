@@ -50,7 +50,7 @@ namespace AtlasSSHTest
         /// </summary>
         private Queue<CommandChangeInfo> _changeQueue = new Queue<CommandChangeInfo>();
 
-        public string Username => "bogusUsernamne";
+        public string UserName => "bogusUsernamne";
 
         public string MachineName => "bogusMachine";
 

@@ -241,7 +241,7 @@ namespace AtlasWorkFlowsTest.Location
         }
 
         [TestMethod]
-        [ExpectedException(typeof(DatasetDoesNotExistException))]
+        [ExpectedException(typeof(DataSetDoesNotExistException))]
         public async Task LinuxRemoteCopyToFromBadDS()
         {
             _ssh.CreateRepro();

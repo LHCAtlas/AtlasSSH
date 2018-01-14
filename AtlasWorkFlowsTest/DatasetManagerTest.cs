@@ -30,7 +30,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        [ExpectedException(typeof(DatasetDoesNotExistException))]
+        [ExpectedException(typeof(DataSetDoesNotExistException))]
         public async Task NoPlaces()
         {
             var files = await DatasetManager.ListOfFilesInDatasetAsync("bogus");
@@ -173,7 +173,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        [ExpectedException(typeof(DatasetDoesNotExistException))]
+        [ExpectedException(typeof(DataSetDoesNotExistException))]
         public async Task FindLocalDatasetWhenNotAround()
         {
             DatasetManager.ResetDSM(new DummyPlace("bogus") { { "ds1", "f1", "f2" } });
@@ -188,7 +188,7 @@ namespace AtlasWorkFlowsTest
         }
 
         [TestMethod]
-        [ExpectedException(typeof(DatasetDoesNotExistException))]
+        [ExpectedException(typeof(DataSetDoesNotExistException))]
         public async Task DSMgrGetListOfFilesFromBadDS()
         {
             var loc1 = new DummyPlace("bogusLocal") { NeedsConfirmationCopy = false, CanSourceACopy = true };

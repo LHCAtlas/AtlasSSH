@@ -34,7 +34,8 @@ namespace AtlasSSH
         /// <param name="s"></param>
         public void Add (string s)
         {
-            var arr = s.ToCharArray();
+            var arr = (s ?? throw new ArgumentNullException("String can't be null when added"))
+                .ToCharArray();
             foreach (var c in arr)
             {
                 _buffer[_next_insertion_point % _buffer_size] = c;

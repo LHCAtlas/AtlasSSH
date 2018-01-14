@@ -83,7 +83,7 @@ namespace AtlasWorkFlows.Locations
                 statusUpdater("Setting up GRID Environment");
             var r = await _linuxRemote.ApplyAsync(l => l.CloneConnection());
             await r.setupATLASAsync();
-            await r.setupRucioAsync(r.Username);
+            await r.setupRucioAsync(r.UserName);
             await r.VomsProxyInitAsync("atlas", failNow: failNow);
             return r;
         }
@@ -155,7 +155,7 @@ namespace AtlasWorkFlows.Locations
             {
                 // First, move the catalog over
                 var catalog = (await DatasetManager.ListOfFilenamesInDatasetAsync(dsGroup.Key, statusUpdate, failNow, probabalLocation: this))
-                    .ThrowIfNull(() => new DatasetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
+                    .ThrowIfNull(() => new DataSetDoesNotExistException($"Dataset '{dsGroup.Key}' was not found in place {Name}."));
                 await _linuxRemote.ApplyAsync(l => l.CopyDataSetInfoAsync(dsGroup.Key, catalog, statusUpdate));
                 if (failNow.PCall(false))
                 {
@@ -212,7 +212,7 @@ namespace AtlasWorkFlows.Locations
                             }
                         }
                     }
-                    catch (DatasetDoesNotExistException)
+                    catch (DataSetDoesNotExistException)
                     {
                         return null;
                     }

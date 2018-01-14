@@ -148,7 +148,7 @@ namespace AtlasWorkFlows.Locations
         /// <summary>
         /// The username for accessing this machine via SCP
         /// </summary>
-        public string SCPUser { get { return _connection.ApplyAsync(c => c.Value.Username).Result; } }
+        public string SCPUser { get { return _connection.ApplyAsync(c => c.Value.UserName).Result; } }
 
         /// <summary>
         /// We can start a copy from here to other places that have a SSH destination available.

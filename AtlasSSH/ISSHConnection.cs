@@ -24,7 +24,7 @@ namespace AtlasSSH
         /// Username used to log into the machine we are talking to. May be quired without triggering a connection
         /// to the remote system.
         /// </summary>
-        string Username { get; }
+        string UserName { get; }
 
         /// <summary>
         /// Return the name of the machine we are connected to

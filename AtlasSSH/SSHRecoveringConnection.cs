@@ -8,6 +8,17 @@ using static AtlasSSH.SSHConnection;
 
 namespace AtlasSSH
 {
+    [Serializable]
+    public class NullSSHConnectionException : InvalidOperationException
+    {
+        public NullSSHConnectionException() { }
+        public NullSSHConnectionException(string message) : base(message) { }
+        public NullSSHConnectionException(string message, Exception inner) : base(message, inner) { }
+        protected NullSSHConnectionException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     /// <summary>
     /// A connection that can recover from being broken.
     /// </summary>
@@ -31,22 +42,11 @@ namespace AtlasSSH
         /// <summary>
         /// Returns the username we are connecting with
         /// </summary>
-        public string Username => ExecuteInConnection(c => c.Username);
+        public string UserName => ExecuteInConnection(c => c.UserName);
 
         public string MachineName => ExecuteInConnection(c => c.MachineName);
 
         public bool GloballyVisible => ExecuteInConnection(c => c.GloballyVisible);
-
-        [Serializable]
-        public class NullSSHConnectionException : InvalidOperationException
-        {
-            public NullSSHConnectionException() { }
-            public NullSSHConnectionException(string message) : base(message) { }
-            public NullSSHConnectionException(string message, Exception inner) : base(message, inner) { }
-            protected NullSSHConnectionException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
 
         /// <summary>
         /// Create a recovering connection from a function taht builds teh connection.

@@ -18,6 +18,16 @@ namespace AtlasSSH
         /// <returns></returns>
         public static ISSHConnection Apply<T>(this ISSHConnection connection, IEnumerable<T> what, Action<ISSHConnection, T> doit)
         {
+            if (what == null)
+            {
+                throw new ArgumentNullException(nameof(what));
+            }
+
+            if (doit == null)
+            {
+                throw new ArgumentNullException(nameof(doit));
+            }
+
             foreach (var w in what)
             {
                 doit(connection, w);
@@ -50,6 +60,11 @@ namespace AtlasSSH
         /// <returns></returns>
         public static ISSHConnection Apply(this ISSHConnection connection, Action doit)
         {
+            if (doit == null)
+            {
+                throw new ArgumentNullException(nameof(doit));
+            }
+
             doit();
             return connection;
         }

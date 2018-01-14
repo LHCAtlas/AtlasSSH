@@ -54,6 +54,11 @@ namespace AtlasSSH
         public static T NonNullCacheInDisk<T>(string cacheName, string key, Func<T> calculateValue)
             where T : class
         {
+            if (calculateValue == null)
+            {
+                throw new ArgumentNullException("calculateValue");
+            }
+
             var c = new DiskCacheTyped<T>(cacheName);
             var r = c[key];
             if (r == null)

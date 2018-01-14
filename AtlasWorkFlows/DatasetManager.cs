@@ -64,7 +64,7 @@ namespace AtlasWorkFlows
                         return files;
                     }
                 }
-                throw new DatasetDoesNotExistException($"Dataset {dsname} could not be found at any place.");
+                throw new DataSetDoesNotExistException($"Dataset {dsname} could not be found at any place.");
             });
 
         }
@@ -74,7 +74,7 @@ namespace AtlasWorkFlows
         /// </summary>
         /// <param name="dsname">Dataset name to return file list for. Throw if it can't be found.</param>
         /// <returns>List of URI's of the files.</returns>
-        /// <exception cref="DatasetDoesNotExistException">Throw if <paramref name="dsname"/> does not exist.</exception>
+        /// <exception cref="DataSetDoesNotExistException">Throw if <paramref name="dsname"/> does not exist.</exception>
         /// <remarks>
         /// Look through the list of places in tier order (from closests to furthest) until we find a good dataset.
         /// </remarks>
@@ -329,7 +329,7 @@ namespace AtlasWorkFlows
 
             if (goodPlaces.Count == 0)
             {
-                throw new DatasetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'.");
+                throw new DataSetDoesNotExistException($"No place knows how to fetch '{u.OriginalString}'.");
             }
 
             return await FindRouteFromSources(goodPlaces.ToArray(), u, endCondition, forceOk);

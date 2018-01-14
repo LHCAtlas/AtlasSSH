@@ -7,6 +7,20 @@ using System.Threading.Tasks;
 
 namespace AtlasSSH
 {
+    /// <summary>
+    /// Throw when we can't find the linux shell prompt.
+    /// </summary>
+    [Serializable]
+    public class NoLinuxShellPromptSeenException : Exception
+    {
+        public NoLinuxShellPromptSeenException() { }
+        public NoLinuxShellPromptSeenException(string message) : base(message) { }
+        public NoLinuxShellPromptSeenException(string message, Exception inner) : base(message, inner) { }
+        protected NoLinuxShellPromptSeenException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     static class SSHStreamUtils
     {
         /// <summary>
@@ -42,18 +56,6 @@ namespace AtlasSSH
             {
                 return shell.Read();
             }
-        }
-
-
-        [Serializable]
-        public class NoLinuxShellPromptSeenException : Exception
-        {
-            public NoLinuxShellPromptSeenException() { }
-            public NoLinuxShellPromptSeenException(string message) : base(message) { }
-            public NoLinuxShellPromptSeenException(string message, Exception inner) : base(message, inner) { }
-            protected NoLinuxShellPromptSeenException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
         /// <summary>

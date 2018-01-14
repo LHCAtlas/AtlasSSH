@@ -45,12 +45,12 @@ namespace AtlasSSH
 
 
     [Serializable]
-    public class DatasetDoesNotExistException : Exception
+    public class DataSetDoesNotExistException : Exception
     {
-        public DatasetDoesNotExistException() { }
-        public DatasetDoesNotExistException(string message) : base(message) { }
-        public DatasetDoesNotExistException(string message, Exception inner) : base(message, inner) { }
-        protected DatasetDoesNotExistException(
+        public DataSetDoesNotExistException() { }
+        public DataSetDoesNotExistException(string message) : base(message) { }
+        public DataSetDoesNotExistException(string message, Exception inner) : base(message, inner) { }
+        protected DataSetDoesNotExistException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
@@ -132,12 +132,12 @@ namespace AtlasSSH
         /// Setup Rucio. ATLAS must have been previously configured, or this will "crash".
         /// </summary>
         /// <param name="connection">Connection on-which we will set everything up</param>
-        /// <param name="rucioUsername">The user alias used on the grid</param>
+        /// <param name="rucioUserName">The user alias used on the grid</param>
         /// <param name="dumpOnly">Dump output to the logging interface rather than actually executing anything</param>
         /// <returns>A shell on-which rucio has been setup (the same connection that went in)</returns>
-        public static ISSHConnection setupRucio(this ISSHConnection connection, string rucioUsername, bool dumpOnly = false)
+        public static ISSHConnection setupRucio(this ISSHConnection connection, string rucioUserName, bool dumpOnly = false)
         {
-            return connection.setupRucioAsync(rucioUsername, dumpOnly)
+            return connection.setupRucioAsync(rucioUserName, dumpOnly)
                 .WaitAndUnwrapException();
         }
 
@@ -145,13 +145,13 @@ namespace AtlasSSH
         /// Setup Rucio. ATLAS must have been previously configured, or this will "crash". Execute Asyncrohonously.
         /// </summary>
         /// <param name="connection">Connection on-which we will set everything up</param>
-        /// <param name="rucioUsername">The user alias used on the grid</param>
+        /// <param name="rucioUserName">The user alias used on the grid</param>
         /// <param name="dumpOnly">Dump output to the logging interface rather than actually executing anything</param>
         /// <returns>A shell on-which rucio has been setup (the same connection that went in)</returns>
-        public static async Task<ISSHConnection> setupRucioAsync(this ISSHConnection connection, string rucioUsername, bool dumpOnly = false)
+        public static async Task<ISSHConnection> setupRucioAsync(this ISSHConnection connection, string rucioUserName, bool dumpOnly = false)
         {
             int hashCount = 0;
-            var r = await connection.ExecuteLinuxCommandAsync(string.Format("export RUCIO_ACCOUNT={0}", rucioUsername), dumpOnly: dumpOnly);
+            var r = await connection.ExecuteLinuxCommandAsync(string.Format("export RUCIO_ACCOUNT={0}", rucioUserName), dumpOnly: dumpOnly);
             r = await r.ExecuteLinuxCommandAsync("lsetup rucio", dumpOnly: dumpOnly);
             r = await r.ExecuteLinuxCommandAsync("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly);
 
@@ -232,20 +232,20 @@ namespace AtlasSSH
         /// Fetch a dataset from the grid using Rucio to a local directory.
         /// </summary>
         /// <param name="connection">A previously configured connection with everything ready to go for GRID access.</param>
-        /// <param name="datasetName">The rucio dataset name</param>
+        /// <param name="dataSetName">The rucio dataset name</param>
         /// <param name="localDirectory">The local directory (on Linux) where the file should be downloaded</param>
         /// <param name="fileStatus">Gets updates as new files are downloaded. This will contain just the filename.</param>
         /// <param name="fileNameFilter">Filter function to alter the files that are to be downloaded</param>
         /// <param name="failNow">Checked periodically, if ever returns true, then bail out</param>
         /// <param name="timeout">How long before we should timeout in seconds</param>
         /// <returns>The connections used so you can chain</returns>
-        public static ISSHConnection DownloadFromGRID(this ISSHConnection connection, string datasetName, string localDirectory,
+        public static ISSHConnection DownloadFromGRID(this ISSHConnection connection, string dataSetName, string localDirectory,
             Action<string> fileStatus = null,
             Func<string[], string[]> fileNameFilter = null,
             Func<bool> failNow = null,
             int timeout = 3600)
         {
-            return connection.DownloadFromGRIDAsync(datasetName, localDirectory, fileStatus, fileNameFilter, failNow, timeout)
+            return connection.DownloadFromGRIDAsync(dataSetName, localDirectory, fileStatus, fileNameFilter, failNow, timeout)
                 .WaitAndUnwrapException();
         }
 
@@ -253,14 +253,14 @@ namespace AtlasSSH
         /// Fetch a dataset from the grid using Rucio to a local directory.
         /// </summary>
         /// <param name="connection">A previously configured connection with everything ready to go for GRID access.</param>
-        /// <param name="datasetName">The rucio dataset name</param>
+        /// <param name="dataSetName">The rucio dataset name</param>
         /// <param name="localDirectory">The local directory (on Linux) where the file should be downloaded</param>
         /// <param name="fileStatus">Gets updates as new files are downloaded. This will contain just the filename.</param>
         /// <param name="fileNameFilter">Filter function to alter the files that are to be downloaded</param>
         /// <param name="failNow">Checked periodically, if ever returns true, then bail out</param>
         /// <param name="timeout">How long before we should timeout in seconds</param>
         /// <returns>The connections used so you can chain</returns>
-        public static async Task<ISSHConnection> DownloadFromGRIDAsync(this ISSHConnection connection, string datasetName, string localDirectory,
+        public static async Task<ISSHConnection> DownloadFromGRIDAsync(this ISSHConnection connection, string dataSetName, string localDirectory,
             Action<string> fileStatus = null,
             Func<string[], string[]> fileNameFilter = null,
             Func<bool> failNow = null,
@@ -272,7 +272,7 @@ namespace AtlasSSH
                 fileStatus("Checking the dataset exists");
             }
             var response = new List<string>();
-            await connection.ExecuteLinuxCommandAsync(string.Format("rucio ls {0}", datasetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
+            await connection.ExecuteLinuxCommandAsync(string.Format("rucio ls {0}", dataSetName), l => response.Add(l), secondsTimeout: 60, failNow: failNow);
 
             var dsnames = response
                 .Where(l => l.Contains("DATASET") | l.Contains("CONTAINER"))
@@ -281,9 +281,9 @@ namespace AtlasSSH
                 .Select(sl => sl[1])
                 .ToArray();
 
-            if (!dsnames.Where(n => n.SantizeDSName() == datasetName.SantizeDSName()).Any())
+            if (!dsnames.Where(n => n.SantizeDSName() == dataSetName.SantizeDSName()).Any())
             {
-                throw new ArgumentException(string.Format("Unable to find any datasets on the GRID (in rucuio) with the name '{0}'.", datasetName));
+                throw new ArgumentException(string.Format("Unable to find any datasets on the GRID (in rucuio) with the name '{0}'.", dataSetName));
             }
 
             // Get the complete list of files in the dataset.
@@ -291,7 +291,7 @@ namespace AtlasSSH
             {
                 fileStatus("Getting the complete list of files from the dataset");
             }
-            var fileNameList = await connection.FilelistFromGRIDAsync(datasetName, failNow: failNow);
+            var fileNameList = await connection.FilelistFromGRIDAsync(dataSetName, failNow: failNow);
 
             // Filter them if need be.
             var goodFiles = fileNameFilter != null
@@ -299,7 +299,7 @@ namespace AtlasSSH
                 : fileNameList;
 
             // Create a file that contains all the files we want to download up on the host.
-            var fileListName = string.Format("/tmp/{0}.filelist", datasetName.SantizeDSName());
+            var fileListName = string.Format("/tmp/{0}.filelist", dataSetName.SantizeDSName());
             await connection.ExecuteLinuxCommandAsync("rm -rf " + fileListName);
             await connection.ApplyAsync(goodFiles, async (c, fname) => await c.ExecuteLinuxCommandAsync(string.Format("echo {0} >> {1}", fname, fileListName)));
 
@@ -318,7 +318,7 @@ namespace AtlasSSH
 
             // Next, do the download
             response.Clear();
-            fileStatus?.Invoke($"Starting GRID download of {datasetName}...");
+            fileStatus?.Invoke($"Starting GRID download of {dataSetName}...");
 
             await Policy
                 .Handle<ClockSkewException>()
@@ -375,38 +375,16 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Info about a single file on the internet.
-        /// </summary>
-        [Serializable]
-        public class GRIDFileInfo
-        {
-            /// <summary>
-            /// Fully qualified name of the file
-            /// </summary>
-            public string name;
-
-            /// <summary>
-            /// Size (in MB) of the file
-            /// </summary>
-            public double size;
-
-            /// <summary>
-            /// Number of events in the file
-            /// </summary>
-            public int eventCount;
-        }
-
-        /// <summary>
         /// Returns the name of the files in a GRID dataset.
         /// </summary>
         /// <param name="connection">The already setup SSH connection</param>
-        /// <param name="datasetName">The dataset that we are to query</param>
+        /// <param name="dataSetName">The dataset that we are to query</param>
         /// <param name="failNow">Return true if long-running commands should quit right away</param>
         /// <param name="dumpOnly">If we are to only test-run, but not actually run.</param>
         /// <returns>List of filenames for this GRID dataset</returns>
-        public static string[] FilelistFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow = null, bool dumpOnly = false)
+        public static string[] FilelistFromGRID(this ISSHConnection connection, string dataSetName, Func<bool> failNow = null, bool dumpOnly = false)
         {
-            return connection.FilelistFromGRIDAsync(datasetName, failNow, dumpOnly)
+            return connection.FilelistFromGRIDAsync(dataSetName, failNow, dumpOnly)
                 .WaitAndUnwrapException();
         }
 
@@ -414,13 +392,13 @@ namespace AtlasSSH
         /// Returns the name of the files in a GRID dataset.
         /// </summary>
         /// <param name="connection">The already setup SSH connection</param>
-        /// <param name="datasetName">The dataset that we are to query</param>
+        /// <param name="dataSetName">The dataset that we are to query</param>
         /// <param name="failNow">Return true if long-running commands should quit right away</param>
         /// <param name="dumpOnly">If we are to only test-run, but not actually run.</param>
         /// <returns>List of filenames for this GRID dataset</returns>
-        public static async Task<string[]> FilelistFromGRIDAsync(this ISSHConnection connection, string datasetName, Func<bool> failNow = null, bool dumpOnly = false)
+        public static async Task<string[]> FilelistFromGRIDAsync(this ISSHConnection connection, string dataSetName, Func<bool> failNow = null, bool dumpOnly = false)
         {
-            return (await connection.FileInfoFromGRIDAsync(datasetName, failNow, dumpOnly))
+            return (await connection.FileInfoFromGRIDAsync(dataSetName, failNow, dumpOnly))
                 .Select(i => i.name)
                 .ToArray();
         }
@@ -434,28 +412,26 @@ namespace AtlasSSH
         /// Returns the list of files associated with a dataset, as fetched from the grid.
         /// </summary>
         /// <param name="connection"></param>
-        /// <param name="datasetName"></param>
+        /// <param name="dataSetName"></param>
         /// <param name="dumpOnly">Dump only commands that are issues to standard logging interface.</param>
         /// <param name="failNow">Returns true to bail out as quickly as possible</param>
         /// <returns></returns>
-        public static List<GRIDFileInfo> FileInfoFromGRID(this ISSHConnection connection, string datasetName, Func<bool> failNow = null, bool dumpOnly = false)
-        {
-            return FileInfoFromGRIDAsync(connection, datasetName, failNow, dumpOnly)
+        public static IReadOnlyList<GRIDFileInfo> FileInfoFromGRID(this ISSHConnection connection, string dataSetName, Func<bool> failNow = null, bool dumpOnly = false) => 
+            FileInfoFromGRIDAsync(connection, dataSetName, failNow, dumpOnly)
                 .WaitAndUnwrapException();
-        }
 
         /// <summary>
         /// Returns the list of files associated with a dataset, as fetched from the grid.
         /// </summary>
         /// <param name="connection"></param>
-        /// <param name="datasetName"></param>
+        /// <param name="dataSetName"></param>
         /// <param name="dumpOnly">Dump only commands that are issues to standard logging interface.</param>
         /// <param name="failNow">Returns true to bail out as quickly as possible</param>
         /// <returns></returns>
-        public static async Task<List<GRIDFileInfo>> FileInfoFromGRIDAsync(this ISSHConnection connection, string datasetName, Func<bool> failNow =null, bool dumpOnly = false)
+        public static async Task<List<GRIDFileInfo>> FileInfoFromGRIDAsync(this ISSHConnection connection, string dataSetName, Func<bool> failNow =null, bool dumpOnly = false)
         {
             // If we have a cache hit, then avoid the really slow lookup.
-            var c = _GRIDFileInfoCache.Value[datasetName] as GRIDFileInfo[];
+            var c = _GRIDFileInfoCache.Value[dataSetName] as GRIDFileInfo[];
             if (c != null)
             {
                 return c.ToList(); ;
@@ -467,7 +443,7 @@ namespace AtlasSSH
             bool bad = false;
             try
             {
-                await connection.ExecuteLinuxCommandAsync(string.Format("rucio list-files {0}", datasetName), l =>
+                await connection.ExecuteLinuxCommandAsync(string.Format("rucio list-files {0}", dataSetName), l =>
                 {
                     if (l.Contains("Data identifier not found"))
                     {
@@ -504,10 +480,10 @@ namespace AtlasSSH
 
             if (bad & !dumpOnly)
             {
-                throw new DatasetDoesNotExistException($"Dataset '{datasetName}' does not exist - can't get its list of files ({connection.MachineName}).");
+                throw new DataSetDoesNotExistException($"Dataset '{dataSetName}' does not exist - can't get its list of files ({connection.MachineName}).");
             }
 
-            _GRIDFileInfoCache.Value[datasetName] = fileNameList.ToArray();
+            _GRIDFileInfoCache.Value[dataSetName] = fileNameList.ToArray();
             return fileNameList;
         }
 
@@ -519,12 +495,12 @@ namespace AtlasSSH
         /// <returns></returns>
         private static double ConvertToMB(string number, string units)
         {
-            if (number == "")
+            if (string.IsNullOrWhiteSpace(number))
             {
                 return 0;
             }
             var n = double.Parse(number);
-            if (units == "")
+            if (string.IsNullOrWhiteSpace(units))
             {
                 return (n / 1024 / 1024);
             } else if (units == "kB")
@@ -611,9 +587,9 @@ namespace AtlasSSH
         /// <param name="password"></param>
         /// <param name="dumpOnly">Dump commands to logging interface rather than execute them</param>
         /// <returns></returns>
-        public static ISSHConnection Kinit(this ISSHConnection connection, string username, string password, bool dumpOnly = false)
+        public static ISSHConnection Kinit(this ISSHConnection connection, string userName, string password, bool dumpOnly = false)
         {
-            return connection.KinitAsync(username, password, dumpOnly)
+            return connection.KinitAsync(userName, password, dumpOnly)
                 .WaitAndUnwrapException();
         }
 
@@ -621,14 +597,14 @@ namespace AtlasSSH
         /// Execute a kinit
         /// </summary>
         /// <param name="connection"></param>
-        /// <param name="username"></param>
+        /// <param name="userName"></param>
         /// <param name="password"></param>
         /// <param name="dumpOnly">Dump commands to logging interface rather than execute them</param>
         /// <returns></returns>
-        public static async Task<ISSHConnection> KinitAsync (this ISSHConnection connection, string username, string password, bool dumpOnly = false)
+        public static async Task<ISSHConnection> KinitAsync (this ISSHConnection connection, string userName, string password, bool dumpOnly = false)
         {
             var allStrings = new List<string>();
-            await connection.ExecuteLinuxCommandAsync(string.Format("echo {0} | kinit {1}", password, username), l => allStrings.Add(l), dumpOnly: dumpOnly);
+            await connection.ExecuteLinuxCommandAsync(string.Format("echo {0} | kinit {1}", password, userName), l => allStrings.Add(l), dumpOnly: dumpOnly);
             var errorStrings = allStrings.Where(l => l.StartsWith("kinit:")).ToArray();
             if (errorStrings.Length > 0)
             {
@@ -663,6 +639,10 @@ namespace AtlasSSH
         /// <returns></returns>
         public static Task<ISSHConnection> CheckoutPackageAsync(this ISSHConnection connection, string scPackagePath, string scRevision, Func<bool> failNow = null, bool dumpOnly = false)
         {
+            if (string.IsNullOrWhiteSpace(scPackagePath))
+            {
+                throw new ArgumentNullException("scPackagePath", "Package must be a valid path to a source control repro!");
+            }
             var isGit = scPackagePath.EndsWith(".git");
             return isGit
                 ? connection.CheckoutPackageGitAsync(scPackagePath, scRevision, failNow, dumpOnly)

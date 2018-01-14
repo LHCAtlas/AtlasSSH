@@ -31,7 +31,7 @@ namespace AtlasSSHTest
         {
             using (var c = new SSHRecoveringConnection(() => new dummyConnection()))
             {
-                Assert.AreEqual("myname", c.Username);
+                Assert.AreEqual("myname", c.UserName);
             }
         }
 
@@ -176,7 +176,7 @@ namespace AtlasSSHTest
             /// <summary>
             /// Return the username.
             /// </summary>
-            public string Username => "myname";
+            public string UserName => "myname";
 
             public string MachineName => throw new NotImplementedException();
 

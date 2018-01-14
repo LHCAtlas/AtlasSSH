@@ -11,11 +11,11 @@ namespace AtlasSSH
     {
         public const string CrLf = "\r\n";
 
-        public LineBuffer(Action<string> actionOnLine = null)
+        public LineBuffer(Action<string> actionOnline = null)
         {
-            if (actionOnLine != null)
+            if (actionOnline != null)
             {
-                _actionsOnLine.Add(actionOnLine);
+                _actionsOnline.Add(actionOnline);
             }
         }
 
@@ -27,7 +27,7 @@ namespace AtlasSSH
         /// <summary>
         /// List of actions to perform when there is new line.
         /// </summary>
-        private List<Action<string>> _actionsOnLine = new List<Action<string>>();
+        private List<Action<string>> _actionsOnline = new List<Action<string>>();
 
         /// <summary>
         /// Add a new action to our list of actions.
@@ -35,7 +35,7 @@ namespace AtlasSSH
         /// <param name="act"></param>
         public void AddAction (Action<string> act)
         {
-            _actionsOnLine.Add(act);
+            _actionsOnline.Add(act);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace AtlasSSH
 
             if (!stringsToSuppress.Any(s => line.Contains(s)))
             {
-                foreach (var a in _actionsOnLine)
+                foreach (var a in _actionsOnline)
                 {
                     a(line);
                 }

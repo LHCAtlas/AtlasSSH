@@ -10,6 +10,20 @@ using System.Threading.Tasks;
 namespace AtlasSSH
 {
     /// <summary>
+    /// Thrown if we can't figure out how to parse the username/host string.
+    /// </summary>
+    [Serializable]
+    public class InvalidHostSpecificationException : Exception
+    {
+        public InvalidHostSpecificationException() { }
+        public InvalidHostSpecificationException(string message) : base(message) { }
+        public InvalidHostSpecificationException(string message, Exception inner) : base(message, inner) { }
+        protected InvalidHostSpecificationException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    /// <summary>
     /// A wrapper for a connection that enables you to use a "tunnel" syntax to connect
     /// between various machines. The following are all valid as arguments:
     ///     user@machine.com - Opens a connection to machine
@@ -35,7 +49,7 @@ namespace AtlasSSH
         /// <summary>
         /// Return the username of the deepest tunnel
         /// </summary>
-        public string Username { get; private set; }
+        public string UserName { get; private set; }
 
         /// <summary>
         /// Return how many tunnels we have... (or will have). 0 if we will only have a connection to one machine.
@@ -98,7 +112,7 @@ namespace AtlasSSH
         {
             var (user, machine) = ExtractUserAndMachine(c);
             MachineName = machine;
-            Username = user;
+            UserName = user;
             if (_deepestConnection == null)
             {
                 _machineConnectionStrings.Add(c);
@@ -120,20 +134,6 @@ namespace AtlasSSH
         /// List of connections that we have, each one feeding to the next.
         /// </summary>
         private List<IDisposable> _connectionStack = null;
-
-        /// <summary>
-        /// Make the connection if it hasn't been made already
-        /// </summary>
-        /// <returns></returns>
-        private async Task<SSHConnection> GetDeepestConnection()
-        {
-            await MakeConnections();
-            if (_deepestConnection == null)
-            {
-                throw new InvalidOperationException("Attempt to use the SSHTunnelConnection without initalizing any connections");
-            }
-            return _deepestConnection;
-        }
 
         /// <summary>
         /// Called to make the connections
@@ -184,25 +184,11 @@ namespace AtlasSSH
         }
 
         /// <summary>
-        /// Thrown if we can't figure out how to parse the username/host string.
-        /// </summary>
-        [Serializable]
-        public class InvalidHostSpecificationException : Exception
-        {
-            public InvalidHostSpecificationException() { }
-            public InvalidHostSpecificationException(string message) : base(message) { }
-            public InvalidHostSpecificationException(string message, Exception inner) : base(message, inner) { }
-            protected InvalidHostSpecificationException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
-
-        /// <summary>
         /// Extract the username and the machine from the connection string
         /// </summary>
         /// <param name="v"></param>
         /// <returns>Tuple with 0 being the user and 1 the machine</returns>
-        private (string user, string machine) ExtractUserAndMachine(string v)
+        private static (string user, string machine) ExtractUserAndMachine(string v)
         {
             var t = v.Split('@');
             if (t.Length != 2)

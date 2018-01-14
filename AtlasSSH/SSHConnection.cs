@@ -13,6 +13,61 @@ using static AtlasSSH.CredentialUtils;
 namespace AtlasSSH
 {
     /// <summary>
+    /// Thrown when the SSH connection has dropped for whatever reason (e.g. the client is no longer
+    /// connected).
+    /// </summary>
+    [Serializable]
+    public class SSHConnectionDroppedException : Exception
+    {
+        public SSHConnectionDroppedException() { }
+        public SSHConnectionDroppedException(string message) : base(message) { }
+        public SSHConnectionDroppedException(string message, Exception inner) : base(message, inner) { }
+        protected SSHConnectionDroppedException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    /// <summary>
+    /// Thrown when the ssh command is interupted by the failnow
+    /// </summary>
+    [Serializable]
+    public class SSHCommandInterruptedException : Exception
+    {
+        public SSHCommandInterruptedException() { }
+        public SSHCommandInterruptedException(string message) : base(message) { }
+        public SSHCommandInterruptedException(string message, Exception inner) : base(message, inner) { }
+        protected SSHCommandInterruptedException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        { }
+    }
+
+    [Serializable]
+    public class UnableToCreateSSHTunnelException : Exception
+    {
+        public UnableToCreateSSHTunnelException() { }
+        public UnableToCreateSSHTunnelException(string message) : base(message) { }
+        public UnableToCreateSSHTunnelException(string message, Exception inner) : base(message, inner) { }
+        protected UnableToCreateSSHTunnelException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    /// <summary>
+    /// Thrown when we can't make the initial connection.
+    /// </summary>
+    [Serializable]
+    public class SSHConnectFailureException : Exception
+    {
+        public SSHConnectFailureException() { }
+        public SSHConnectFailureException(string message) : base(message) { }
+        public SSHConnectFailureException(string message, Exception inner) : base(message, inner) { }
+        protected SSHConnectFailureException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    /// <summary>
     /// The low-level connection. Supports very simple SSH and SCP interactions. This represents a single
     /// shell - once you give it comments the shell will "remember" what you've done to the environment.
     /// </summary>
@@ -28,87 +83,53 @@ namespace AtlasSSH
         const int TerminalWidth = 240;
 
         /// <summary>
-        /// Thrown when the ssh command is interupted by the failnow
-        /// </summary>
-        [Serializable]
-        public class SSHCommandInterruptedException : Exception
-        {
-            public SSHCommandInterruptedException() { }
-            public SSHCommandInterruptedException(string message) : base(message) { }
-            public SSHCommandInterruptedException(string message, Exception inner) : base(message, inner) { }
-            protected SSHCommandInterruptedException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context)
-            { }
-        }
-
-        [Serializable]
-        public class UnableToCreateSSHTunnelException : Exception
-        {
-            public UnableToCreateSSHTunnelException() { }
-            public UnableToCreateSSHTunnelException(string message) : base(message) { }
-            public UnableToCreateSSHTunnelException(string message, Exception inner) : base(message, inner) { }
-            protected UnableToCreateSSHTunnelException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
-
-        /// <summary>
-        /// Thrown when we can't make the initial connection.
-        /// </summary>
-        [Serializable]
-        public class SSHConnectFailureException : Exception
-        {
-            public SSHConnectFailureException() { }
-            public SSHConnectFailureException(string message) : base(message) { }
-            public SSHConnectFailureException(string message, Exception inner) : base(message, inner) { }
-            protected SSHConnectFailureException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
-
-        /// <summary>
         /// Create the connection. The connection is not actually made until it is actually requested.
         /// </summary>
         /// <param name="host"></param>
-        /// <param name="username"></param>
-        public SSHConnection(string host, string username)
+        /// <param name="userName"></param>
+        public SSHConnection(string host, string userName)
         {
-            Username = username;
+            UserName = userName;
             MachineName = host;
 
             // Fetch the username and password.
-            Credential passwordInfo = FetchUserCredentials(host, username);
+            Credential passwordInfo = FetchUserCredentials(host, userName);
             if (passwordInfo == null)
             {
-                throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));
+                throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, userName));
             }
 
             // Create the connection, but do it lazy so we don't do anything if we aren't used.
             _client = new Lazy<SshClient>(() =>
             {
-                var c = new SshClient(host, username, passwordInfo.Password)
-                {
-                    KeepAliveInterval = TimeSpan.FromSeconds(15)
-                };
+                var c = new SshClient(host, userName, passwordInfo.Password);
                 try
                 {
+                    c.KeepAliveInterval = TimeSpan.FromSeconds(15);
                     c.Connect();
+                    return c;
                 }
                 catch (Exception e)
                 {
+                    c.Dispose();
                     throw new SSHConnectFailureException($"Unable to make the connection to {host}.", e);
                 }
-                return c;
             });
 
             // Create the scp client for copying things
             _scp = new Lazy<ScpClient>(() =>
             {
-                var c = new ScpClient(host, username, passwordInfo.Password);
-                c.Connect();
-                c.ErrorOccurred += (sender, error) => _scpError = error.Exception;
-                return c;
+                var c = new ScpClient(host, userName, passwordInfo.Password);
+                try
+                {
+                    c.Connect();
+                    c.ErrorOccurred += (sender, error) => _scpError = error.Exception;
+                    return c;
+                } catch
+                {
+                    c.Dispose();
+                    throw;
+                }
             });
 
             // And create a shell stream. Initialize to find the prompt so we can figure out, later, when
@@ -163,7 +184,7 @@ namespace AtlasSSH
         /// </summary>
         private string _prompt;
 
-        public string Username { get; private set; }
+        public string UserName { get; private set; }
 
         public string MachineName { get; private set; }
 
@@ -171,21 +192,6 @@ namespace AtlasSSH
         /// Since we are connected, we assume we are always there.
         /// </summary>
         public bool GloballyVisible => true;
-
-        /// <summary>
-        /// Thrown when the SSH connection has dropped for whatever reason (e.g. the client is no longer
-        /// connected).
-        /// </summary>
-        [Serializable]
-        public class SSHConnectionDroppedException : Exception
-        {
-            public SSHConnectionDroppedException() { }
-            public SSHConnectionDroppedException(string message) : base(message) { }
-            public SSHConnectionDroppedException(string message, Exception inner) : base(message, inner) { }
-            protected SSHConnectionDroppedException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-        }
 
         /// <summary>
         /// Dump the input until we see a particular string in the returning text.
@@ -408,18 +414,18 @@ namespace AtlasSSH
             }
         }
 
-        public IDisposable SSHTo (string host, string username)
+        public IDisposable SSHTo (string host, string userName)
         {
-            return SSHToAsync(host, username).Result;
+            return SSHToAsync(host, userName).Result;
         }
 
         /// <summary>
         /// ssh to another machine. This implies we have to deal with a new prompt.
         /// </summary>
         /// <param name="host">host of remote machine to ssh to</param>
-        /// <param name="username">username to use when we ssh there</param>
+        /// <param name="userName">username to use when we ssh there</param>
         /// <returns>A context item. Dispose and it will exit the remote shell. If you let it garbage collect you might be caught by unexpected behavior!!</returns>
-        public async Task<IDisposable> SSHToAsync(string host, string username)
+        public async Task<IDisposable> SSHToAsync(string host, string userName)
         {
             // Archive the prompt for later use
             // Since getting the connection runing is lazy, the prompt won't be set
@@ -432,7 +438,7 @@ namespace AtlasSSH
             var r = new SSHSubShellContext(_prompt, this);
 
             // Issue the ssh command... Since this isn't coming back, we have to do it a little differently.
-            await ExecuteCommandAsync($"ssh -oStrictHostKeyChecking=no -o TCPKeepAlive=yes -o ServerAliveInterval=15 {username}@{host}", WaitForCommandResult: false);
+            await ExecuteCommandAsync($"ssh -oStrictHostKeyChecking=no -o TCPKeepAlive=yes -o ServerAliveInterval=15 {userName}@{host}", WaitForCommandResult: false);
             _prompt = null;
             var cmdResult = new StringBuilder();
             while (_prompt == null)
@@ -442,10 +448,10 @@ namespace AtlasSSH
                 cmdResult.Append(text);
                 if (text.StartsWith("Password"))
                 {
-                    var passwordInfo = FetchUserCredentials(host, username);
+                    var passwordInfo = FetchUserCredentials(host, userName);
                     if (passwordInfo == null)
                     {
-                        throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, username));
+                        throw new ArgumentException(string.Format("Please create a generic windows credential with '{0}' as the target address, '{1}' as the username, and the password for remote SSH access to that machine.", host, userName));
                     }
                     (await _shell).WriteLine(passwordInfo.Password);
                 } else if (!string.IsNullOrWhiteSpace(text))
@@ -468,7 +474,7 @@ namespace AtlasSSH
             if (shellStatus != "0")
             {
                 // The whole connection is borked. We have to dump this connection totally.
-                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel to {username}@{host} (ssh command returned {shellStatus}). Error text from the command: {cmdResult.ToString()}");
+                throw new UnableToCreateSSHTunnelException($"Unable to create SSH tunnel to {userName}@{host} (ssh command returned {shellStatus}). Error text from the command: {cmdResult.ToString()}");
             }
 
             // Return the old context so we can restore ourselves when we exit the thing.
@@ -528,8 +534,17 @@ namespace AtlasSSH
         /// </summary>
         /// <param name="lx"></param>
         /// <param name="ourpath"></param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters", Justification = "Need DirectoryInfo for this to make sense")]
         public ISSHConnection CopyRemoteFileLocally(string lx, DirectoryInfo ourpath, Action<string> statusUpdate = null, Func<bool> failNow = null)
         {
+            if (string.IsNullOrWhiteSpace(lx))
+            {
+                throw new ArgumentNullException("You must specify a linux path");
+            }
+            if (ourpath == null)
+            {
+                throw new ArgumentNullException("Must specify ourpath so we know where to copy to!");
+            }
             var lxFname = lx.Split('/').Last();
             return CopyRemoteFileLocally(lx, new FileInfo(Path.Combine(ourpath.FullName, lxFname)), statusUpdate, failNow);
         }
