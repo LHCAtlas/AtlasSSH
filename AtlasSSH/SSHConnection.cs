@@ -1,6 +1,8 @@
 ﻿using CredentialManagement;
 using Nito.AsyncEx;
+using Polly;
 using Renci.SshNet;
+using Renci.SshNet.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -106,7 +108,11 @@ namespace AtlasSSH
                 try
                 {
                     c.KeepAliveInterval = TimeSpan.FromSeconds(15);
-                    c.Connect();
+                    Policy
+                        .Handle<SshOperationTimeoutException>()
+                        .Or<SshConnectionException>()
+                        .WaitAndRetry(new [] { TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(1000) })
+                        .Execute(() => c.Connect());
                     return c;
                 }
                 catch (Exception e)

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AtlasSSHTest
 {
@@ -107,6 +108,137 @@ namespace AtlasSSHTest
                 s
                     .setupATLAS();
             }
+        }
+
+        [TestMethod]
+        public async Task MultipleConnections1()
+        {
+            await TestSimulatniousConnection(1);
+        }
+
+        [TestMethod]
+        public async Task MultipleConnections10()
+        {
+            await TestSimulatniousConnection(10);
+        }
+
+        [TestMethod]
+        public async Task MultipleConnections10Wait2()
+        {
+            await TestSimulatniousConnection(10, millisecondswait: 2000);
+        }
+
+        [TestMethod]
+        public async Task MultipleConnections10Wait2With10Iter()
+        {
+            await TestSimulatniousConnection(10, iterations: 10, millisecondswait: 2000);
+        }
+
+        // This works fine, but it takes 3 minutes. It is a good stress test of the multi-threading code.
+        [Ignore]
+        [TestMethod]
+        public async Task MultipleConnections100Wait2With10Iter()
+        {
+            await TestSimulatniousConnection(100, iterations: 10, millisecondswait: 2000);
+        }
+
+        // This works fine, but it takes 3 minutes. It is a good stress test of the multi-threading code.
+        [Ignore]
+        [TestMethod]
+        public async Task MultipleConnections100()
+        {
+            await TestSimulatniousConnection(100);
+        }
+
+        /// <summary>
+        /// Run a flexible stress test. Create n connections simulaniously, then run "ls" on them, and then
+        /// delay using the linux sleep command if requests, and repeat if requested.
+        /// </summary>
+        /// <param name="connections"></param>
+        /// <param name="millisecondswait"></param>
+        /// <param name="iterations"></param>
+        /// <returns></returns>
+        private async Task TestSimulatniousConnection(int connections, int millisecondswait = 0, int iterations = 1)
+        {
+            var info = util.GetUsernameAndPassword();
+            var sshConnections = Enumerable.Range(0, connections)
+                .Select(index => new SSHConnection(info.Item1, info.Item2))
+                .ToArray();
+
+            try
+            {
+                foreach (var i in Enumerable.Range(0, iterations))
+                {
+                    var waitOnLs = sshConnections
+                        .Select(c => c.ExecuteLinuxCommandAsync("ls"))
+                        .ToArray();
+                    await Task.WhenAll(waitOnLs);
+                    if (millisecondswait > 0)
+                    {
+                        var timeToSleepInSeconds = (millisecondswait / 1000).ToString();
+                        var waitOnDelay = sshConnections
+                            .Select(c => c.ExecuteCommandAsync($"sleep {timeToSleepInSeconds}"))
+                            .ToArray();
+                        await Task.WhenAll(waitOnDelay);
+                    }
+                }
+            }
+            finally
+            {
+
+                foreach (var c in sshConnections)
+                {
+                    c.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Run a number of simultanious runs that aren't synced together.
+        /// </summary>
+        /// <param name="simultaniousRuns"></param>
+        /// <param name="millisecondWait"></param>
+        /// <param name="iterations"></param>
+        /// <returns></returns>
+        public async Task TestAsyncSimltaniousConnections(int simultaniousRuns, int millisecondWait = 0, int iterations = 1, (int minwait, int maxwait)? waitdist = null)
+        {
+            var r = new Random();
+            var waitingConnections = Enumerable.Range(0, simultaniousRuns)
+                .Select(index => waitdist == null ? millisecondWait : r.Next(waitdist.Value.minwait, waitdist.Value.maxwait))
+                .Select(timeout => TestSimulatniousConnection(1, timeout, iterations))
+                .ToArray();
+
+            await Task.WhenAll(waitingConnections);
+        }
+
+        [TestMethod]
+        public async Task AsyncConnectionStressTest1()
+        {
+            await TestAsyncSimltaniousConnections(1);
+        }
+
+        [TestMethod]
+        public async Task AsyncConnectionStressTest10Iter10()
+        {
+            await TestAsyncSimltaniousConnections(10, iterations: 10);
+        }
+
+        [TestMethod]
+        public async Task AsyncConnectionStressTest100Iter10()
+        {
+            await TestAsyncSimltaniousConnections(100, iterations: 10);
+        }
+
+        [TestMethod]
+        public async Task AsyncConnectionStressTest100Iter10WaitRandom2()
+        {
+            await TestAsyncSimltaniousConnections(100, iterations: 10, waitdist: (500, 2000));
+        }
+
+        [TestMethod]
+        public async Task AsyncConnectionStressTest10Iter10Wait2()
+        {
+            await TestAsyncSimltaniousConnections(10, iterations: 10, millisecondWait: 2000);
         }
 
         [TestMethod]
