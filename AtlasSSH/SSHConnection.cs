@@ -111,7 +111,7 @@ namespace AtlasSSH
                     Policy
                         .Handle<SshOperationTimeoutException>()
                         .Or<SshConnectionException>()
-                        .WaitAndRetry(new [] { TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(1000) })
+                        .WaitAndRetry(new [] { TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(1000) }, (exception, timespan, count, ctx) => Trace.WriteLine($"Failed to connect ({exception.Message}) - retry count {count}"))
                         .Execute(() => c.Connect());
                     return c;
                 }
