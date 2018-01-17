@@ -48,40 +48,48 @@ namespace AtlasSSHTest
         [TestMethod]
         public void SSHRecoverRegularConnection()
         {
-            using (var c = new SSHRecoveringConnection(() => new dummyConnection()))
+            var maker = new dummyConnectionMaker();
+            using (var c = new SSHRecoveringConnection(() => maker.Execute()))
             {
+                Assert.AreEqual(0, dummyConnection.DisposedCalled);
                 c.ExecuteLinuxCommand("ls");
                 Assert.AreEqual(2, dummyConnection.CalledExecuteLinuxCommand);
             }
+            Assert.AreEqual(1, dummyConnection.DisposedCalled);
         }
 
         [TestMethod]
         public void SSHRecoverFailsConnectionSshConnectionException()
         {
-            using (var c = new SSHRecoveringConnection(() => new dummyConnection(failExecuteCommandForNTimes: 1, genException: () => new SshConnectionException("Client not connected."))))
+            var maker = new dummyConnectionMaker(failExecuteCommandForNTimes: 1, genException: () => new SshConnectionException("Client not connected."));
+            using (var c = new SSHRecoveringConnection(() => maker.Execute()))
             {
                 c.RetryWaitPeriod = TimeSpan.FromMilliseconds(5);
                 c.ExecuteLinuxCommand("ls");
                 Assert.AreEqual(3, dummyConnection.CalledExecuteLinuxCommand);
             }
+            Assert.AreEqual(2, dummyConnection.DisposedCalled);
         }
 
         [TestMethod]
         public void SSHRecoverFailsConnectionSSHConnectionDroppedException()
         {
-            using (var c = new SSHRecoveringConnection(() => new dummyConnection(failExecuteCommandForNTimes: 1, genException: () => new SSHConnectionDroppedException())))
+            var maker = new dummyConnectionMaker(failExecuteCommandForNTimes: 1, genException: () => new SSHConnectionDroppedException());
+            using (var c = new SSHRecoveringConnection(() => maker.Execute()))
             {
                 c.RetryWaitPeriod = TimeSpan.FromMilliseconds(5);
                 c.ExecuteLinuxCommand("ls");
                 Assert.AreEqual(3, dummyConnection.CalledExecuteLinuxCommand);
             }
+            Assert.AreEqual(2, dummyConnection.DisposedCalled);
         }
 
         [TestMethod]
         [ExpectedException(typeof(SshConnectionException))]
         public void SSHRecoverNoRecover()
         {
-            using (var c = new SSHRecoveringConnection(() => new dummyConnection(failExecuteCommandForNTimes: 1)))
+            var maker = new dummyConnectionMaker(failExecuteCommandForNTimes: 1);
+            using (var c = new SSHRecoveringConnection(() => maker.Execute()))
             {
                 c.RetryWaitPeriod = TimeSpan.FromMilliseconds(1);
                 using (var blocker = c.EnterNoRecoverRegion())
@@ -89,12 +97,14 @@ namespace AtlasSSHTest
                     c.ExecuteLinuxCommand("ls");
                 }
             }
+            Assert.AreEqual(1, dummyConnection.DisposedCalled);
         }
 
         [TestMethod]
         public void SSHRecoverNoRecoverAndRecover()
         {
-            using (var c = new SSHRecoveringConnection(() => new dummyConnection(failExecuteCommandForNTimes: 1)))
+            var maker = new dummyConnectionMaker(failExecuteCommandForNTimes: 1);
+            using (var c = new SSHRecoveringConnection(() => maker.Execute()))
             {
                 using (var blocker = c.EnterNoRecoverRegion())
                 {
@@ -106,12 +116,14 @@ namespace AtlasSSHTest
                     c.ExecuteCommand("ls");
                 }
             }
+            Assert.AreEqual(1, dummyConnection.DisposedCalled);
         }
 
         [TestMethod]
         public void SSHRecoverMakeSureCommandRetriedOnException()
         {
-            using (var c = new SSHRecoveringConnection(() => new dummyConnection(failExecuteCommandForNTimes: 1)))
+            var maker = new dummyConnectionMaker(failExecuteCommandForNTimes: 1);
+            using (var c = new SSHRecoveringConnection(() => maker.Execute()))
             {
                 c.RetryWaitPeriod = TimeSpan.FromMilliseconds(5);
                 try
@@ -121,6 +133,34 @@ namespace AtlasSSHTest
                 catch { }
                 Assert.AreEqual(2, dummyConnection.ListOfCommands.Count());
                 Assert.AreEqual("ls", dummyConnection.ListOfCommands[0]);
+            }
+            Assert.AreEqual(2, dummyConnection.DisposedCalled);
+        }
+
+        /// <summary>
+        /// Helper to generate a dummy connection so that it eventually works properly.
+        /// </summary>
+        private class dummyConnectionMaker
+        {
+            private int _fail;
+            private Func<Exception> _genException;
+            private IDictionary<string, string> _responses;
+
+            public dummyConnectionMaker(int failExecuteCommandForNTimes = 0, Func<Exception> genException = null, IDictionary<string, string> responses = null)
+            {
+                _fail = failExecuteCommandForNTimes;
+                _genException = genException;
+                _responses = responses;
+            }
+
+            public dummyConnection Execute()
+            {
+                if (_fail == 0)
+                {
+                    return new dummyConnection(0, null, _responses);
+                }
+                _fail--;
+                return new dummyConnection(1, _genException, _responses);
             }
         }
 
@@ -133,6 +173,7 @@ namespace AtlasSSHTest
             {
                 CalledExecuteLinuxCommand = 0;
                 ListOfCommands.Clear();
+                DisposedCalled = 0;
             }
 
             /// <summary>
@@ -197,8 +238,11 @@ namespace AtlasSSHTest
                 throw new NotImplementedException();
             }
 
+            public static int DisposedCalled { get; set; }
+
             public void Dispose()
             {
+                DisposedCalled++;
             }
 
             /// <summary>

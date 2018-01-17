@@ -83,9 +83,25 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        [DeploymentItem("testmachineOne.txt")]
         public void GloballyVisibleTunnel()
         {
-            Assert.Fail("Check to see if we are globall visible");
+            using (var t = new SSHConnectionTunnel(File.ReadLines("testmachineOne.txt").First()))
+            {
+                Assert.IsTrue(t.GloballyVisible);
+                Assert.AreEqual(0, t.TunnelCount);
+            }
+        }
+
+        [TestMethod]
+        [DeploymentItem("testmachineTwo.txt")]
+        public void GloballyNotVisibleTunnel()
+        {
+            using (var t = new SSHConnectionTunnel(File.ReadLines("testmachineTwo.txt").First()))
+            {
+                Assert.IsFalse(t.GloballyVisible);
+                Assert.AreEqual(1, t.TunnelCount);
+            }
         }
 
         /// <summary>

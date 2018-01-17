@@ -22,6 +22,9 @@ namespace AtlasSSH
     /// <summary>
     /// A connection that can recover from being broken.
     /// </summary>
+    /// <remarks>
+    /// While each instance is threadsafe from other instances, do not make more than one call at a time from different threads into the same instance.
+    /// </remarks>
     public sealed class SSHRecoveringConnection : ISSHConnection
     {
         /// <summary>
@@ -174,13 +177,14 @@ namespace AtlasSSH
             if (_lockCount > 0)
             {
                 return InternalExecuteInConnection(execute);
-            } else
+            }
+            else
             {
                 return Policy
                     .Handle<SshConnectionException>(e => e.Message.Contains("Client not connected"))
                     .Or<SSHConnectionDroppedException>()
                     .Or<TimeoutException>(e => e.Message.Contains("back from host"))
-                    .WaitAndRetryForever(index => RetryWaitPeriod)
+                    .WaitAndRetryForever(index => RetryWaitPeriod, (except, cnt) => { _connection.Dispose(); _connection = null; })
                     .Execute(() =>
                     {
                         return InternalExecuteInConnection(execute);
@@ -206,7 +210,7 @@ namespace AtlasSSH
                     .Handle<SshConnectionException>(e => e.Message.Contains("Client not connected"))
                     .Or<SSHConnectionDroppedException>()
                     .Or<TimeoutException>(e => e.Message.Contains("back from host"))
-                    .WaitAndRetryForeverAsync(index => RetryWaitPeriod)
+                    .WaitAndRetryForeverAsync(index => RetryWaitPeriod, (except, cnt) => { _connection.Dispose(); _connection = null; })
                     .ExecuteAsync(async () =>
                     {
                         return await InternalExecuteInConnectionAsync(execute);
