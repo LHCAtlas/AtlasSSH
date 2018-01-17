@@ -150,6 +150,7 @@ namespace AtlasSSH
                         _connectionStack = new List<IDisposable>();
                         var (user, machine) = ExtractUserAndMachine(_machineConnectionStrings[0]);
                         _deepestConnection = new SSHConnection(machine, user);
+                        _connectionStack.Add(_deepestConnection);
                         try
                         {
 

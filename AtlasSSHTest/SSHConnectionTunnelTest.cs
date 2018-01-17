@@ -14,13 +14,13 @@ namespace AtlasSSHTest
     {
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void SSHTunnelFailWithNoInitalization()
+        public async Task SSHTunnelFailWithNoInitalization()
         {
             try
             {
                 using (var t = new SSHConnectionTunnel())
                 {
-                    var pid = GetPID(t);
+                    var pid = await GetPID(t);
                 }
             } catch (Exception e)
             {
@@ -30,14 +30,62 @@ namespace AtlasSSHTest
 
         [TestMethod]
         [DeploymentItem("testmachineOne.txt")]
-        public void SSHTunnelSingleLink()
+        public async Task SSHTunnelSingleLink()
         {
             using (var t = new SSHConnectionTunnel(File.ReadLines("testmachineOne.txt").First()))
             {
-                var pid = GetPID(t);
+                var pid = await GetPID(t);
                 Assert.IsTrue(pid != "");
                 Assert.AreEqual(0, t.TunnelCount);
             }
+        }
+
+        [TestMethod]
+        [DeploymentItem("testmachineOne.txt")]
+        public async Task SSHTunnelSingleLinkStressTest1()
+        {
+            await BuildAndRunTunnels(1);
+        }
+
+        [TestMethod]
+        [DeploymentItem("testmachineOne.txt")]
+        public async Task SSHTunnelSingleLinkStressTest10()
+        {
+            await BuildAndRunTunnels(10);
+        }
+
+        [TestMethod]
+        [DeploymentItem("testmachineTwo.txt")]
+        public async Task SSHTunnelDoubleLinkStressTest10()
+        {
+            await BuildAndRunTunnels(10, configFile: "testMachineTwo.txt");
+        }
+
+        /// <summary>
+        /// Run a number of simultanious tunnels
+        /// </summary>
+        /// <param name="tunnels"></param>
+        /// <returns></returns>
+        private async Task BuildAndRunTunnels(int tunnels, string configFile = "testMachineOne.txt")
+        {
+            var ts = Enumerable.Range(0, tunnels)
+                .Select(_ => BuildAndRunTunnel(configFile));
+            await Task.WhenAll(ts);
+        }
+
+        private async Task BuildAndRunTunnel(string configFile)
+        {
+            using (var t = new SSHConnectionTunnel(File.ReadLines(configFile).First()))
+            {
+                var pid = await GetPID(t);
+                Assert.IsTrue(pid != "");
+            }
+        }
+
+        [TestMethod]
+        public void GloballyVisibleTunnel()
+        {
+            Assert.Fail("Check to see if we are globall visible");
         }
 
         /// <summary>
@@ -45,23 +93,23 @@ namespace AtlasSSHTest
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
-        private string GetPID (ISSHConnection c)
+        private async Task<string> GetPID (ISSHConnection c)
         {
             var pid = "";
-            c.ExecuteLinuxCommand("echo $$", s => pid = s);
+            await c.ExecuteLinuxCommandAsync("echo $$", s => pid = s);
             Assert.IsTrue(!string.IsNullOrWhiteSpace(pid));
             return pid;
         }
 
         [TestMethod]
         [DeploymentItem("testMachineOne.txt")]
-        public void SSHTunnelAddLater()
+        public async Task SSHTunnelAddLater()
         {
             using (var t = new SSHConnectionTunnel(File.ReadLines("testmachineOne.txt").First()))
             {
-                var pid1 = GetPID(t);
+                var pid1 = await GetPID(t);
                 t.Add(File.ReadLines("testmachineone.txt").First());
-                var pid2 = GetPID(t);
+                var pid2 = await GetPID(t);
                 Assert.AreNotEqual(pid1, pid2);
                 Assert.AreEqual(1, t.TunnelCount);
             }
@@ -96,16 +144,16 @@ namespace AtlasSSHTest
 
         [TestMethod]
         [DeploymentItem("testMachineTwo.txt")]
-        public void SSHTunnelAddTwo()
+        public async Task SSHTunnelAddTwo()
         {
             using (var t = new SSHConnectionTunnel(File.ReadLines("testMachineTwo.txt").First()))
             {
-                var pid2 = GetPID(t);
+                var pid2 = await GetPID(t);
                 Assert.IsTrue(pid2 != "");
                 Assert.AreEqual(1, t.TunnelCount);
                 Console.WriteLine(pid2);
 
-                t.ExecuteLinuxCommand("export", l => Console.WriteLine(l));
+                await t.ExecuteLinuxCommandAsync("export", l => Console.WriteLine(l));
             }
         }
     }

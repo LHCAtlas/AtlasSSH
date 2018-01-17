@@ -143,11 +143,13 @@ namespace AtlasSSHTest
         }
 
         // This works fine, but it takes 3 minutes. It is a good stress test of the multi-threading code.
-        [Ignore]
         [TestMethod]
         public async Task MultipleConnections100()
         {
             await TestSimulatniousConnection(100);
+            GC.Collect();
+            GC.WaitForFullGCComplete();
+            GC.WaitForPendingFinalizers();
         }
 
         /// <summary>
