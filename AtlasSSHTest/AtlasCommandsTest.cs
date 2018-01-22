@@ -226,7 +226,7 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
-        [Ignore]
+        [Ignore] // This works fine, but takes too long for normal testing. Very good to run a stress test.
         public async Task AsyncConnectionStressTest100Iter10()
         {
             await TestAsyncSimltaniousConnections(100, iterations: 10);

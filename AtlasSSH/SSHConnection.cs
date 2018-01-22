@@ -107,12 +107,7 @@ namespace AtlasSSH
                 var c = new SshClient(host, userName, password);
                 try
                 {
-                    c.KeepAliveInterval = TimeSpan.FromSeconds(15);
-                    Policy
-                        .Handle<SshOperationTimeoutException>()
-                        .Or<SshConnectionException>()
-                        .WaitAndRetry(new [] { TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(1000) }, (exception, timespan, count, ctx) => Trace.WriteLine($"Failed to connect ({exception.Message}) - retry count {count}"))
-                        .Execute(() => c.Connect());
+                    ConnectSSHRobustly(c);
                     return c;
                 }
                 catch (Exception e)
@@ -128,7 +123,7 @@ namespace AtlasSSH
                 var c = new ScpClient(host, userName, password);
                 try
                 {
-                    c.Connect();
+                    ConnectSSHRobustly(c);
                     c.ErrorOccurred += (sender, error) => _scpError = error.Exception;
                     return c;
                 } catch
@@ -143,9 +138,31 @@ namespace AtlasSSH
             _shell = new AsyncLazy<ShellStream>(async () =>
             {
                 var s = _client.Value.CreateShellStream("Commands", TerminalWidth, 200, 132, 80, 240 * 200);
-                _prompt = await ExtractPromptText(s, _client.Value);
+                try
+                {
+                    _prompt = await ExtractPromptText(s, _client.Value);
+                }
+                catch
+                {
+                    s.Dispose();
+                    throw;
+                }
                 return s;
             }, AsyncLazyFlags.RetryOnFailure);
+        }
+
+        /// <summary>
+        /// Robustly make the connection to an ssh endpoint. This includes retries and the like.
+        /// </summary>
+        /// <param name="c"></param>
+        private static void ConnectSSHRobustly(BaseClient c)
+        {
+            c.KeepAliveInterval = TimeSpan.FromSeconds(15);
+            Policy
+                .Handle<SshOperationTimeoutException>()
+                .Or<SshConnectionException>()
+                .WaitAndRetry(new[] { TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(1000) }, (exception, timespan, count, ctx) => Trace.WriteLine($"Failed to connect ({exception.Message}) - retry count {count}"))
+                .Execute(() => c.Connect());
         }
 
         /// <summary>
