@@ -226,6 +226,7 @@ namespace AtlasSSHTest
         }
 
         [TestMethod]
+        [Ignore]
         public async Task AsyncConnectionStressTest100Iter10()
         {
             await TestAsyncSimltaniousConnections(100, iterations: 10);
