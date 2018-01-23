@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>AtlasSSH</id>
-    <version>4.2.0-pre04</version>
+    <version>4.2.0-pre05</version>
     <title>Atlas SSH</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
