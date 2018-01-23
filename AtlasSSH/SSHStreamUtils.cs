@@ -81,7 +81,7 @@ namespace AtlasSSH
                 string line;
                 while ((line = await shell.ReadLineAsync(TimeSpan.FromMilliseconds(10))) != null)
                 {
-                    Trace.WriteLine("WaitTillPromptText: read text: " + line, "SSHConnection");
+                    //Trace.WriteLine("WaitTillPromptText: read text: " + line, "SSHConnection");
                     allText.AppendLine(line);
                 }
 

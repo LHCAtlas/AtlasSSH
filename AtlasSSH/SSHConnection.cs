@@ -309,7 +309,7 @@ namespace AtlasSSH
                     if (data != null && data.Length > 0)
                     {
                         // Archive the line
-                        Trace.WriteLine($"DumpTillFind: Read text: {data}");
+                        //Trace.WriteLine($"DumpTillFind: Read text: {data}");
                         lb.Add(data + LineBuffer.CrLf);
                     }
                 }

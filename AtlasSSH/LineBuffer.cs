@@ -101,7 +101,7 @@ namespace AtlasSSH
         /// <param name="line"></param>
         private void ActOnLine(string line)
         {
-            Trace.WriteLine("ReturnedLine: " + line, "SSHConnection");
+            //Trace.WriteLine("ReturnedLine: " + line, "SSHConnection");
 
             if (!stringsToSuppress.Any(s => line.Contains(s)))
             {
