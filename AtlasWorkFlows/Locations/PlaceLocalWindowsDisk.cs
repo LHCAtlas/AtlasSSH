@@ -159,7 +159,7 @@ namespace AtlasWorkFlows.Locations
                             {
                                 count++;
                                 statusUpdate.PCall($"Copying {sourcePath.Name}: {source.Name} -> {Name} (retry {count})");
-                                return TimeSpan.FromSeconds(2);
+                                return TimeSpan.FromSeconds(10);
                             })
                             .ExecuteAsync(async () => {
                                 destPathPart.Refresh();
@@ -244,7 +244,7 @@ namespace AtlasWorkFlows.Locations
                 {
                     count++;
                     statusUpdate.PCall($"Reading catalog file ({Name}) (retry count {count})");
-                    return TimeSpan.FromSeconds(2);
+                    return TimeSpan.FromSeconds(10);
                 })
                 .Execute(() =>
                 {

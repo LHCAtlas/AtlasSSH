@@ -144,7 +144,7 @@ namespace AtlasSSH
             {
                 await Policy
                     .Handle<UnableToCreateSSHTunnelException>()
-                    .WaitAndRetryAsync(new[] { TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30) })
+                    .WaitAndRetryAsync(new[] { TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60) })
                     .ExecuteAsync(async () =>
                     {
                         _connectionStack = new List<IDisposable>();
