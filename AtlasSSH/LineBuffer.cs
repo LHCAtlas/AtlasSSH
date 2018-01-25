@@ -25,6 +25,15 @@ namespace AtlasSSH
         string _text = "";
 
         /// <summary>
+        /// Return remaining text
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return _text;
+        }
+
+        /// <summary>
         /// List of actions to perform when there is new line.
         /// </summary>
         private List<Action<string>> _actionsOnline = new List<Action<string>>();

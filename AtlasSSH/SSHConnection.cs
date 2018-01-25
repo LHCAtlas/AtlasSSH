@@ -320,10 +320,12 @@ namespace AtlasSSH
                     throw new SSHCommandInterruptedException("Calling routine requested termination of command");
                 }
             }
+            var tmpString = lb.ToString();
             lb.DumpRest();
             if (!gotmatch)
             {
-                throw new TimeoutException(string.Format("Waiting for '{0}' back from host and it was not seen inside of {1} seconds.", matchText, secondsTimeout));
+                Debug.WriteLine($"Waiting for '{matchText}' back from host and it was not seen inside of {secondsTimeout} seconds. Remaining in buffer: '{tmpString}'");
+                throw new TimeoutException($"Waiting for '{matchText}' back from host and it was not seen inside of {secondsTimeout} seconds. Remaining in buffer: '{tmpString}'");
             }
         }
 
