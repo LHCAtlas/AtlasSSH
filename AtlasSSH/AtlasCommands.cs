@@ -152,7 +152,7 @@ namespace AtlasSSH
         {
             int hashCount = 0;
             var r = await connection.ExecuteLinuxCommandAsync(string.Format("export RUCIO_ACCOUNT={0}", rucioUserName), dumpOnly: dumpOnly, secondsTimeout: 30);
-            r = await r.ExecuteLinuxCommandAsync("lsetup rucio", dumpOnly: dumpOnly, , secondsTimeout: 30);
+            r = await r.ExecuteLinuxCommandAsync("lsetup rucio", dumpOnly: dumpOnly, secondsTimeout: 30);
             r = await r.ExecuteLinuxCommandAsync("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly, secondsTimeout: 30);
 
             if (hashCount != 0 && !dumpOnly)
