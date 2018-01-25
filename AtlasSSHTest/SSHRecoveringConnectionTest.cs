@@ -98,6 +98,7 @@ namespace AtlasSSHTest
                 }
             }
             Assert.AreEqual(1, dummyConnection.DisposedCalled);
+            Assert.AreEqual(1, dummyConnection.CTorCalls);
         }
 
         [TestMethod]
@@ -116,7 +117,8 @@ namespace AtlasSSHTest
                     c.ExecuteCommand("ls");
                 }
             }
-            Assert.AreEqual(1, dummyConnection.DisposedCalled);
+            Assert.AreEqual(2, dummyConnection.DisposedCalled);
+            Assert.AreEqual(2, dummyConnection.CTorCalls);
         }
 
         [TestMethod]
@@ -174,6 +176,7 @@ namespace AtlasSSHTest
                 CalledExecuteLinuxCommand = 0;
                 ListOfCommands.Clear();
                 DisposedCalled = 0;
+                CTorCalls = 0;
             }
 
             /// <summary>
@@ -194,12 +197,15 @@ namespace AtlasSSHTest
 
             private Dictionary<string, string> _responses;
 
+            public static int CTorCalls = 0;
+
             /// <summary>
             /// Create ourselves.
             /// </summary>
             /// <param name="failExecuteCommandForNTimes"></param>
             public dummyConnection(int failExecuteCommandForNTimes = 0, Func<Exception> genException = null, IDictionary<string, string> responses = null)
             {
+                CTorCalls++;
                 this._failExecuteCommandForNTimes = failExecuteCommandForNTimes;
                 if (genException == null)
                 {
@@ -219,7 +225,7 @@ namespace AtlasSSHTest
             /// </summary>
             public string UserName => "myname";
 
-            public string MachineName => throw new NotImplementedException();
+            public string MachineName => "bogus";
 
             public bool GloballyVisible => throw new NotImplementedException();
 

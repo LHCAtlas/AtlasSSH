@@ -211,7 +211,7 @@ namespace AtlasSSH
                     .Handle<SshConnectionException>(e => e.Message.Contains("Client not connected"))
                     .Or<SSHConnectionDroppedException>()
                     .Or<TimeoutException>(e => e.Message.Contains("back from host"))
-                    .WaitAndRetryForeverAsync(index => RetryWaitPeriod, (except, cnt) => { Trace.WriteLine($"Failed In Connection to {_connection.MachineName}: {except.Message}"); _connection.Dispose(); _connection = null; })
+                    .WaitAndRetryForeverAsync(index => RetryWaitPeriod)
                     .ExecuteAsync(async () =>
                     {
                         return await InternalExecuteInConnectionAsync(execute);
@@ -235,7 +235,22 @@ namespace AtlasSSH
                     throw new NullSSHConnectionException("Attempted to create a recoverable SSHConnection, but was given a null value!");
                 }
             }
-            return execute(_connection);
+            bool hasThrown = true;
+            try
+            {
+                var r = execute(_connection);
+                hasThrown = false;
+                return r;
+            } finally
+            {
+                // If an error happened, even though we are reporting it, reset the connection.
+                if (hasThrown)
+                {
+                    Trace.WriteLine($"Failed In Connection to {_connection.MachineName}");
+                    _connection.Dispose();
+                    _connection = null;
+                }
+            }
         }
 
         /// <summary>
@@ -254,7 +269,21 @@ namespace AtlasSSH
                     throw new NullSSHConnectionException("Attempted to create a recoverable SSHConnection, but was given a null value!");
                 }
             }
-            return await execute(_connection);
+            bool hasThrown = true;
+            try
+            {
+                var r = await execute(_connection);
+                hasThrown = false;
+                return r;
+            } finally
+            {
+                if (hasThrown)
+                {
+                    Trace.WriteLine($"Failed In Connection to {_connection.MachineName}");
+                    _connection.Dispose();
+                    _connection = null;
+                }
+            }
         }
     }
 }
