@@ -118,7 +118,7 @@ namespace AtlasSSH
         {
             bool badCommand = false;
             var r = await connection
-                .ExecuteLinuxCommandAsync("setupATLAS", dumpOnly: dumpOnly, processLine: l => badCommand = badCommand || l.Contains("command not found"));
+                .ExecuteLinuxCommandAsync("setupATLAS", dumpOnly: dumpOnly, processLine: l => badCommand = badCommand || l.Contains("command not found"), secondsTimeout: 120);
 
             if (badCommand)
             {
@@ -151,9 +151,9 @@ namespace AtlasSSH
         public static async Task<ISSHConnection> setupRucioAsync(this ISSHConnection connection, string rucioUserName, bool dumpOnly = false)
         {
             int hashCount = 0;
-            var r = await connection.ExecuteLinuxCommandAsync(string.Format("export RUCIO_ACCOUNT={0}", rucioUserName), dumpOnly: dumpOnly);
-            r = await r.ExecuteLinuxCommandAsync("lsetup rucio", dumpOnly: dumpOnly);
-            r = await r.ExecuteLinuxCommandAsync("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly);
+            var r = await connection.ExecuteLinuxCommandAsync(string.Format("export RUCIO_ACCOUNT={0}", rucioUserName), dumpOnly: dumpOnly, secondsTimeout: 30);
+            r = await r.ExecuteLinuxCommandAsync("lsetup rucio", dumpOnly: dumpOnly, , secondsTimeout: 30);
+            r = await r.ExecuteLinuxCommandAsync("hash rucio", l => hashCount += 1, dumpOnly: dumpOnly, secondsTimeout: 30);
 
             if (hashCount != 0 && !dumpOnly)
             {
