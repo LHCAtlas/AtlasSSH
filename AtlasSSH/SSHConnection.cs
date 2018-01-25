@@ -181,6 +181,11 @@ namespace AtlasSSH
                 throw new LinuxCommandErrorException($"Did not find the shell prompt! I will not be able to properly interact with this shell! ({c.ConnectionInfo.Host})");
             }
             Trace.WriteLine("Initialization: prompt=" + prompt, "SSHConnection");
+            if (prompt.Contains("\n"))
+            {
+                Trace.WriteLine("Prmopt contains a \\n character: '{prompt}'");
+                throw new InvalidOperationException("Prmopt contains a \\n character: '{prompt}'");
+            }
             return prompt;
         }
 
