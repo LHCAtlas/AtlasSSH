@@ -174,7 +174,7 @@ namespace AtlasSSH
         {
             await s.WaitTillPromptText();
             s.WriteLine("# this initialization");
-            await DumpTillFind(s, c, "# this initialization");
+            await DumpTillFind(s, c, "# this initialization", secondsTimeout: 30);
             var prompt = await s.ReadRemainingText(1000);
             if (prompt == null || prompt.Length == 0)
             {
@@ -314,7 +314,6 @@ namespace AtlasSSH
                     if (data != null && data.Length > 0)
                     {
                         // Archive the line
-                        //Trace.WriteLine($"DumpTillFind: Read text: {data}");
                         lb.Add(data + LineBuffer.CrLf);
                     }
                 }
@@ -408,7 +407,7 @@ namespace AtlasSSH
                     }
                 } catch (TimeoutException e)
                 {
-                    throw new TimeoutException($"{e.Message} - occured while executing command {command}. Last text we saw was '{buf.ToString()}'", e);
+                    throw new TimeoutException($"{e.Message} - occurred while executing command {command}. Last text we saw was '{buf.ToString()}'", e);
                 }
             }
             return this;
