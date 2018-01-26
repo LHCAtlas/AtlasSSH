@@ -183,8 +183,8 @@ namespace AtlasSSH
             Trace.WriteLine("Initialization: prompt=" + prompt, "SSHConnection");
             if (prompt.Contains("\n"))
             {
-                Trace.WriteLine("Prmopt contains a \\n character: '{prompt}'");
-                throw new InvalidOperationException("Prmopt contains a \\n character: '{prompt}'");
+                Trace.WriteLine($"Prmopt contains a \\n character: '{prompt}'");
+                throw new InvalidOperationException($"Prmopt contains a \\n character: '{prompt}'");
             }
             return prompt;
         }
