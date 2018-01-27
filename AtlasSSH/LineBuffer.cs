@@ -24,13 +24,16 @@ namespace AtlasSSH
         /// </summary>
         string _text = "";
 
+        private List<string> _seen = new List<string>();
+
         /// <summary>
         /// Return remaining text
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            return _text;
+            var alreadyDone = _seen.Count > 0 ? _seen.Aggregate((all, newLine) => $"{all}//{newLine}") : "";
+            return alreadyDone + "//" + _text;
         }
 
         /// <summary>
@@ -71,6 +74,7 @@ namespace AtlasSSH
                 var line = _text.Substring(0, lend);
                 ActOnLine(line);
                 _text = _text.Substring(lend + 2);
+                _seen.Add(line);
             }
         }
 
