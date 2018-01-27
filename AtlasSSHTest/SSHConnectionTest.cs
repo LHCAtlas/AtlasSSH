@@ -78,10 +78,27 @@ namespace AtlasSSHTest
         public void ListDirectoryWithNoOutput()
         {
             var info = util.GetUsernameAndPassword();
+            var l = new List<string>();
             using (var s = new SSHConnection(info.Item1, info.Item2))
             {
-                s.ExecuteCommand("ls -a | cat");
+                s.ExecuteCommand("ls -a | cat", output: ln => l.Add(ln));
             }
+            // Make sure we got a few things back.
+            Assert.AreNotEqual(0, l.Count);
+        }
+
+        [TestMethod]
+        public void TimeoutBetweenEchos()
+        {
+            var info = util.GetUsernameAndPassword();
+            var l = new List<DateTime>();
+            using (var s = new SSHConnection(info.Item1, info.Item2))
+            {
+                s.ExecuteCommand("echo hi; sleep 1; echo there", output: ln => l.Add(DateTime.Now));
+            }
+            Assert.AreEqual(2, l.Count);
+            var diff = l[1] - l[0];
+            Assert.IsTrue(diff > TimeSpan.FromSeconds(1), $"The time diff was {diff.ToString()} instead of at leaset 1 second");
         }
 
         [TestMethod]

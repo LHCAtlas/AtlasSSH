@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static AtlasSSH.CredentialUtils;
 
@@ -174,7 +175,7 @@ namespace AtlasSSH
         {
             await s.WaitTillPromptText();
             s.WriteLine("# this initialization");
-            await DumpTillFind(s, c, "# this initialization", secondsTimeout: 30);
+            await DumpTillFind(s, c, "# this initialization", crlfExpectedAtEnd: true, secondsTimeout: 30);
             var prompt = await s.ReadRemainingText(1000);
             if (prompt == null || prompt.Length == 0)
             {
@@ -243,30 +244,53 @@ namespace AtlasSSH
             Dictionary<string, string> seeAndRespond = null
             )
         {
-            var lb = new LineBuffer();
+            /// <summary>
+            /// How long to go before checking for update data from the stream. The actual timeout accuracy
+            /// when refreshtimeout is set will depend on this.
+            /// </summary>
+            TimeSpan TimeoutGranularity = TimeSpan.FromSeconds(5);
 
-            // Supress reporting back of the text we are going to "match" in.
+            // Send back text we see if there is someone watching.
+            // Don't send back the matched text.
+            var lb = new LineBuffer();
             if (ongo != null)
             {
                 lb.AddAction(l => { if (!l.Contains(matchText)) { ongo(l); } });
             }
 
-            // We get a match when we see everything in the input buffer
+            // Set when we see the text we are trying to match.
             bool gotmatch = false;
-            lb.AddAction(l => gotmatch = gotmatch || l.Contains(matchText));
 
-            // Build the actions that will occur when we see various patterns in the text.
+            // The Shell Stream works by looking for strings, and when it matches, performing a call out and returning.
+            // The most obvious string to wait for is our matched string.
             var expectedMatchText = matchText + (crlfExpectedAtEnd ? LineBuffer.CrLf : "");
-            var matchTextAction = new ExpectAction(expectedMatchText, l => { Trace.WriteLine($"DumpTillFill: Found expected Text: '{SummarizeText(l)}'"); lb.Add(l); gotmatch = true; });
+            var matchText_action = new ExpectAction(expectedMatchText, l =>
+            {
+                Trace.WriteLine($"DumpTillFill: Found expected Text: '{SummarizeText(l)}'");
+                lb.Add(l);
+                gotmatch = true;
+            });
             Trace.WriteLine($"DumpTillFind: searching for text: {matchText} (with crlf: {crlfExpectedAtEnd})");
 
-            var expect_actions = (new ExpectAction[] { matchTextAction })
-                .Concat(seeAndRespond == null
+            // Next is the end-of-line action.
+            var matchEOL_action = new ExpectAction(new Regex("^.*" + LineBuffer.CrLf + "$"), l => {
+                if (!gotmatch)
+                {
+                    lb.Add(l);
+                }
+            });
+
+            // Finally, there are some see-and-then-send actions that might be present. When we see a match, send back some text.
+            // This is an easy way to deal with a conversation (like a password request).
+            var seeAndRespond_actions = seeAndRespond == null
                         ? Enumerable.Empty<ExpectAction>()
                         : seeAndRespond
-                            .Select(sr => new ExpectAction(sr.Key, whatMatched => { Trace.WriteLine($"DumpTillFill: Found seeAndRespond: {whatMatched}"); lb.Add(whatMatched); s.WriteLine(sr.Value); }))
-                       )
-                       .ToArray();
+                            .Select(sr => new ExpectAction(sr.Key, whatMatched =>
+                            {
+                                Trace.WriteLine($"DumpTillFill: Found seeAndRespond: {whatMatched}");
+                                lb.Add(whatMatched);
+                                s.WriteLine(sr.Value);
+                            }));
             if (seeAndRespond != null)
             {
                 foreach (var item in seeAndRespond)
@@ -275,13 +299,18 @@ namespace AtlasSSH
                 }
             }
 
-            // Run until we hit a timeout. Timeout is finegraned so that we can
-            // deal with the sometimes very slow GRID.
-            var timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
+            // All the actions together
+            var expect_actions = new[] { matchText_action, matchEOL_action }
+                    .Concat(seeAndRespond_actions)
+                    .ToArray();
+
+            // When is time up? If we are supposed to refresh the timeout then everytime the data changes in the buffer, we will want
+            // to update the timeout.
+            var timesUp = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
             var streamDataLength = new ValueHasChanged<long>(() => s.Length);
             streamDataLength.Evaluate();
 
-            while (timeout > DateTime.Now)
+            while (timesUp > DateTime.Now)
             {
                 // Make sure the connection hasn't dropped. We won't get an exception later on if that hasn't happened.
                 if (!client.IsConnected)
@@ -290,32 +319,20 @@ namespace AtlasSSH
                 }
 
                 // Wait for some sort of interesting text to come back.
-                await Task.Factory.FromAsync(
-                    s.BeginExpect(TimeSpan.FromMilliseconds(100), null, null, expect_actions),
+                var howLongToWait = MinTime(timesUp - DateTime.Now, TimeoutGranularity);
+                var seenText = await Task.Factory.FromAsync(
+                    s.BeginExpect(howLongToWait, null, null, expect_actions),
                     s.EndExpect);
 
-                // If a crlf is not expected, then if we have a match we are done.
-                if (!crlfExpectedAtEnd)
-                {
-                    gotmatch = gotmatch || lb.Match(matchText);
-                }
                 if (gotmatch)
+                {
                     break;
+                }
 
                 // Reset the timeout if data has come in and we are doing that.
-                if (streamDataLength.HasChanged)
+                if (refreshTimeout && streamDataLength.HasChanged)
                 {
-                    if (refreshTimeout)
-                    {
-                        timeout = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
-                    }
-
-                    var data = s.ReadLine(TimeSpan.FromTicks(1));
-                    if (data != null && data.Length > 0)
-                    {
-                        // Archive the line
-                        lb.Add(data + LineBuffer.CrLf);
-                    }
+                    timesUp = DateTime.Now + TimeSpan.FromSeconds(secondsTimeout);
                 }
 
                 // Check to see if we should fail
@@ -324,13 +341,28 @@ namespace AtlasSSH
                     throw new SSHCommandInterruptedException("Calling routine requested termination of command");
                 }
             }
-            var tmpString = lb.ToString();
+
+            // Done. IF there is anything that doesn't include a complete line in there, then dump it.
             lb.DumpRest();
             if (!gotmatch)
             {
+                var tmpString = lb.ToString();
                 Debug.WriteLine($"Waiting for '{matchText}' back from host and it was not seen inside of {secondsTimeout} seconds. Remaining in buffer: '{tmpString}'");
                 throw new TimeoutException($"Waiting for '{matchText}' back from host and it was not seen inside of {secondsTimeout} seconds. Remaining in buffer: '{tmpString}'");
             }
+        }
+
+        /// <summary>
+        /// Take the minimum of the two timespans.
+        /// </summary>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
+        /// <returns></returns>
+        private static TimeSpan MinTime(TimeSpan t1, TimeSpan t2)
+        {
+            return t1 > t2
+                ? t2
+                : t1;
         }
 
         /// <summary>
