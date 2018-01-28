@@ -61,6 +61,14 @@ namespace AtlasSSHTest
             await BuildAndRunTunnels(10, configFile: "testMachineTwo.txt");
         }
 
+        [TestMethod]
+        [DeploymentItem("testmachineTwo.txt")]
+        [Ignore]
+        public async Task SSHTunnelDoubleLinkStressTest100()
+        {
+            await BuildAndRunTunnels(100, configFile: "testMachineTwo.txt");
+        }
+
         /// <summary>
         /// Run a number of simultanious tunnels
         /// </summary>
