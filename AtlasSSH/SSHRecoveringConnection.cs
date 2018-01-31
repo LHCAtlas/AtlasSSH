@@ -184,6 +184,8 @@ namespace AtlasSSH
                 return Policy
                     .Handle<SshConnectionException>(e => e.Message.Contains("Client not connected"))
                     .Or<SSHConnectionDroppedException>()
+                    .Or<NoLinuxShellPromptSeenException>()
+                    .Or<SshOperationTimeoutException>()
                     .Or<TimeoutException>(e => e.Message.Contains("back from host"))
                     .WaitAndRetryForever(index => RetryWaitPeriod, (except, cnt) => { Trace.WriteLine($"Failed In Connection to {_connection.MachineName}: {except.Message}");  _connection.Dispose(); _connection = null; })
                     .Execute(() =>
